@@ -11,6 +11,10 @@ export default defineConfig(async () => ({
   
   base: "/Jigsaw/",
   
+  define: {
+    __BASE_URL__: JSON.stringify("/Jigsaw/"),
+  },
+  
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
