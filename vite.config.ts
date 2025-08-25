@@ -9,6 +9,8 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [vue()],
   
+  base: "/Jigsaw/",
+  
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
