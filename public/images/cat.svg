@@ -1,0 +1,59 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="600" height="400" fill="#F0F8FF"/>
+  
+  <!-- 猫咪身体 -->
+  <ellipse cx="300" cy="280" rx="80" ry="60" fill="#FF7F50"/>
+  
+  <!-- 猫咪头部 -->
+  <circle cx="300" cy="180" r="60" fill="#FF7F50"/>
+  
+  <!-- 耳朵 -->
+  <polygon points="260,140 280,120 290,150" fill="#FF7F50"/>
+  <polygon points="340,140 320,120 310,150" fill="#FF7F50"/>
+  <polygon points="265,140 275,130 285,145" fill="#FFB6C1"/>
+  <polygon points="335,140 325,130 315,145" fill="#FFB6C1"/>
+  
+  <!-- 眼睛 -->
+  <ellipse cx="280" cy="170" rx="12" ry="15" fill="white"/>
+  <ellipse cx="320" cy="170" rx="12" ry="15" fill="white"/>
+  <ellipse cx="280" cy="175" rx="6" ry="8" fill="black"/>
+  <ellipse cx="320" cy="175" rx="6" ry="8" fill="black"/>
+  <ellipse cx="282" cy="172" rx="2" ry="3" fill="white"/>
+  <ellipse cx="322" cy="172" rx="2" ry="3" fill="white"/>
+  
+  <!-- 鼻子 -->
+  <polygon points="300,185 295,195 305,195" fill="#FFB6C1"/>
+  
+  <!-- 嘴巴 -->
+  <path d="M 300 195 Q 290 205 285 200" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M 300 195 Q 310 205 315 200" stroke="black" stroke-width="2" fill="none"/>
+  
+  <!-- 胡须 -->
+  <line x1="250" y1="185" x2="220" y2="180" stroke="black" stroke-width="2"/>
+  <line x1="250" y1="195" x2="220" y2="195" stroke="black" stroke-width="2"/>
+  <line x1="250" y1="205" x2="220" y2="210" stroke="black" stroke-width="2"/>
+  
+  <line x1="350" y1="185" x2="380" y2="180" stroke="black" stroke-width="2"/>
+  <line x1="350" y1="195" x2="380" y2="195" stroke="black" stroke-width="2"/>
+  <line x1="350" y1="205" x2="380" y2="210" stroke="black" stroke-width="2"/>
+  
+  <!-- 前爪 -->
+  <ellipse cx="260" cy="320" rx="15" ry="25" fill="#FF7F50"/>
+  <ellipse cx="340" cy="320" rx="15" ry="25" fill="#FF7F50"/>
+  
+  <!-- 尾巴 -->
+  <ellipse cx="380" cy="260" rx="20" ry="50" fill="#FF7F50" transform="rotate(30 380 260)"/>
+  
+  <!-- 花纹 -->
+  <ellipse cx="280" cy="150" rx="8" ry="6" fill="#CD5C5C"/>
+  <ellipse cx="330" cy="160" rx="6" ry="8" fill="#CD5C5C"/>
+  <ellipse cx="320" cy="250" rx="10" ry="8" fill="#CD5C5C"/>
+  <ellipse cx="270" cy="270" rx="8" ry="10" fill="#CD5C5C"/>
+  
+  <!-- 装饰性元素 -->
+  <circle cx="150" cy="100" r="3" fill="#FFD700" opacity="0.7"/>
+  <circle cx="450" cy="80" r="4" fill="#FFD700" opacity="0.7"/>
+  <circle cx="100" cy="300" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="500" cy="320" r="3" fill="#FFD700" opacity="0.7"/>
+</svg>

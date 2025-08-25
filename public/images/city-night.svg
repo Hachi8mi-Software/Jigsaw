@@ -1,0 +1,63 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="nightSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#191970;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#000080;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 夜空背景 -->
+  <rect width="600" height="400" fill="url(#nightSky)"/>
+  
+  <!-- 星星 -->
+  <circle cx="100" cy="50" r="2" fill="white"/>
+  <circle cx="200" cy="80" r="1.5" fill="white"/>
+  <circle cx="350" cy="40" r="2" fill="white"/>
+  <circle cx="450" cy="70" r="1" fill="white"/>
+  <circle cx="550" cy="60" r="1.5" fill="white"/>
+  <circle cx="80" cy="120" r="1" fill="white"/>
+  <circle cx="480" cy="30" r="1.5" fill="white"/>
+  
+  <!-- 月亮 -->
+  <circle cx="500" cy="80" r="25" fill="#F0F0F0"/>
+  
+  <!-- 建筑物 -->
+  <rect x="50" y="200" width="60" height="200" fill="#2F2F2F"/>
+  <rect x="120" y="150" width="50" height="250" fill="#404040"/>
+  <rect x="180" y="180" width="70" height="220" fill="#2F2F2F"/>
+  <rect x="260" y="120" width="55" height="280" fill="#404040"/>
+  <rect x="325" y="160" width="65" height="240" fill="#2F2F2F"/>
+  <rect x="400" y="140" width="50" height="260" fill="#404040"/>
+  <rect x="460" y="190" width="60" height="210" fill="#2F2F2F"/>
+  <rect x="530" y="170" width="45" height="230" fill="#404040"/>
+  
+  <!-- 窗户灯光 -->
+  <rect x="60" y="220" width="8" height="12" fill="#FFD700"/>
+  <rect x="80" y="240" width="8" height="12" fill="#FFD700"/>
+  <rect x="90" y="280" width="8" height="12" fill="#FFD700"/>
+  
+  <rect x="130" y="180" width="8" height="12" fill="#FFD700"/>
+  <rect x="145" y="200" width="8" height="12" fill="#FFD700"/>
+  <rect x="130" y="250" width="8" height="12" fill="#FFD700"/>
+  
+  <rect x="200" y="200" width="8" height="12" fill="#FFD700"/>
+  <rect x="220" y="230" width="8" height="12" fill="#FFD700"/>
+  <rect x="200" y="280" width="8" height="12" fill="#FFD700"/>
+  
+  <rect x="280" y="160" width="8" height="12" fill="#FFD700"/>
+  <rect x="290" y="200" width="8" height="12" fill="#FFD700"/>
+  <rect x="280" y="260" width="8" height="12" fill="#FFD700"/>
+  
+  <rect x="340" y="190" width="8" height="12" fill="#FFD700"/>
+  <rect x="360" y="220" width="8" height="12" fill="#FFD700"/>
+  <rect x="340" y="280" width="8" height="12" fill="#FFD700"/>
+  
+  <rect x="415" y="180" width="8" height="12" fill="#FFD700"/>
+  <rect x="430" y="210" width="8" height="12" fill="#FFD700"/>
+  
+  <rect x="480" y="220" width="8" height="12" fill="#FFD700"/>
+  <rect x="495" y="260" width="8" height="12" fill="#FFD700"/>
+  
+  <rect x="545" y="200" width="8" height="12" fill="#FFD700"/>
+  <rect x="555" y="240" width="8" height="12" fill="#FFD700"/>
+</svg>
