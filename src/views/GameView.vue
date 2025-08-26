@@ -376,6 +376,16 @@ const loadPuzzleFromRoute = async () => {
     // 从素材库查找拼图
     const libraryItem = libraryStore.items.find(item => item.id === puzzleId)
     if (libraryItem) {
+      // 检查是否有正在进行的游戏需要切换
+      const hasActiveGame = gameStore.currentPuzzle && 
+                           gameStore.currentPuzzle.id !== puzzleId && 
+                           gameStore.isGameActive && 
+                           !gameStore.isCompleted
+      
+      if (hasActiveGame) {
+        console.log(`切换拼图: ${gameStore.currentPuzzle?.name} -> ${libraryItem.name}`)
+      }
+      
       // 生成简单的边界数据（平直边界用于演示）
       const boundaries: Boundary[] = []
       const rows = 3, cols = 4
@@ -396,7 +406,7 @@ const loadPuzzleFromRoute = async () => {
         difficulty: libraryItem.difficulty
       }
       
-      // 使用新的startNewGame方法，允许恢复现有游戏状态
+      // 使用新的startNewGame方法，会自动处理游戏切换的暂停逻辑
       gameStore.startNewGame(puzzleData, false)
     }
   }

@@ -62,7 +62,15 @@ class GameManager {
    * 计算经过的时间（秒）
    */
   calculateElapsedTime(startTime: Date, endTime?: Date): number {
-    const end = endTime || new Date()
+    let end: Date
+    if (endTime) {
+      end = endTime
+    } else if (this.pauseStartTime) {
+      // 如果游戏暂停中，使用暂停开始时间作为结束时间
+      end = this.pauseStartTime
+    } else {
+      end = new Date()
+    }
     const actualElapsed = end.getTime() - startTime.getTime()
     const adjustedElapsed = actualElapsed - this.totalPauseTime
     return Math.floor(adjustedElapsed / 1000)
@@ -152,6 +160,7 @@ export const useGameStore = defineStore('game', () => {
   // 计算属性
   const elapsedTime = computed(() => {
     if (!startTime.value) return 0
+    // GameManager内部会处理暂停逻辑
     return gameManager.calculateElapsedTime(startTime.value, currentTime.value)
   })
 
@@ -251,6 +260,19 @@ export const useGameStore = defineStore('game', () => {
 
   // Actions
   const startNewGame = (puzzleData: PuzzleData, forceNew: boolean = false) => {
+    // 如果当前有正在进行的游戏且不是同一个拼图，先暂停并保存当前游戏
+    if (currentPuzzle.value && 
+        currentPuzzle.value.id !== puzzleData.id && 
+        isGameActive.value && 
+        !isCompleted.value) {
+      console.log('切换拼图，暂停当前游戏:', currentPuzzle.value.name)
+      pauseGame(true) // 自动暂停当前游戏
+      saveGameState() // 保存当前游戏状态
+    }
+    
+    // 停止当前的实时计时器
+    stopRealTimeTimer()
+    
     // 如果强制新游戏或没有现有状态，则开始新游戏
     if (forceNew) {
       clearGameState(puzzleData.id)
@@ -301,6 +323,8 @@ export const useGameStore = defineStore('game', () => {
       console.log('开始新游戏')
     }
     
+    // 清理之前的页面可见性监听器，避免重复添加
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
     // 设置页面可见性监听
     document.addEventListener('visibilitychange', handleVisibilityChange)
   }
@@ -311,7 +335,8 @@ export const useGameStore = defineStore('game', () => {
       isPaused.value = true
       isAutoPaused.value = autoPause
       gameManager.pauseTimer()
-      // 不停止实时计时器，让时间继续更新
+      // 暂停时停止实时计时器，避免继续计时
+      stopRealTimeTimer()
       saveGameState()
       console.log(autoPause ? '游戏已自动暂停' : '游戏已暂停')
     }
@@ -323,7 +348,8 @@ export const useGameStore = defineStore('game', () => {
       isPaused.value = false
       isAutoPaused.value = false
       gameManager.resumeTimer()
-      // 实时计时器已经在运行，不需要重新启动
+      // 恢复游戏时重新启动实时计时器
+      startRealTimeTimer()
       saveGameState()
       console.log('游戏已恢复')
     }
