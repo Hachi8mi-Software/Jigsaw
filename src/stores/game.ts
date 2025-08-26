@@ -126,6 +126,34 @@ class GameManager {
     this.totalPauseTime = 0
     this.pauseStartTime = null
   }
+
+  /**
+   * 获取总暂停时间
+   */
+  getTotalPauseTime(): number {
+    return this.totalPauseTime
+  }
+
+  /**
+   * 设置总暂停时间
+   */
+  setTotalPauseTime(totalPauseTime: number): void {
+    this.totalPauseTime = totalPauseTime
+  }
+
+  /**
+   * 获取暂停开始时间
+   */
+  getPauseStartTime(): Date | null {
+    return this.pauseStartTime
+  }
+
+  /**
+   * 设置暂停开始时间
+   */
+  setPauseStartTime(pauseStartTime: Date | null): void {
+    this.pauseStartTime = pauseStartTime
+  }
 }
 
 const libraryStore = useLibraryStore()
@@ -138,9 +166,8 @@ export const useGameStore = defineStore('game', () => {
   const endTime = ref<Date | null>(null)
   const moveCount = ref(0)
   const isCompleted = ref(false)
-  const isGameActive = ref(false)
   const isPaused = ref(false)
-  const isAutoPaused = ref(false) // 标记是否为自动暂停
+  const pauseType = ref<'manual' | 'auto' | null>(null) // 暂停类型：手动或自动
   const gameSessionId = ref<string | null>(null)
   const userStats = ref<UserStats>({
     totalGamesPlayed: 0,
@@ -158,6 +185,10 @@ export const useGameStore = defineStore('game', () => {
   const gameManager = new GameManager()
 
   // 计算属性
+  const isGameActive = computed(() => {
+    return currentPuzzle.value !== null && !isCompleted.value && !isPaused.value
+  })
+
   const elapsedTime = computed(() => {
     if (!startTime.value) return 0
     // GameManager内部会处理暂停逻辑
@@ -189,8 +220,8 @@ export const useGameStore = defineStore('game', () => {
     if (timerInterval.value) return
     
     timerInterval.value = window.setInterval(() => {
-      // 只要游戏开始且未完成，就更新时间（包括暂停状态）
-      if (!isCompleted.value) {
+      // 只有游戏活跃且未暂停且未完成时才更新时间
+      if (isGameActive.value && !isPaused.value && !isCompleted.value) {
         currentTime.value = new Date()
       }
     }, 1000) // 每秒更新一次
@@ -220,7 +251,9 @@ export const useGameStore = defineStore('game', () => {
       moveCount: moveCount.value,
       isCompleted: isCompleted.value,
       isPaused: isPaused.value,
-      isAutoPaused: isAutoPaused.value,
+      pauseType: pauseType.value,
+      totalPauseTime: gameManager.getTotalPauseTime(),
+      pauseStartTime: gameManager.getPauseStartTime()?.toISOString(),
       savedAt: new Date().toISOString()
     }
     
@@ -254,7 +287,7 @@ export const useGameStore = defineStore('game', () => {
     } else {
       // 页面显示时可以选择是否恢复
       // 这里可以根据用户偏好决定是否自动恢复
-      console.log('页面重新可见，游戏状态:', { isActive: isGameActive.value, isPaused: isPaused.value, isAutoPaused: isAutoPaused.value })
+      console.log('页面重新可见，游戏状态:', { isActive: isGameActive.value, isPaused: isPaused.value, pauseType: pauseType.value })
     }
   }
 
@@ -291,12 +324,24 @@ export const useGameStore = defineStore('game', () => {
       moveCount.value = existingState.moveCount
       isCompleted.value = existingState.isCompleted
       isPaused.value = existingState.isPaused
-      isAutoPaused.value = existingState.isAutoPaused || false
-      isGameActive.value = !existingState.isPaused
+      // 兼容旧的状态格式和新的状态格式
+      if (existingState.pauseType !== undefined) {
+        pauseType.value = existingState.pauseType
+      } else {
+        // 兼容旧格式
+        pauseType.value = existingState.isAutoPaused ? 'auto' : (existingState.isPaused ? 'manual' : null)
+      }
       gameSessionId.value = existingState.sessionId
       
-      // 重置暂停时间统计
-      gameManager.resetPauseTime()
+      // 恢复暂停时间信息
+      if (existingState.totalPauseTime !== undefined) {
+        gameManager.setTotalPauseTime(existingState.totalPauseTime)
+      }
+      if (existingState.pauseStartTime) {
+        gameManager.setPauseStartTime(new Date(existingState.pauseStartTime))
+      } else {
+        gameManager.setPauseStartTime(null)
+      }
       
       if (isGameActive.value) {
         startRealTimeTimer()
@@ -313,8 +358,7 @@ export const useGameStore = defineStore('game', () => {
       moveCount.value = 0
       isCompleted.value = false
       isPaused.value = false
-      isAutoPaused.value = false
-      isGameActive.value = true
+      pauseType.value = null
       gameSessionId.value = generateSessionId()
       
       // 启动实时计时器
@@ -330,10 +374,9 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const pauseGame = (autoPause: boolean = false) => {
-    if (isGameActive.value && !isCompleted.value) {
-      isGameActive.value = false
+    if (isGameActive.value) {
       isPaused.value = true
-      isAutoPaused.value = autoPause
+      pauseType.value = autoPause ? 'auto' : 'manual'
       gameManager.pauseTimer()
       // 暂停时停止实时计时器，避免继续计时
       stopRealTimeTimer()
@@ -344,9 +387,8 @@ export const useGameStore = defineStore('game', () => {
 
   const resumeGame = () => {
     if (isPaused.value && !isCompleted.value) {
-      isGameActive.value = true
       isPaused.value = false
-      isAutoPaused.value = false
+      pauseType.value = null
       gameManager.resumeTimer()
       // 恢复游戏时重新启动实时计时器
       startRealTimeTimer()
@@ -391,9 +433,8 @@ export const useGameStore = defineStore('game', () => {
     if (!isCompleted.value && currentPuzzle.value) {
       endTime.value = gameManager.stopTimer()
       isCompleted.value = true
-      isGameActive.value = false
       isPaused.value = false
-      isAutoPaused.value = false
+      pauseType.value = null
       
       // 停止实时计时器
       stopRealTimeTimer()
@@ -529,7 +570,7 @@ export const useGameStore = defineStore('game', () => {
     isCompleted,
     isGameActive,
     isPaused,
-    isAutoPaused,
+    pauseType,
     gameSessionId,
     userStats,
     
