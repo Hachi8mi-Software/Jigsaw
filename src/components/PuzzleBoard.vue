@@ -249,15 +249,103 @@ const getPlacedPieceStyle = (piece: Piece) => {
   }
 }
 
+// 智能散落算法：确保拼图块100%落在区域内
+const scatterPiecesIntelligently = (piecesToScatter: Piece[], areaWidth: number, areaHeight: number, pieceWidth: number, pieceHeight: number) => {
+  const margin = 10 // 边距
+  const effectiveWidth = areaWidth - 2 * margin
+  const effectiveHeight = areaHeight - 2 * margin
+  
+  // 计算可以放置的网格数量
+  const maxCols = Math.max(1, Math.floor(effectiveWidth / (pieceWidth + 5)))
+  const maxRows = Math.max(1, Math.floor(effectiveHeight / (pieceHeight + 5)))
+  const maxPositions = maxCols * maxRows
+  
+  // 如果拼图块数量超过网格容量，使用紧凑模式
+  if (piecesToScatter.length > maxPositions) {
+    return scatterCompactMode(piecesToScatter, areaWidth, areaHeight, pieceWidth, pieceHeight)
+  }
+  
+  // 生成所有可能的位置
+  const availablePositions: { x: number, y: number }[] = []
+  for (let row = 0; row < maxRows; row++) {
+    for (let col = 0; col < maxCols; col++) {
+      const x = margin + col * (pieceWidth + 5)
+      const y = margin + row * (pieceHeight + 5)
+      
+      // 确保位置完全在区域内
+      if (x + pieceWidth <= areaWidth - margin && y + pieceHeight <= areaHeight - margin) {
+        availablePositions.push({ x, y })
+      }
+    }
+  }
+  
+  // 随机打乱位置数组
+  for (let i = availablePositions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[availablePositions[i], availablePositions[j]] = [availablePositions[j], availablePositions[i]]
+  }
+  
+  // 分配位置给拼图块
+  piecesToScatter.forEach((piece, index) => {
+    if (index < availablePositions.length) {
+      const pos = availablePositions[index]
+      piece.currentX = pos.x
+      piece.currentY = pos.y
+    } else {
+      // 备用随机位置（理论上不应该到达这里）
+      piece.currentX = margin + Math.random() * (effectiveWidth - pieceWidth)
+      piece.currentY = margin + Math.random() * (effectiveHeight - pieceHeight)
+    }
+  })
+}
+
+// 紧凑散落模式：用于拼图块数量过多的情况
+const scatterCompactMode = (piecesToScatter: Piece[], areaWidth: number, areaHeight: number, pieceWidth: number, pieceHeight: number) => {
+  const margin = 5
+  const effectiveWidth = areaWidth - 2 * margin - pieceWidth
+  const effectiveHeight = areaHeight - 2 * margin - pieceHeight
+  
+  piecesToScatter.forEach(piece => {
+    let attempts = 0
+    let validPosition = false
+    
+    while (!validPosition && attempts < 50) {
+      const x = margin + Math.random() * effectiveWidth
+      const y = margin + Math.random() * effectiveHeight
+      
+      // 检查是否与其他拼图块重叠
+      const hasOverlap = piecesToScatter.some(otherPiece => {
+        if (otherPiece === piece || !otherPiece.currentX) return false
+        
+        const dx = Math.abs(x - otherPiece.currentX)
+        const dy = Math.abs(y - otherPiece.currentY)
+        
+        return dx < pieceWidth && dy < pieceHeight
+      })
+      
+      if (!hasOverlap) {
+        piece.currentX = x
+        piece.currentY = y
+        validPosition = true
+      }
+      
+      attempts++
+    }
+    
+    // 如果找不到无重叠位置，使用强制位置
+    if (!validPosition) {
+      piece.currentX = margin + (Math.random() * effectiveWidth)
+      piece.currentY = margin + (Math.random() * effectiveHeight)
+    }
+  })
+}
+
 const initializePieces = () => {
   if (!props.puzzleData) return
   
   const total = totalPieces.value
-  // 与CSS中scattered-pieces的尺寸保持一致
   const piecesAreaWidth = 320
   const piecesAreaHeight = 420
-  
-  // 确保pieceSize已正确计算
   const size = pieceSize.value
   
   // 检查初始化参数
@@ -266,34 +354,22 @@ const initializePieces = () => {
     return
   }
   
-  // 添加内边距，确保拼图块不会贴边
-  const padding = 20 // 增加内边距
-  let availableWidth = Math.max(0, piecesAreaWidth - size.width - padding * 2)
-  let availableHeight = Math.max(0, piecesAreaHeight - size.height - padding * 2)
+  // 创建拼图块数组
+  pieces.value = Array.from({ length: total }, (_, i) => ({
+    originalIndex: i,
+    currentX: 0,
+    currentY: 0,
+    isPlaced: false
+  }))
   
-  // 强化容错机制：如果计算出的可用空间太小或为负数，使用安全的默认值
-  if (availableWidth <= 0 || availableHeight <= 0 || size.width <= 0 || size.height <= 0) {
-    console.warn('pieceSize计算异常，使用安全的默认散落区域')
-    // 使用安全的默认值，确保拼图块能在区域内散落
-    availableWidth = piecesAreaWidth - 80 // 预留40px边距
-    availableHeight = piecesAreaHeight - 80
-    const safePadding = 40
-    
-    pieces.value = Array.from({ length: total }, (_, i) => ({
-      originalIndex: i,
-      currentX: safePadding + Math.random() * availableWidth,
-      currentY: safePadding + Math.random() * availableHeight,
-      isPlaced: false
-    }))
-  } else {
-     // 正常情况下的初始化
-     pieces.value = Array.from({ length: total }, (_, i) => ({
-       originalIndex: i,
-       currentX: padding + Math.random() * availableWidth,
-       currentY: padding + Math.random() * availableHeight,
-       isPlaced: false
-     }))
-   }
+  // 使用智能散落算法
+  scatterPiecesIntelligently(pieces.value, piecesAreaWidth, piecesAreaHeight, size.width, size.height)
+  
+  // 最终验证：确保所有拼图块都在区域内
+  pieces.value.forEach(piece => {
+    piece.currentX = Math.max(5, Math.min(piece.currentX, piecesAreaWidth - size.width - 5))
+    piece.currentY = Math.max(5, Math.min(piece.currentY, piecesAreaHeight - size.height - 5))
+  })
   
   // 同步状态到GameStore
   syncPiecesToStore()
@@ -302,22 +378,22 @@ const initializePieces = () => {
 const shufflePieces = () => {
   if (!props.puzzleData) return
   
-  // 与CSS中scattered-pieces的尺寸保持一致
   const piecesAreaWidth = 320
   const piecesAreaHeight = 420
   const size = pieceSize.value
   
-  // 添加内边距，确保拼图块不会贴边
-  const padding = 10
-  const availableWidth = Math.max(0, piecesAreaWidth - size.width - padding * 2)
-  const availableHeight = Math.max(0, piecesAreaHeight - size.height - padding * 2)
+  // 获取所有未放置的拼图块
+  const unplacedPieces = pieces.value.filter(piece => !piece.isPlaced)
   
-  // 重新随机散布所有未放置的拼图块
-  pieces.value.forEach(piece => {
-    if (!piece.isPlaced) {
-      piece.currentX = padding + Math.random() * availableWidth
-      piece.currentY = padding + Math.random() * availableHeight
-    }
+  if (unplacedPieces.length === 0) return
+  
+  // 使用智能散落算法重新散布未放置的拼图块
+  scatterPiecesIntelligently(unplacedPieces, piecesAreaWidth, piecesAreaHeight, size.width, size.height)
+  
+  // 最终验证：确保所有拼图块都在区域内
+  unplacedPieces.forEach(piece => {
+    piece.currentX = Math.max(5, Math.min(piece.currentX, piecesAreaWidth - size.width - 5))
+    piece.currentY = Math.max(5, Math.min(piece.currentY, piecesAreaHeight - size.height - 5))
   })
   
   // 打乱操作不增加步数，只同步状态到GameStore
@@ -445,10 +521,22 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
     } else if (piece.isPlaced) {
       // 已放置拼图块回到原位置
       resetPlacedPiecePosition(draggingPieceIndex.value)
+    } else {
+      // 未放置拼图块无法放置到网格，约束回拼图块区域
+      constrainToPiecesArea(draggingPieceIndex.value)
     }
   } else if (piece.isPlaced) {
     // 已放置拼图块拖拽到网格外，回到原位置
     resetPlacedPiecePosition(draggingPieceIndex.value)
+  } else {
+    // 未放置拼图块拖拽到网格外，检查是否在拼图块区域内
+    if (!isInPiecesArea(clientX, clientY)) {
+      // 不在拼图块区域内，约束回拼图块区域
+      constrainToPiecesArea(draggingPieceIndex.value)
+    } else {
+      // 在拼图块区域内，但需要确保不超出边界
+      constrainToPiecesArea(draggingPieceIndex.value)
+    }
   }
   
   draggingPieceIndex.value = -1
@@ -457,6 +545,60 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   document.removeEventListener('mouseup', stopDrag)
   document.removeEventListener('touchmove', handleDrag)
   document.removeEventListener('touchend', stopDrag)
+}
+
+// 将拼图块约束回拼图块区域
+const constrainToPiecesArea = (pieceIndex: number) => {
+  const piece = pieces.value[pieceIndex]
+  if (!piece || piece.isPlaced) return
+  
+  const piecesAreaWidth = 320
+  const piecesAreaHeight = 420
+  const size = pieceSize.value
+  
+  // 使用严格的边界约束，确保拼图块完全在区域内
+  const minX = 5
+  const minY = 5
+  const maxX = piecesAreaWidth - size.width - 5
+  const maxY = piecesAreaHeight - size.height - 5
+  
+  // 如果当前位置超出边界，重新使用智能散落算法找到合适位置
+  if (piece.currentX < minX || piece.currentX > maxX || 
+      piece.currentY < minY || piece.currentY > maxY) {
+    
+    // 尝试找到一个不与其他拼图块重叠的位置
+    let attempts = 0
+    let validPosition = false
+    
+    while (!validPosition && attempts < 20) {
+      const x = minX + Math.random() * (maxX - minX)
+      const y = minY + Math.random() * (maxY - minY)
+      
+      // 检查是否与其他未放置的拼图块重叠
+      const hasOverlap = pieces.value.some(otherPiece => {
+        if (otherPiece === piece || otherPiece.isPlaced) return false
+        
+        const dx = Math.abs(x - otherPiece.currentX)
+        const dy = Math.abs(y - otherPiece.currentY)
+        
+        return dx < size.width && dy < size.height
+      })
+      
+      if (!hasOverlap) {
+        piece.currentX = x
+        piece.currentY = y
+        validPosition = true
+      }
+      
+      attempts++
+    }
+    
+    // 如果找不到无重叠位置，使用强制约束
+    if (!validPosition) {
+      piece.currentX = Math.max(minX, Math.min(piece.currentX, maxX))
+      piece.currentY = Math.max(minY, Math.min(piece.currentY, maxY))
+    }
+  }
 }
 
 // 吸附到网格
@@ -529,16 +671,11 @@ const syncPiecesFromStore = () => {
   if (!props.puzzleData || !gameStore.pieces.length) return
   
   const total = totalPieces.value
-  // 与CSS中scattered-pieces的尺寸保持一致
   const piecesAreaWidth = 320
   const piecesAreaHeight = 420
   const size = pieceSize.value
   
-  // 添加内边距，确保拼图块不会贴边
-  const padding = 10
-  const availableWidth = Math.max(0, piecesAreaWidth - size.width - padding * 2)
-  const availableHeight = Math.max(0, piecesAreaHeight - size.height - padding * 2)
-  
+  // 创建拼图块数组
   pieces.value = Array.from({ length: total }, (_, i) => {
     const storePiece = gameStore.pieces.find(p => p.id === `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`)
     
@@ -553,19 +690,40 @@ const syncPiecesFromStore = () => {
         currentX: 8 + col * (size.width + 2),
         currentY: 8 + row * (size.height + 2),
         isPlaced: true,
-        isCorrect: true, // 假设从store恢复的都是正确放置的
+        isCorrect: true,
         gridPosition: gridIndex
       }
     } else {
-      // 未放置的拼图块，使用store中的位置或随机位置
+      // 未放置的拼图块，先创建基础对象
       return {
         originalIndex: i,
-        currentX: storePiece?.x || (padding + Math.random() * availableWidth),
-        currentY: storePiece?.y || (padding + Math.random() * availableHeight),
+        currentX: storePiece?.x || 0,
+        currentY: storePiece?.y || 0,
         isPlaced: false
       }
     }
   })
+  
+  // 获取所有未放置的拼图块
+  const unplacedPieces = pieces.value.filter(piece => !piece.isPlaced)
+  
+  // 检查是否有未放置的拼图块需要重新散落
+  const needsRescatter = unplacedPieces.some(piece => 
+    piece.currentX === 0 || piece.currentY === 0 ||
+    piece.currentX < 0 || piece.currentY < 0 ||
+    piece.currentX > piecesAreaWidth || piece.currentY > piecesAreaHeight
+  )
+  
+  if (needsRescatter && unplacedPieces.length > 0) {
+    // 使用智能散落算法重新散布
+    scatterPiecesIntelligently(unplacedPieces, piecesAreaWidth, piecesAreaHeight, size.width, size.height)
+    
+    // 最终验证
+    unplacedPieces.forEach(piece => {
+      piece.currentX = Math.max(5, Math.min(piece.currentX, piecesAreaWidth - size.width - 5))
+      piece.currentY = Math.max(5, Math.min(piece.currentY, piecesAreaHeight - size.height - 5))
+    })
+  }
 }
 
 // 监听游戏状态变化
