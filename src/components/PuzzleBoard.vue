@@ -530,6 +530,9 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   } else if (piece.isPlaced) {
     // 已放置拼图块拖拽到网格外，回到原位置
     resetPlacedPiecePosition(draggingPieceIndex.value)
+  } else {
+    // 未放置拼图块拖拽到网格外，约束回拼图块区域
+    constrainToPiecesArea(draggingPieceIndex.value)
   }
   
   draggingPieceIndex.value = -1
@@ -591,6 +594,9 @@ const constrainToPiecesArea = (pieceIndex: number) => {
       piece.currentX = Math.max(minX, Math.min(piece.currentX, maxX))
       piece.currentY = Math.max(minY, Math.min(piece.currentY, maxY))
     }
+    
+    // 同步位置变化到GameStore
+    syncPiecesToStore()
   }
 }
 
@@ -617,11 +623,19 @@ const snapToGrid = (pieceIndex: number, gridIndex: number) => {
   piece.currentX = 8 + col * (pieceSize.value.width + 2)
   piece.currentY = 8 + row * (pieceSize.value.height + 2)
   
+  // 强制Vue更新DOM以立即显示吸附效果
+  nextTick(() => {
+    // 确保DOM已更新
+  })
+  
   // 通知GameStore更新步数
   gameStore.incrementMoveCount()
   
   // 同步状态到GameStore
   syncPiecesToStore()
+  
+  // 检查游戏是否完成（基于本地状态）
+  checkLocalCompletion()
   
   // 显示反馈
   if (isCorrect) {
@@ -629,6 +643,39 @@ const snapToGrid = (pieceIndex: number, gridIndex: number) => {
   } else {
     console.log('位置不正确')
   }
+}
+
+// 检查游戏是否完成（基于本地拼图块状态）
+const checkLocalCompletion = () => {
+  if (!props.puzzleData) return
+  
+  const total = totalPieces.value
+  
+  // 检查是否所有拼图块都已放置
+  const placedPieces = pieces.value.filter(piece => piece.isPlaced)
+  if (placedPieces.length !== total) {
+    return false
+  }
+  
+  // 检查是否所有拼图块都在正确位置
+  const allCorrect = pieces.value.every(piece => {
+    return piece.isPlaced && piece.isCorrect
+  })
+  
+  console.log('本地游戏完成检查:', {
+    已放置数量: placedPieces.length,
+    总数量: total,
+    全部正确: allCorrect
+  })
+  
+  if (allCorrect) {
+    console.log('🎉 游戏完成！所有拼图块都在正确位置')
+    // 直接设置GameStore的完成状态，不依赖其checkCompletion方法
+    gameStore.isCompleted = true
+    gameStore.completeGameState(new Date())
+  }
+  
+  return allCorrect
 }
 
 // 重置已放置拼图块位置
@@ -643,10 +690,29 @@ const resetPlacedPiecePosition = (pieceIndex: number) => {
   
   piece.currentX = 8 + col * (pieceSize.value.width + 2)
   piece.currentY = 8 + row * (pieceSize.value.height + 2)
+  
+  // 同步位置变化到GameStore
+  syncPiecesToStore()
 }
 
 // 监听拼图数据变化
 onMounted(async () => {
+  console.log('PuzzleBoard onMounted, puzzleData:', props.puzzleData)
+  
+  // 如果页面不可见，延迟初始化直到页面可见
+  if (document.hidden) {
+    console.log('页面不可见，延迟初始化直到页面可见')
+    const handleWhenVisible = () => {
+      if (!document.hidden) {
+        document.removeEventListener('visibilitychange', handleWhenVisible)
+        console.log('页面重新可见，执行延迟的初始化')
+        // 这里不自动初始化，保持当前状态
+      }
+    }
+    document.addEventListener('visibilitychange', handleWhenVisible)
+    return
+  }
+  
   if (props.puzzleData) {
     // 等待DOM更新完成，确保pieceSize正确计算
     await nextTick()
@@ -654,12 +720,29 @@ onMounted(async () => {
     // 再次等待，确保所有计算属性都已更新
     await new Promise(resolve => setTimeout(resolve, 100))
     
-    // 如果游戏store中已有状态，同步到本地
-    if (gameStore.currentPuzzle?.id === props.puzzleData.id && gameStore.pieces.length > 0) {
-      syncPiecesFromStore()
-    } else {
-      initializePieces()
+    try {
+      // 优先尝试恢复精确位置状态
+      const restored = restoreExactPiecePositions()
+      if (restored) {
+        console.log('成功恢复精确拼图块位置')
+      } else if (gameStore.currentPuzzle?.id === props.puzzleData.id && gameStore.pieces.length > 0) {
+        console.log('从GameStore恢复游戏状态')
+        syncPiecesFromStore()
+      } else {
+        console.log('初始化新游戏')
+        initializePieces()
+      }
+    } catch (error) {
+      console.error('初始化拼图块时出错:', error)
+      // 出错时强制重新初始化
+      pieces.value = []
+      if (props.puzzleData) {
+        initializePieces()
+      }
     }
+  } else {
+    console.log('没有拼图数据，清空拼图块')
+    pieces.value = []
   }
 })
 
@@ -667,28 +750,61 @@ onMounted(async () => {
 const syncPiecesFromStore = () => {
   if (!props.puzzleData || !gameStore.pieces.length) return
   
+  // 如果页面不可见，完全跳过同步以保持拼图块位置不变
+  if (document.hidden) {
+    console.log('页面不可见，跳过syncPiecesFromStore以保持拼图块位置不变')
+    return
+  }
+  
   const total = totalPieces.value
   const piecesAreaWidth = 320
   const piecesAreaHeight = 420
   const size = pieceSize.value
   
+  // 保存旧状态用于对比
+  const oldPieces = pieces.value.slice()
+  
   // 创建拼图块数组
   pieces.value = Array.from({ length: total }, (_, i) => {
     const storePiece = gameStore.pieces.find(p => p.id === `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`)
+    const oldPiece = oldPieces[i]
     
     if (storePiece && storePiece.isPlaced) {
-      // 已放置的拼图块
-      const gridIndex = i
-      const row = Math.floor(gridIndex / gridCols.value)
-      const col = gridIndex % gridCols.value
+      // 已放置的拼图块 - 使用store中保存的实际位置
+      const actualX = storePiece.x
+      const actualY = storePiece.y
+      
+      // 根据实际坐标计算网格位置
+      const gridCol = Math.floor((actualX - 8) / (size.width + 2))
+      const gridRow = Math.floor((actualY - 8) / (size.height + 2))
+      const actualGridIndex = gridRow * gridCols.value + gridCol
+      
+      // 检查是否放置在正确位置
+      const isCorrect = i === actualGridIndex
+      
+      // 记录已放置拼图块的同步
+      if (oldPiece) {
+        const positionChanged = Math.abs(oldPiece.currentX - actualX) > 0.1 || Math.abs(oldPiece.currentY - actualY) > 0.1
+        const statusChanged = oldPiece.isPlaced !== true
+        if (positionChanged || statusChanged) {
+          console.log(`📍 [syncPiecesFromStore] 拼图块 ${i} 已放置状态同步:`, {
+            原因: '从GameStore恢复已放置状态',
+            状态变化: statusChanged ? `${oldPiece.isPlaced ? '已放置' : '未放置'} → 已放置` : '无变化',
+            坐标变化: positionChanged ? `(${oldPiece.currentX.toFixed(1)}, ${oldPiece.currentY.toFixed(1)}) → (${actualX}, ${actualY})` : '无变化',
+            实际网格位置: `第${gridRow}行第${gridCol}列 (索引${actualGridIndex})`,
+            是否正确: isCorrect ? '✅ 正确位置' : '❌ 错误位置',
+            原始正确位置: `索引${i}`
+          })
+        }
+      }
       
       return {
         originalIndex: i,
-        currentX: 8 + col * (size.width + 2),
-        currentY: 8 + row * (size.height + 2),
+        currentX: actualX,
+        currentY: actualY,
         isPlaced: true,
-        isCorrect: true,
-        gridPosition: gridIndex
+        isCorrect: isCorrect,
+        gridPosition: actualGridIndex
       }
     } else {
       // 未放置的拼图块，先创建基础对象
@@ -730,74 +846,194 @@ watch(() => gameStore.isGameActive, (newValue) => {
   }
 })
 
+// 添加标志位防止循环同步
+const isSyncingToStore = ref(false)
+
 // 监听gameStore中pieces的变化，确保重置时能正确同步
 watch(() => gameStore.pieces, (newPieces) => {
+  // 如果正在同步到store，跳过这次watch触发
+  if (isSyncingToStore.value) {
+    return
+  }
+  
+  // 如果页面不可见，跳过同步以避免状态混乱
+  if (document.hidden) {
+    console.log('页面不可见，跳过GameStore pieces同步')
+    return
+  }
+  
   if (props.puzzleData && gameStore.currentPuzzle?.id === props.puzzleData.id) {
-    // 当gameStore的pieces发生变化时，重新同步到本地
-    if (newPieces.length === 0) {
-      // 如果pieces被清空，重新初始化
-      initializePieces()
-    } else {
-      // 否则同步状态
-      syncPiecesFromStore()
+    try {
+      // 当gameStore的pieces发生变化时，重新同步到本地
+      if (newPieces.length === 0) {
+        // 如果pieces被清空，重新初始化
+        console.log('GameStore pieces被清空，重新初始化')
+        initializePieces()
+      } else {
+        // 否则同步状态
+        console.log('GameStore pieces变化，同步状态')
+        syncPiecesFromStore()
+      }
+    } catch (error) {
+      console.error('同步GameStore pieces时出错:', error)
+      // 出错时重新初始化
+      if (props.puzzleData) {
+        initializePieces()
+      }
     }
   }
 }, { deep: true })
 
 // 监听拼图数据变化
-watch(() => props.puzzleData, async (newPuzzleData) => {
-  if (newPuzzleData) {
-    // 等待DOM更新完成，确保pieceSize正确计算
-    await nextTick()
-    
-    // 再次等待，确保所有计算属性都已更新
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    // 如果游戏store中已有状态，同步到本地
-    if (gameStore.currentPuzzle?.id === newPuzzleData.id && gameStore.pieces.length > 0) {
-      syncPiecesFromStore()
-    } else {
-      initializePieces()
+watch(() => props.puzzleData, async (newPuzzleData, oldPuzzleData) => {
+  console.log('puzzleData变化:', { old: oldPuzzleData?.id, new: newPuzzleData?.id })
+  
+  // 如果页面不可见，延迟处理直到页面可见
+  if (document.hidden) {
+    console.log('页面不可见，延迟处理puzzleData变化')
+    const handleWhenVisible = () => {
+      if (!document.hidden) {
+        document.removeEventListener('visibilitychange', handleWhenVisible)
+        // 重新触发watch处理
+        if (newPuzzleData) {
+          console.log('页面重新可见，处理延迟的puzzleData变化')
+          // 这里不直接调用同步，而是让用户手动操作
+        }
+      }
     }
+    document.addEventListener('visibilitychange', handleWhenVisible)
+    return
+  }
+  
+  if (newPuzzleData) {
+    try {
+      // 等待DOM更新完成，确保pieceSize正确计算
+      await nextTick()
+      
+      // 再次等待，确保所有计算属性都已更新
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // 优先尝试恢复精确位置状态
+      const restored = restoreExactPiecePositions()
+      if (restored) {
+        console.log('成功恢复精确拼图块位置')
+      } else if (gameStore.currentPuzzle?.id === newPuzzleData.id && gameStore.pieces.length > 0) {
+        console.log('从GameStore恢复拼图状态')
+        syncPiecesFromStore()
+      } else {
+        console.log('初始化新拼图')
+        initializePieces()
+      }
+    } catch (error) {
+      console.error('处理拼图数据变化时出错:', error)
+      // 出错时清空并重新初始化
+      pieces.value = []
+      if (newPuzzleData) {
+        initializePieces()
+      }
+    }
+  } else {
+    console.log('拼图数据被清空')
+    pieces.value = []
   }
 })
 
-// 同步拼图块状态到GameStore
+// 保存当前拼图块的精确状态到localStorage
+const saveExactPiecePositions = () => {
+  if (!props.puzzleData) return
+  
+  const exactState = {
+    puzzleId: props.puzzleData.id,
+    pieces: pieces.value.map(piece => ({
+      originalIndex: piece.originalIndex,
+      currentX: piece.currentX,
+      currentY: piece.currentY,
+      isPlaced: piece.isPlaced,
+      isCorrect: piece.isCorrect,
+      gridPosition: piece.gridPosition
+    })),
+    timestamp: Date.now()
+  }
+  
+  localStorage.setItem(`puzzle_exact_state_${props.puzzleData.id}`, JSON.stringify(exactState))
+  console.log('保存精确拼图块位置状态')
+}
+
+// 从localStorage恢复精确的拼图块位置
+const restoreExactPiecePositions = () => {
+  if (!props.puzzleData) return false
+  
+  const savedState = localStorage.getItem(`puzzle_exact_state_${props.puzzleData.id}`)
+  if (!savedState) return false
+  
+  try {
+    const exactState = JSON.parse(savedState)
+    if (exactState.puzzleId !== props.puzzleData.id) return false
+    
+    // 直接恢复精确位置，不重新计算
+     pieces.value = exactState.pieces.map((savedPiece: Piece) => ({ ...savedPiece }))
+    
+    console.log('恢复精确拼图块位置状态:', {
+      拼图块数量: pieces.value.length,
+      已放置数量: pieces.value.filter(p => p.isPlaced).length
+    })
+    
+    return true
+  } catch (error) {
+    console.error('恢复精确位置状态失败:', error)
+    return false
+  }
+}
+
+// 同步拼图块状态到GameStore（仅同步基本信息，不改变位置）
 const syncPiecesToStore = () => {
   if (!props.puzzleData) return
   
-  const total = totalPieces.value
+  // 设置同步标志位，防止触发watch循环
+  isSyncingToStore.value = true
   
-  // 创建PiecePosition数组
-  const storePieces = Array.from({ length: total }, (_, i) => {
-    const piece = pieces.value.find(p => p.originalIndex === i)
+  try {
+    const total = totalPieces.value
     
-    if (piece && piece.isPlaced) {
-      return {
-        id: `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`,
-        x: piece.currentX,
-        y: piece.currentY,
-        rotation: 0,
-        isPlaced: true
+    // 创建PiecePosition数组（保持原有位置）
+    const storePieces = Array.from({ length: total }, (_, i) => {
+      const piece = pieces.value.find(p => p.originalIndex === i)
+      
+      if (piece && piece.isPlaced) {
+        return {
+          id: `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`,
+          x: piece.currentX,
+          y: piece.currentY,
+          rotation: 0,
+          isPlaced: true
+        }
+      } else {
+        return {
+          id: `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`,
+          x: piece?.currentX || 0,
+          y: piece?.currentY || 0,
+          rotation: 0,
+          isPlaced: false
+        }
       }
-    } else {
-      return {
-        id: `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`,
-        x: piece?.currentX || 0,
-        y: piece?.currentY || 0,
-        rotation: 0,
-        isPlaced: false
-      }
-    }
-  })
-  
-  // 通过updatePiecePlacement方法更新GameStore状态
-  console.log("syncPiecesToStore - 开始同步拼图块状态")
-  storePieces.forEach((piece) => {
-    console.log("同步拼图块:", piece.id, "isPlaced:", piece.isPlaced)
-    gameStore.updatePiecePlacement(piece.id, piece.isPlaced)
-  })
-  console.log("syncPiecesToStore - 同步完成")
+    })
+    
+    // 保存精确位置状态
+    saveExactPiecePositions()
+    
+    // 通过updatePiecePlacement方法更新GameStore状态
+    console.log("syncPiecesToStore - 开始同步拼图块状态")
+    storePieces.forEach((piece) => {
+      console.log("同步拼图块:", piece.id, "isPlaced:", piece.isPlaced)
+      gameStore.updatePiecePlacement(piece.id, piece.isPlaced)
+    })
+    console.log("syncPiecesToStore - 同步完成")
+  } finally {
+    // 确保标志位被重置
+    nextTick(() => {
+      isSyncingToStore.value = false
+    })
+  }
 }
 </script>
 

@@ -272,6 +272,11 @@ export class GameController {
         }
       } else {
         console.log('页面重新可见')
+        // 页面重新可见时，不自动恢复游戏，让用户手动恢复
+        // 这样可以避免状态同步导致的拼图块位置混乱
+        if (this.gameStore.isAutoPaused) {
+          console.log('页面重新可见，游戏保持暂停状态，等待用户手动恢复')
+        }
       }
     }
     

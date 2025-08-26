@@ -144,7 +144,8 @@ export const useGameStore = defineStore('game', () => {
     const piece = pieces.value.find(p => p.id === pieceId)
     if (piece) {
       piece.isPlaced = isPlaced
-      checkCompletion(totalPieces.value)
+      // 不再自动调用checkCompletion，由PuzzleBoard组件控制完成检查
+      // checkCompletion(totalPieces.value)
     } else {
       console.log("updatePiecePlacement 找不到拼图块:", pieceId)
     }
@@ -259,7 +260,44 @@ export const useGameStore = defineStore('game', () => {
 
   const checkCompletion = (totalPieces: number): boolean => {
     const placedPieces = pieces.value.filter(piece => piece.isPlaced)
-    isCompleted.value = placedPieces.length === totalPieces
+    
+    // 首先检查是否所有拼图块都已放置
+    if (placedPieces.length !== totalPieces) {
+      isCompleted.value = false
+      return false
+    }
+    
+    // 然后检查每个拼图块是否放在正确位置
+    const allCorrect = pieces.value.every(piece => {
+      if (!piece.isPlaced) return false
+      
+      // 从piece.id解析出正确的行列位置
+      const [, row, col] = piece.id.split('_').map(Number)
+      if (isNaN(row) || isNaN(col)) return false
+      
+      // 计算正确的网格索引
+      const correctGridIndex = row * (currentPuzzle.value?.gridConfig.cols || 0) + col
+      
+      // 从piece.x, piece.y计算当前网格位置
+      const gridCols = currentPuzzle.value?.gridConfig.cols || 0
+      const pieceWidth = currentPuzzle.value?.gridConfig.pieceWidth || 100
+      const pieceHeight = currentPuzzle.value?.gridConfig.pieceHeight || 75
+      
+      const currentCol = Math.floor((piece.x - 8) / (pieceWidth + 2))
+      const currentRow = Math.floor((piece.y - 8) / (pieceHeight + 2))
+      const currentGridIndex = currentRow * gridCols + currentCol
+      
+      return correctGridIndex === currentGridIndex
+    })
+    
+    isCompleted.value = allCorrect
+    console.log('游戏完成检查:', {
+      已放置数量: placedPieces.length,
+      总数量: totalPieces,
+      全部正确: allCorrect,
+      游戏完成: isCompleted.value
+    })
+    
     return isCompleted.value
   }
 
