@@ -1,6 +1,5 @@
 <!--
-  重构后的拼图游戏板组件
-  参考SimplePuzzleGame的简洁实现
+  拼图游戏板组件
 -->
 
 <template>
@@ -320,25 +319,10 @@ const autoSolve = () => {
   
   // 同步状态到GameStore
   syncPiecesToStore()
-  
-  // 检查游戏是否完成
-  checkGameCompletion()
 }
 
 const isSlotOccupied = (slotIndex: number): boolean => {
   return pieces.value.some(piece => piece.isPlaced && piece.gridPosition === slotIndex)
-}
-
-// 检查游戏完成状态
-const checkGameCompletion = () => {
-  const allPlaced = pieces.value.every(p => p.isPlaced)
-  const allCorrect = pieces.value.every(p => p.isCorrect)
-  
-  if (allPlaced && allCorrect) {
-    console.log('拼图完成！')
-    // 通知GameStore游戏完成
-    gameStore.completeGame()
-  }
 }
 
 // 简化的拖拽逻辑
@@ -472,9 +456,6 @@ const snapToGrid = (pieceIndex: number, gridIndex: number) => {
   } else {
     console.log('位置不正确')
   }
-  
-  // 检查是否完成
-  checkGameCompletion()
 }
 
 // 重置已放置拼图块位置
