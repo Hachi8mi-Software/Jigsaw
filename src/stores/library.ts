@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { LibraryItem, PuzzleData, Achievement } from '../types'
+import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue } from '../types'
 
 /**
  * 获取图片资源的完整路径
@@ -22,6 +22,7 @@ function getImagePath(imageName: string): string {
  */
 class LibraryManager {
   private readonly STORAGE_KEY = 'puzzle_library'
+  private readonly USER_STATS_KEY = 'user_stats'
   private readonly ACHIEVEMENTS_KEY = 'puzzle_achievements'
 
   /**
@@ -105,6 +106,19 @@ class LibraryManager {
   }
 
   /**
+   * 获取用户统计数据
+   */
+  getUserStats(): UserStats {
+    return {
+      totalGamesPlayed: 0,
+      totalTimeSpent: 0,
+      bestTimes: {},
+      achievements: [],
+      totalSuccessMovements: 0,
+    }
+  }
+
+  /**
    * 保存用户库到本地存储
    */
   saveToStorage(items: LibraryItem[]): void {
@@ -150,6 +164,30 @@ class LibraryManager {
     } catch (error) {
       console.error('加载成就失败:', error)
       return this.getAchievements()
+    }
+  }
+
+  /**
+   * 保存用户统计数据到本地存储
+   */
+  saveUserStats(userStats: UserStats) {
+    try {
+      localStorage.setItem(this.USER_STATS_KEY, JSON.stringify(userStats))
+    } catch (error) {
+      console.error('保存用户统计失败:', error)
+    }
+  }
+
+  /**
+   * 从本地获取用户统计数据
+   */
+  loadUserStats(): UserStats {
+    try {
+      const stored = localStorage.getItem(this.USER_STATS_KEY)
+      return stored ? JSON.parse(stored) : this.getUserStats()
+    } catch (error) {
+      console.error('加载用户统计失败:', error)
+      return this.getUserStats()
     }
   }
 
@@ -200,6 +238,8 @@ export const useLibraryStore = defineStore('library', () => {
 
   // 素材库管理器实例
   const libraryManager = new LibraryManager()
+
+  const userStats = ref<UserStats>(libraryManager.loadUserStats())
 
   // 计算属性
   const filteredItems = computed(() => {
@@ -274,7 +314,10 @@ export const useLibraryStore = defineStore('library', () => {
     
     // 加载成就
     achievements.value = libraryManager.loadAchievements()
-    
+
+    // 加载统计数据
+    userStats.value = libraryManager.loadUserStats()
+
     isLoading.value = false
   }
 
@@ -345,12 +388,12 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
-  const checkAchievements = (userStats: any) => {
+  const checkAchievements = (userStats: UserStats) => {
     let newAchievements = false
     
     achievements.value.forEach(achievement => {
       if (!achievement.unlockedAt && achievement.condition(userStats)) {
-        achievement.unlockedAt = new Date()
+        achievement.unlockedAt = Date.now() as DateValue
         newAchievements = true
       }
     })
@@ -395,6 +438,14 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
+  const updateUserStats = (modifier: (userStats: UserStats) => UserStats | undefined) => {
+    const newStats = modifier(userStats.value)
+    if (newStats) {
+      userStats.value = newStats
+      libraryManager.saveUserStats(userStats.value)
+    }
+  }
+
   const clearUserLibrary = () => {
     items.value = items.value.filter(item => item.isBuiltIn)
     libraryManager.saveToStorage(items.value)
@@ -410,6 +461,7 @@ export const useLibraryStore = defineStore('library', () => {
     sortOrder,
     achievements,
     isLoading,
+    userStats,
     
     // 计算属性
     filteredItems,
@@ -429,6 +481,7 @@ export const useLibraryStore = defineStore('library', () => {
     checkAchievements,
     exportLibrary,
     importLibrary,
+    updateUserStats,
     clearUserLibrary
   }
 })

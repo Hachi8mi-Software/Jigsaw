@@ -6,6 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, onUnmounted } from 'vue'
 import type { GameState, PuzzleData, PiecePosition, UserStats } from '../types'
+import { useLibraryStore } from './library'
 
 /**
  * 游戏管理器类
@@ -85,6 +86,8 @@ class GameManager {
   }
 }
 
+const libraryStore = useLibraryStore()
+
 export const useGameStore = defineStore('game', () => {
   // 状态
   const currentPuzzle = ref<PuzzleData | null>(null)
@@ -94,12 +97,6 @@ export const useGameStore = defineStore('game', () => {
   const moveCount = ref(0)
   const isCompleted = ref(false)
   const isGameActive = ref(false)
-  const userStats = ref<UserStats>({
-    totalGamesPlayed: 0,
-    totalTimeSpent: 0,
-    bestTimes: {},
-    achievements: []
-  })
 
   // 实时计时器状态
   const currentTime = ref<Date>(new Date())
@@ -223,18 +220,21 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const updateUserStats = () => {
-    if (!currentPuzzle.value || !startTime.value || !endTime.value) return
-    
-    const gameTime = gameManager.calculateElapsedTime(startTime.value, endTime.value)
-    const puzzleId = currentPuzzle.value.id
-    
-    userStats.value.totalGamesPlayed++
-    userStats.value.totalTimeSpent += gameTime
-    
-    // 更新最佳时间
-    if (!userStats.value.bestTimes[puzzleId] || gameTime < userStats.value.bestTimes[puzzleId]) {
-      userStats.value.bestTimes[puzzleId] = gameTime
-    }
+    libraryStore.updateUserStats((userStats: UserStats) => {
+      if (!currentPuzzle.value || !startTime.value || !endTime.value) return
+
+      const gameTime = gameManager.calculateElapsedTime(startTime.value, endTime.value)
+      const puzzleId = currentPuzzle.value.id
+
+      userStats.totalGamesPlayed++
+      userStats.totalTimeSpent += gameTime
+
+      // 更新最佳时间
+      if (!userStats.bestTimes[puzzleId] || gameTime < userStats.bestTimes[puzzleId]) {
+        userStats.bestTimes[puzzleId] = gameTime
+      }
+      return userStats
+    })
   }
 
   const resetGame = () => {
@@ -331,7 +331,6 @@ export const useGameStore = defineStore('game', () => {
     moveCount,
     isCompleted,
     isGameActive,
-    userStats,
     
     // 计算属性
     elapsedTime,

@@ -56,13 +56,16 @@
 import { computed, onMounted } from 'vue'
 import { useLibraryStore } from '../stores/library'
 import { useGameStore } from '../stores/game'
+import type { DateValue } from '../types'
 
 // Store
 const libraryStore = useLibraryStore()
-const gameStore = useGameStore()
 
 // 计算属性
-const achievements = computed(() => libraryStore.achievements)
+const achievements = computed(() => {
+  console.debug(libraryStore.achievements)
+  return libraryStore.achievements
+})
 const unlockedAchievements = computed(() => libraryStore.unlockedAchievements)
 
 const unlockedCount = computed(() => unlockedAchievements.value.length)
@@ -72,7 +75,7 @@ const completionRate = computed(() => {
 })
 
 // 方法
-const formatDate = (date: Date): string => {
+const formatDate = (date: DateValue): string => {
   return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: 'long',
@@ -85,7 +88,10 @@ const formatDate = (date: Date): string => {
 // 生命周期
 onMounted(() => {
   // 检查是否有新的成就可以解锁
-  libraryStore.checkAchievements(gameStore.userStats)
+  console.debug(libraryStore.userStats)
+  console.debug(libraryStore.achievements)
+
+  libraryStore.checkAchievements(libraryStore.userStats)
 })
 </script>
 

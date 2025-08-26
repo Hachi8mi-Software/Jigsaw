@@ -77,6 +77,7 @@ export interface UserStats {
   totalTimeSpent: number
   bestTimes: Record<string, number>
   achievements: string[]
+  totalSuccessMovements: number
 }
 
 // 素材库项目接口
@@ -90,6 +91,8 @@ export interface LibraryItem {
   isBuiltIn: boolean
 }
 
+export type DateValue = number
+
 // 成就系统接口
 export interface Achievement {
   id: string
@@ -97,7 +100,7 @@ export interface Achievement {
   description: string
   icon: string
   condition: (stats: UserStats) => boolean
-  unlockedAt?: Date
+  unlockedAt?: DateValue
 }
 
 // 排行榜记录接口
@@ -106,5 +109,5 @@ export interface LeaderboardEntry {
   puzzleId: string
   completionTime: number
   moveCount: number
-  completedAt: Date
+  completedAt: DateValue
 }

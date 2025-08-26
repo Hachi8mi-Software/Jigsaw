@@ -286,11 +286,11 @@ const handleGameCompleted = () => {
   showCompletionModal.value = true
   
   // 检查新解锁的成就
-  const hasNewAchievements = libraryStore.checkAchievements(gameStore.userStats)
+  const hasNewAchievements = libraryStore.checkAchievements(libraryStore.userStats)
   if (hasNewAchievements) {
     newAchievements.value = libraryStore.unlockedAchievements.filter(
       achievement => achievement.unlockedAt && 
-      new Date().getTime() - achievement.unlockedAt.getTime() < 1000
+      Date.now() - achievement.unlockedAt < 1000
     )
   }
   
