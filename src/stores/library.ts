@@ -160,7 +160,13 @@ class LibraryManager {
   loadAchievements(): Achievement[] {
     try {
       const stored = localStorage.getItem(this.ACHIEVEMENTS_KEY)
-      return stored ? JSON.parse(stored) : this.getAchievements()
+      const prev: any[] = stored ? JSON.parse(stored) : []
+      let result = this.getAchievements()
+      result = result.map(achievement => {
+        const found = prev.find(item => item.id === achievement.id)
+        return found ? { ...achievement, ...found } : achievement
+      })
+      return result
     } catch (error) {
       console.error('加载成就失败:', error)
       return this.getAchievements()

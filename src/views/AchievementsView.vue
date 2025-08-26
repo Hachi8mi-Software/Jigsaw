@@ -63,7 +63,6 @@ const libraryStore = useLibraryStore()
 
 // 计算属性
 const achievements = computed(() => {
-  console.debug(libraryStore.achievements)
   return libraryStore.achievements
 })
 const unlockedAchievements = computed(() => libraryStore.unlockedAchievements)
@@ -88,8 +87,7 @@ const formatDate = (date: DateValue): string => {
 // 生命周期
 onMounted(() => {
   // 检查是否有新的成就可以解锁
-  console.debug(libraryStore.userStats)
-  console.debug(libraryStore.achievements)
+  console.debug("[Achievements]", libraryStore.achievements)
 
   libraryStore.checkAchievements(libraryStore.userStats)
 })
