@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch, nextTick } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { PuzzleData } from '../types'
 
@@ -253,19 +253,47 @@ const initializePieces = () => {
   if (!props.puzzleData) return
   
   const total = totalPieces.value
-  const piecesAreaWidth = 300
-  const piecesAreaHeight = 400
+  // 与CSS中scattered-pieces的尺寸保持一致
+  const piecesAreaWidth = 320
+  const piecesAreaHeight = 420
   
   // 确保pieceSize已正确计算
   const size = pieceSize.value
   
-  // 初始化所有拼图块
-  pieces.value = Array.from({ length: total }, (_, i) => ({
-    originalIndex: i,
-    currentX: Math.random() * Math.max(0, piecesAreaWidth - size.width),
-    currentY: Math.random() * Math.max(0, piecesAreaHeight - size.height),
-    isPlaced: false
-  }))
+  // 检查初始化参数
+  if (total === 0 || gridCols.value === 0 || gridRows.value === 0) {
+    console.warn('拼图参数异常，跳过初始化:', { total, gridCols: gridCols.value, gridRows: gridRows.value })
+    return
+  }
+  
+  // 添加内边距，确保拼图块不会贴边
+  const padding = 20 // 增加内边距
+  let availableWidth = Math.max(0, piecesAreaWidth - size.width - padding * 2)
+  let availableHeight = Math.max(0, piecesAreaHeight - size.height - padding * 2)
+  
+  // 强化容错机制：如果计算出的可用空间太小或为负数，使用安全的默认值
+  if (availableWidth <= 0 || availableHeight <= 0 || size.width <= 0 || size.height <= 0) {
+    console.warn('pieceSize计算异常，使用安全的默认散落区域')
+    // 使用安全的默认值，确保拼图块能在区域内散落
+    availableWidth = piecesAreaWidth - 80 // 预留40px边距
+    availableHeight = piecesAreaHeight - 80
+    const safePadding = 40
+    
+    pieces.value = Array.from({ length: total }, (_, i) => ({
+      originalIndex: i,
+      currentX: safePadding + Math.random() * availableWidth,
+      currentY: safePadding + Math.random() * availableHeight,
+      isPlaced: false
+    }))
+  } else {
+     // 正常情况下的初始化
+     pieces.value = Array.from({ length: total }, (_, i) => ({
+       originalIndex: i,
+       currentX: padding + Math.random() * availableWidth,
+       currentY: padding + Math.random() * availableHeight,
+       isPlaced: false
+     }))
+   }
   
   // 同步状态到GameStore
   syncPiecesToStore()
@@ -274,15 +302,21 @@ const initializePieces = () => {
 const shufflePieces = () => {
   if (!props.puzzleData) return
   
-  const piecesAreaWidth = 300
-  const piecesAreaHeight = 400
+  // 与CSS中scattered-pieces的尺寸保持一致
+  const piecesAreaWidth = 320
+  const piecesAreaHeight = 420
   const size = pieceSize.value
+  
+  // 添加内边距，确保拼图块不会贴边
+  const padding = 10
+  const availableWidth = Math.max(0, piecesAreaWidth - size.width - padding * 2)
+  const availableHeight = Math.max(0, piecesAreaHeight - size.height - padding * 2)
   
   // 重新随机散布所有未放置的拼图块
   pieces.value.forEach(piece => {
     if (!piece.isPlaced) {
-      piece.currentX = Math.random() * Math.max(0, piecesAreaWidth - size.width)
-      piece.currentY = Math.random() * Math.max(0, piecesAreaHeight - size.height)
+      piece.currentX = padding + Math.random() * availableWidth
+      piece.currentY = padding + Math.random() * availableHeight
     }
   })
   
@@ -473,8 +507,14 @@ const resetPlacedPiecePosition = (pieceIndex: number) => {
 }
 
 // 监听拼图数据变化
-onMounted(() => {
+onMounted(async () => {
   if (props.puzzleData) {
+    // 等待DOM更新完成，确保pieceSize正确计算
+    await nextTick()
+    
+    // 再次等待，确保所有计算属性都已更新
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
     // 如果游戏store中已有状态，同步到本地
     if (gameStore.currentPuzzle?.id === props.puzzleData.id && gameStore.pieces.length > 0) {
       syncPiecesFromStore()
@@ -489,9 +529,15 @@ const syncPiecesFromStore = () => {
   if (!props.puzzleData || !gameStore.pieces.length) return
   
   const total = totalPieces.value
-  const piecesAreaWidth = 300
-  const piecesAreaHeight = 400
+  // 与CSS中scattered-pieces的尺寸保持一致
+  const piecesAreaWidth = 320
+  const piecesAreaHeight = 420
   const size = pieceSize.value
+  
+  // 添加内边距，确保拼图块不会贴边
+  const padding = 10
+  const availableWidth = Math.max(0, piecesAreaWidth - size.width - padding * 2)
+  const availableHeight = Math.max(0, piecesAreaHeight - size.height - padding * 2)
   
   pieces.value = Array.from({ length: total }, (_, i) => {
     const storePiece = gameStore.pieces.find(p => p.id === `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`)
@@ -514,8 +560,8 @@ const syncPiecesFromStore = () => {
       // 未放置的拼图块，使用store中的位置或随机位置
       return {
         originalIndex: i,
-        currentX: storePiece?.x || Math.random() * Math.max(0, piecesAreaWidth - size.width),
-        currentY: storePiece?.y || Math.random() * Math.max(0, piecesAreaHeight - size.height),
+        currentX: storePiece?.x || (padding + Math.random() * availableWidth),
+        currentY: storePiece?.y || (padding + Math.random() * availableHeight),
         isPlaced: false
       }
     }
@@ -530,8 +576,14 @@ watch(() => gameStore.isGameActive, (newValue) => {
 })
 
 // 监听拼图数据变化
-watch(() => props.puzzleData, (newPuzzleData) => {
+watch(() => props.puzzleData, async (newPuzzleData) => {
   if (newPuzzleData) {
+    // 等待DOM更新完成，确保pieceSize正确计算
+    await nextTick()
+    
+    // 再次等待，确保所有计算属性都已更新
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
     // 如果游戏store中已有状态，同步到本地
     if (gameStore.currentPuzzle?.id === newPuzzleData.id && gameStore.pieces.length > 0) {
       syncPiecesFromStore()
