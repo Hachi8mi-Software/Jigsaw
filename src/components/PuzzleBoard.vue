@@ -156,6 +156,10 @@ const gridStyle = computed(() => ({
 
 const pieceSize = computed(() => {
   // 计算每个网格单元的实际尺寸
+  if (gridCols.value === 0 || gridRows.value === 0) {
+    return { width: 100, height: 75 } // 默认尺寸
+  }
+  
   const availableWidth = 400 - 16 - (gridCols.value - 1) * 2
   const availableHeight = 300 - 16 - (gridRows.value - 1) * 2
   
@@ -253,11 +257,14 @@ const initializePieces = () => {
   const piecesAreaWidth = 300
   const piecesAreaHeight = 400
   
+  // 确保pieceSize已正确计算
+  const size = pieceSize.value
+  
   // 初始化所有拼图块
   pieces.value = Array.from({ length: total }, (_, i) => ({
     originalIndex: i,
-    currentX: Math.random() * (piecesAreaWidth - pieceSize.value.width),
-    currentY: Math.random() * (piecesAreaHeight - pieceSize.value.height),
+    currentX: Math.random() * Math.max(0, piecesAreaWidth - size.width),
+    currentY: Math.random() * Math.max(0, piecesAreaHeight - size.height),
     isPlaced: false
   }))
   
@@ -270,19 +277,17 @@ const shufflePieces = () => {
   
   const piecesAreaWidth = 300
   const piecesAreaHeight = 400
+  const size = pieceSize.value
   
   // 重新随机散布所有未放置的拼图块
   pieces.value.forEach(piece => {
     if (!piece.isPlaced) {
-      piece.currentX = Math.random() * (piecesAreaWidth - pieceSize.value.width)
-      piece.currentY = Math.random() * (piecesAreaHeight - pieceSize.value.height)
+      piece.currentX = Math.random() * Math.max(0, piecesAreaWidth - size.width)
+      piece.currentY = Math.random() * Math.max(0, piecesAreaHeight - size.height)
     }
   })
   
-  // 通知GameStore更新步数
-  gameStore.moveCount++
-  
-  // 同步状态到GameStore
+  // 打乱操作不增加步数，只同步状态到GameStore
   syncPiecesToStore()
 }
 
@@ -489,14 +494,69 @@ const resetPlacedPiecePosition = (pieceIndex: number) => {
 // 监听拼图数据变化
 onMounted(() => {
   if (props.puzzleData) {
-    initializePieces()
+    // 如果游戏store中已有状态，同步到本地
+    if (gameStore.currentPuzzle?.id === props.puzzleData.id && gameStore.pieces.length > 0) {
+      syncPiecesFromStore()
+    } else {
+      initializePieces()
+    }
   }
 })
+
+// 从GameStore同步拼图块状态到本地
+const syncPiecesFromStore = () => {
+  if (!props.puzzleData || !gameStore.pieces.length) return
+  
+  const total = totalPieces.value
+  const piecesAreaWidth = 300
+  const piecesAreaHeight = 400
+  const size = pieceSize.value
+  
+  pieces.value = Array.from({ length: total }, (_, i) => {
+    const storePiece = gameStore.pieces.find(p => p.id === `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`)
+    
+    if (storePiece && storePiece.isPlaced) {
+      // 已放置的拼图块
+      const gridIndex = i
+      const row = Math.floor(gridIndex / gridCols.value)
+      const col = gridIndex % gridCols.value
+      
+      return {
+        originalIndex: i,
+        currentX: 8 + col * (size.width + 2),
+        currentY: 8 + row * (size.height + 2),
+        isPlaced: true,
+        isCorrect: true, // 假设从store恢复的都是正确放置的
+        gridPosition: gridIndex
+      }
+    } else {
+      // 未放置的拼图块，使用store中的位置或随机位置
+      return {
+        originalIndex: i,
+        currentX: storePiece?.x || Math.random() * Math.max(0, piecesAreaWidth - size.width),
+        currentY: storePiece?.y || Math.random() * Math.max(0, piecesAreaHeight - size.height),
+        isPlaced: false
+      }
+    }
+  })
+}
 
 // 监听游戏状态变化
 watch(() => gameStore.isGameActive, (newValue) => {
   if (!newValue && props.puzzleData) {
     console.log('游戏已暂停')
+  }
+})
+
+// 监听拼图数据变化
+watch(() => props.puzzleData, (newPuzzleData) => {
+  if (newPuzzleData) {
+    // 如果游戏store中已有状态，同步到本地
+    if (gameStore.currentPuzzle?.id === newPuzzleData.id && gameStore.pieces.length > 0) {
+      syncPiecesFromStore()
+    } else {
+      initializePieces()
+    }
   }
 })
 

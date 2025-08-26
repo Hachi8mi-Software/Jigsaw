@@ -14,12 +14,16 @@ import { useLibraryStore } from './library'
 class GameManager {
   private startTime: Date | null = null
   private timerInterval: number | null = null
+  private pauseStartTime: Date | null = null
+  private totalPauseTime: number = 0
 
   /**
    * 开始游戏计时
    */
   startTimer(): Date {
     this.startTime = new Date()
+    this.totalPauseTime = 0
+    this.pauseStartTime = null
     return this.startTime
   }
 
@@ -35,11 +39,33 @@ class GameManager {
   }
 
   /**
+   * 暂停计时
+   */
+  pauseTimer(): void {
+    if (!this.pauseStartTime) {
+      this.pauseStartTime = new Date()
+    }
+  }
+
+  /**
+   * 恢复计时
+   */
+  resumeTimer(): void {
+    if (this.pauseStartTime) {
+      const pauseEndTime = new Date()
+      this.totalPauseTime += pauseEndTime.getTime() - this.pauseStartTime.getTime()
+      this.pauseStartTime = null
+    }
+  }
+
+  /**
    * 计算经过的时间（秒）
    */
   calculateElapsedTime(startTime: Date, endTime?: Date): number {
     const end = endTime || new Date()
-    return Math.floor((end.getTime() - startTime.getTime()) / 1000)
+    const actualElapsed = end.getTime() - startTime.getTime()
+    const adjustedElapsed = actualElapsed - this.totalPauseTime
+    return Math.floor(adjustedElapsed / 1000)
   }
 
   /**
@@ -84,6 +110,14 @@ class GameManager {
       isPlaced: false
     }))
   }
+
+  /**
+   * 重置暂停时间统计
+   */
+  resetPauseTime(): void {
+    this.totalPauseTime = 0
+    this.pauseStartTime = null
+  }
 }
 
 const libraryStore = useLibraryStore()
@@ -97,6 +131,16 @@ export const useGameStore = defineStore('game', () => {
   const moveCount = ref(0)
   const isCompleted = ref(false)
   const isGameActive = ref(false)
+  const isPaused = ref(false)
+  const isAutoPaused = ref(false) // 标记是否为自动暂停
+  const gameSessionId = ref<string | null>(null)
+  const userStats = ref<UserStats>({
+    totalGamesPlayed: 0,
+    totalTimeSpent: 0,
+    bestTimes: {},
+    achievements: [],
+    totalSuccessMovements: 0
+  })
 
   // 实时计时器状态
   const currentTime = ref<Date>(new Date())
@@ -107,7 +151,7 @@ export const useGameStore = defineStore('game', () => {
 
   // 计算属性
   const elapsedTime = computed(() => {
-    if (!startTime.value || !isGameActive.value) return 0
+    if (!startTime.value) return 0
     return gameManager.calculateElapsedTime(startTime.value, currentTime.value)
   })
 
@@ -136,7 +180,8 @@ export const useGameStore = defineStore('game', () => {
     if (timerInterval.value) return
     
     timerInterval.value = window.setInterval(() => {
-      if (isGameActive.value && !isCompleted.value) {
+      // 只要游戏开始且未完成，就更新时间（包括暂停状态）
+      if (!isCompleted.value) {
         currentTime.value = new Date()
       }
     }, 1000) // 每秒更新一次
@@ -149,31 +194,139 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  // Actions
-  const startNewGame = (puzzleData: PuzzleData) => {
-    currentPuzzle.value = puzzleData
-    pieces.value = gameManager.generateInitialPieces(puzzleData)
-    startTime.value = gameManager.startTimer()
-    currentTime.value = new Date()
-    endTime.value = null
-    moveCount.value = 0
-    isCompleted.value = false
-    isGameActive.value = true
-    
-    // 启动实时计时器
-    startRealTimeTimer()
+  // 生成游戏会话ID
+  const generateSessionId = (): string => {
+    return `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
-  const pauseGame = () => {
-    isGameActive.value = false
-    // 暂停时停止计时器更新
-    stopRealTimeTimer()
+  // 保存游戏状态到本地存储
+  const saveGameState = () => {
+    if (!currentPuzzle.value || !gameSessionId.value) return
+    
+    const gameState = {
+      sessionId: gameSessionId.value,
+      puzzleId: currentPuzzle.value.id,
+      pieces: pieces.value,
+      startTime: startTime.value?.toISOString(),
+      moveCount: moveCount.value,
+      isCompleted: isCompleted.value,
+      isPaused: isPaused.value,
+      isAutoPaused: isAutoPaused.value,
+      savedAt: new Date().toISOString()
+    }
+    
+    localStorage.setItem(`puzzle_game_${currentPuzzle.value.id}`, JSON.stringify(gameState))
+  }
+
+  // 从本地存储加载游戏状态
+  const loadGameState = (puzzleId: string): any | null => {
+    try {
+      const saved = localStorage.getItem(`puzzle_game_${puzzleId}`)
+      return saved ? JSON.parse(saved) : null
+    } catch (error) {
+      console.error('加载游戏状态失败:', error)
+      return null
+    }
+  }
+
+  // 清除本地存储的游戏状态
+  const clearGameState = (puzzleId: string) => {
+    localStorage.removeItem(`puzzle_game_${puzzleId}`)
+  }
+
+  // 检测页面可见性变化（自动暂停/恢复）
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      // 页面隐藏时自动暂停
+      if (isGameActive.value && !isCompleted.value) {
+        console.log('页面隐藏，自动暂停游戏')
+        pauseGame(true) // 标记为自动暂停
+      }
+    } else {
+      // 页面显示时可以选择是否恢复
+      // 这里可以根据用户偏好决定是否自动恢复
+      console.log('页面重新可见，游戏状态:', { isActive: isGameActive.value, isPaused: isPaused.value, isAutoPaused: isAutoPaused.value })
+    }
+  }
+
+  // Actions
+  const startNewGame = (puzzleData: PuzzleData, forceNew: boolean = false) => {
+    // 如果强制新游戏或没有现有状态，则开始新游戏
+    if (forceNew) {
+      clearGameState(puzzleData.id)
+    }
+    
+    // 尝试加载现有游戏状态
+    const existingState = loadGameState(puzzleData.id)
+    
+    if (existingState && !forceNew && !existingState.isCompleted) {
+      // 恢复现有游戏
+      currentPuzzle.value = puzzleData
+      pieces.value = existingState.pieces
+      startTime.value = new Date(existingState.startTime)
+      currentTime.value = new Date()
+      endTime.value = null
+      moveCount.value = existingState.moveCount
+      isCompleted.value = existingState.isCompleted
+      isPaused.value = existingState.isPaused
+      isAutoPaused.value = existingState.isAutoPaused || false
+      isGameActive.value = !existingState.isPaused
+      gameSessionId.value = existingState.sessionId
+      
+      // 重置暂停时间统计
+      gameManager.resetPauseTime()
+      
+      if (isGameActive.value) {
+        startRealTimeTimer()
+      }
+      
+      console.log('恢复现有游戏状态')
+    } else {
+      // 开始新游戏
+      currentPuzzle.value = puzzleData
+      pieces.value = gameManager.generateInitialPieces(puzzleData)
+      startTime.value = gameManager.startTimer()
+      currentTime.value = new Date()
+      endTime.value = null
+      moveCount.value = 0
+      isCompleted.value = false
+      isPaused.value = false
+      isAutoPaused.value = false
+      isGameActive.value = true
+      gameSessionId.value = generateSessionId()
+      
+      // 启动实时计时器
+      startRealTimeTimer()
+      
+      console.log('开始新游戏')
+    }
+    
+    // 设置页面可见性监听
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+  }
+
+  const pauseGame = (autoPause: boolean = false) => {
+    if (isGameActive.value && !isCompleted.value) {
+      isGameActive.value = false
+      isPaused.value = true
+      isAutoPaused.value = autoPause
+      gameManager.pauseTimer()
+      // 不停止实时计时器，让时间继续更新
+      saveGameState()
+      console.log(autoPause ? '游戏已自动暂停' : '游戏已暂停')
+    }
   }
 
   const resumeGame = () => {
-    isGameActive.value = true
-    // 恢复时重新启动计时器
-    startRealTimeTimer()
+    if (isPaused.value && !isCompleted.value) {
+      isGameActive.value = true
+      isPaused.value = false
+      isAutoPaused.value = false
+      gameManager.resumeTimer()
+      // 实时计时器已经在运行，不需要重新启动
+      saveGameState()
+      console.log('游戏已恢复')
+    }
   }
 
   const movePiece = (pieceId: string, x: number, y: number) => {
@@ -182,6 +335,7 @@ export const useGameStore = defineStore('game', () => {
       piece.x = x
       piece.y = y
       moveCount.value++
+      saveGameState()
     }
   }
 
@@ -190,6 +344,7 @@ export const useGameStore = defineStore('game', () => {
     if (piece && isGameActive.value) {
       piece.rotation = rotation
       moveCount.value++
+      saveGameState()
     }
   }
 
@@ -197,6 +352,7 @@ export const useGameStore = defineStore('game', () => {
     const piece = pieces.value.find(p => p.id === pieceId)
     if (piece) {
       piece.isPlaced = isPlaced
+      saveGameState()
       
       // 检查游戏是否完成
       if (gameManager.checkCompletion(pieces.value, pieces.value.length)) {
@@ -210,12 +366,19 @@ export const useGameStore = defineStore('game', () => {
       endTime.value = gameManager.stopTimer()
       isCompleted.value = true
       isGameActive.value = false
+      isPaused.value = false
+      isAutoPaused.value = false
       
       // 停止实时计时器
       stopRealTimeTimer()
       
       // 更新用户统计
       updateUserStats()
+      
+      // 保存完成状态
+      saveGameState()
+      
+      console.log('游戏完成！')
     }
   }
 
@@ -239,16 +402,22 @@ export const useGameStore = defineStore('game', () => {
 
   const resetGame = () => {
     if (currentPuzzle.value) {
-      pieces.value = gameManager.shufflePieces(pieces.value)
-      startTime.value = gameManager.startTimer()
-      currentTime.value = new Date()
-      endTime.value = null
-      moveCount.value = 0
-      isCompleted.value = false
-      isGameActive.value = true
+      // 清除现有游戏状态
+      clearGameState(currentPuzzle.value.id)
       
-      // 重新启动计时器
-      startRealTimeTimer()
+      // 重新开始游戏
+      startNewGame(currentPuzzle.value, true)
+      
+      console.log('游戏已重置')
+    }
+  }
+
+  const restartGame = () => {
+    if (currentPuzzle.value) {
+      // 重新开始游戏（不清除历史记录）
+      startNewGame(currentPuzzle.value, true)
+      
+      console.log('游戏已重新开始')
     }
   }
 
@@ -271,6 +440,7 @@ export const useGameStore = defineStore('game', () => {
     currentTime.value = new Date()
     moveCount.value = gameData.moveCount
     isGameActive.value = true
+    isPaused.value = false
     
     // 启动计时器
     startRealTimeTimer()
@@ -317,9 +487,10 @@ export const useGameStore = defineStore('game', () => {
     return null
   }
 
-  // 清理定时器
+  // 清理定时器和事件监听器
   const cleanup = () => {
     stopRealTimeTimer()
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
   }
 
   return {
@@ -331,6 +502,10 @@ export const useGameStore = defineStore('game', () => {
     moveCount,
     isCompleted,
     isGameActive,
+    isPaused,
+    isAutoPaused,
+    gameSessionId,
+    userStats,
     
     // 计算属性
     elapsedTime,
@@ -346,6 +521,7 @@ export const useGameStore = defineStore('game', () => {
     placePiece,
     completeGame,
     resetGame,
+    restartGame,
     saveGame,
     loadGame,
     getHint,

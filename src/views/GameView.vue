@@ -5,61 +5,39 @@
 
 <template>
   <div class="game-view">
-    <!-- 游戏顶部栏 -->
-    <div class="game-header">
-      <div class="game-info">
-        <h1 class="game-title">{{ currentPuzzle?.name || '拼图游戏' }}</h1>
-        <div class="game-stats">
-          <div class="stat-item">
-            <span class="stat-label">进度</span>
-            <span class="stat-value">{{ completionPercentage }}%</span>
-            <!-- 调试信息 -->
-            <small class="debug-info">({{ gameStore.pieces?.length || 0 }} 总块, {{ gameStore.pieces?.filter(p => p.isPlaced).length || 0 }} 已放置)</small>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">时间</span>
-            <span class="stat-value">{{ formatTime(elapsedTime) }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">步数</span>
-            <span class="stat-value">{{ moveCount }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">难度</span>
-            <span class="stat-value">{{ currentDifficulty }}/5</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="game-controls">
-        <button 
-          @click="pauseGame"
-          v-if="isGameActive"
-          class="control-btn"
-        >
-          ⏸️ 暂停
-        </button>
-        <button 
-          @click="resumeGame"
-          v-else-if="currentPuzzle && !isCompleted"
-          class="control-btn"
-        >
-          ▶️ 继续
-        </button>
-        <button @click="showSettingsModal = true" class="control-btn">
-          ⚙️ 设置
-        </button>
-        <button @click="returnToLibrary" class="control-btn">
-          📚 返回素材库
-        </button>
-      </div>
-    </div>
+    <!-- 游戏状态栏 -->
+    <GameStatusBar
+      v-if="currentPuzzle"
+      :puzzle-name="currentPuzzle.name"
+      :grid-rows="currentPuzzle.gridConfig.rows"
+      :grid-cols="currentPuzzle.gridConfig.cols"
+      :total-pieces="totalPieces"
+      :completion-percentage="completionPercentage"
+      :placed-pieces="placedPieces"
+      :elapsed-time="elapsedTime"
+      :move-count="moveCount"
+      :difficulty="currentDifficulty"
+      :is-paused="isPaused"
+      @show-settings="showSettingsModal = true"
+    />
 
     <!-- 游戏主内容 -->
     <div class="game-content" v-if="currentPuzzle">
       <PuzzleBoard
         :puzzle-data="currentPuzzle"
       />
+      
+      <!-- 暂停遮罩 -->
+      <div v-if="isPaused" class="pause-overlay">
+        <div class="pause-message">
+          <div class="pause-icon">⏸️</div>
+          <h2>{{ isAutoPaused ? '游戏已自动暂停' : '游戏已暂停' }}</h2>
+          <p v-if="isAutoPaused" class="pause-subtitle">离开游戏页面时自动暂停</p>
+          <button @click="resumeGame" class="resume-btn">
+            继续游戏
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- 无游戏状态 -->
@@ -205,16 +183,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 暂停遮罩 -->
-    <div v-if="!isGameActive && currentPuzzle && !isCompleted" class="pause-overlay">
-      <div class="pause-message">
-        <h2>游戏已暂停</h2>
-        <button @click="resumeGame" class="resume-btn">
-          继续游戏
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -225,6 +193,7 @@ import { useGameStore } from '../stores/game'
 import { useLibraryStore } from '../stores/library'
 import type { PuzzleData, Achievement, Boundary } from '../types'
 import PuzzleBoard from '../components/PuzzleBoard.vue'
+import GameStatusBar from '../components/GameStatusBar.vue'
 
 // Store和路由
 const gameStore = useGameStore()
@@ -250,10 +219,22 @@ const gameSettings = reactive({
 const currentPuzzle = computed(() => gameStore.currentPuzzle)
 const isGameActive = computed(() => gameStore.isGameActive)
 const isCompleted = computed(() => gameStore.isCompleted)
+const isPaused = computed(() => gameStore.isPaused)
+const isAutoPaused = computed(() => gameStore.isAutoPaused)
 const completionPercentage = computed(() => gameStore.completionPercentage)
 const elapsedTime = computed(() => gameStore.elapsedTime)
 const moveCount = computed(() => gameStore.moveCount)
 const currentDifficulty = computed(() => gameStore.currentDifficulty)
+
+// 拼图相关计算属性
+const totalPieces = computed(() => {
+  if (!currentPuzzle.value) return 0
+  return currentPuzzle.value.gridConfig.rows * currentPuzzle.value.gridConfig.cols
+})
+
+const placedPieces = computed(() => {
+  return gameStore.pieces.filter(p => p.isPlaced).length
+})
 
 // 方法
 const formatTime = (seconds: number): string => {
@@ -310,7 +291,8 @@ const resumeGame = () => {
 
 const playAgain = () => {
   if (currentPuzzle.value) {
-    gameStore.resetGame()
+    // 使用新的restartGame方法，强制开始新游戏
+    gameStore.restartGame()
     closeCompletionModal()
   }
 }
@@ -414,7 +396,8 @@ const loadPuzzleFromRoute = async () => {
         difficulty: libraryItem.difficulty
       }
       
-      gameStore.startNewGame(puzzleData)
+      // 使用新的startNewGame方法，允许恢复现有游戏状态
+      gameStore.startNewGame(puzzleData, false)
     }
   }
 }
@@ -441,6 +424,13 @@ onMounted(() => {
       console.log('游戏已暂停')
     }
   })
+
+  // 监听暂停状态变化
+  watch(() => gameStore.isPaused, (paused) => {
+    if (paused) {
+      console.log('游戏已暂停，可以显示暂停提示')
+    }
+  })
 })
 
 // 监听路由变化
@@ -450,8 +440,24 @@ watch(() => route.params.puzzleId, (newId) => {
   }
 })
 
+// 监听路由路径变化，离开游戏页面时自动暂停
+watch(() => route.path, (newPath, oldPath) => {
+  // 如果从游戏页面切换到其他页面，且游戏正在运行，则自动暂停
+  if (oldPath && oldPath.startsWith('/game') && !newPath.startsWith('/game')) {
+    if (gameStore.isGameActive && !gameStore.isCompleted && !gameStore.isPaused) {
+      console.log('离开游戏页面，自动暂停游戏')
+      gameStore.pauseGame(true) // 标记为自动暂停
+    }
+  }
+})
+
 // 组件卸载时清理
 onUnmounted(() => {
+  // 组件卸载时自动暂停游戏
+  if (gameStore.isGameActive && !gameStore.isCompleted && !gameStore.isPaused) {
+    console.log('组件卸载，自动暂停游戏')
+    gameStore.pauseGame(true) // 标记为自动暂停
+  }
   gameStore.cleanup()
 })
 </script>
@@ -503,7 +509,7 @@ onUnmounted(() => {
 }
 
 .game-content {
-  @apply flex-1 overflow-hidden;
+  @apply flex-1 overflow-hidden relative;
 }
 
 .no-game-state {
@@ -669,9 +675,33 @@ onUnmounted(() => {
   @apply bg-blue-500 text-white hover:bg-blue-600;
 }
 
+/* 暂停遮罩样式 */
 .pause-overlay {
-  @apply fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40;
+  @apply absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
 }
+
+.pause-message {
+  @apply bg-white rounded-lg p-8 text-center shadow-xl;
+}
+
+.pause-icon {
+  @apply text-6xl mb-4;
+}
+
+.pause-message h2 {
+  @apply text-2xl font-bold text-gray-800 mb-2;
+}
+
+.pause-subtitle {
+  @apply text-sm text-gray-600 mb-6;
+}
+
+.resume-btn {
+  @apply px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
+  @apply transition-colors duration-200 font-medium;
+}
+
+
 
 .pause-message {
   @apply text-center text-white;
