@@ -34,6 +34,13 @@
           导入
         </button>
         <button 
+          @click="addToLibrary" 
+          class="toolbar-btn success"
+          :disabled="!canExport"
+        >
+          添加到素材库
+        </button>
+        <button 
           @click="exportPuzzle" 
           class="toolbar-btn primary"
           :disabled="!canExport"
@@ -291,6 +298,62 @@
         </div>
       </div>
     </div>
+
+    <!-- 添加到素材库对话框 -->
+    <div v-if="showAddToLibraryDialog" class="modal-overlay" @click="closeAddToLibraryDialog">
+      <div class="modal-dialog" @click.stop>
+        <div class="modal-header">
+          <h3>添加到素材库</h3>
+          <button @click="closeAddToLibraryDialog" class="close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">拼图名称</label>
+            <input
+              v-model="libraryItemName"
+              type="text"
+              placeholder="请输入拼图名称"
+              class="form-input"
+              :disabled="isAddingToLibrary"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">分类</label>
+            <select
+              v-model="libraryItemCategory"
+              class="form-select"
+              :disabled="isAddingToLibrary"
+            >
+              <option value="自定义">自定义</option>
+              <option value="自然风光">自然风光</option>
+              <option value="城市建筑">城市建筑</option>
+              <option value="艺术画作">艺术画作</option>
+              <option value="可爱动物">可爱动物</option>
+              <option value="卡通动漫">卡通动漫</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">标签</label>
+            <input
+              v-model="libraryItemTags"
+              type="text"
+              placeholder="请输入标签，用逗号分隔"
+              class="form-input"
+              :disabled="isAddingToLibrary"
+            />
+            <p class="form-hint">例如：风景,美丽,自然</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeAddToLibraryDialog" class="modal-btn" :disabled="isAddingToLibrary">
+            取消
+          </button>
+          <button @click="handleAddToLibrary" class="modal-btn primary" :disabled="isAddingToLibrary">
+            {{ isAddingToLibrary ? '添加中...' : '添加到素材库' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -298,12 +361,14 @@
 import { computed, ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useEditorStore } from '../stores/editor'
+import { useLibraryStore } from '../stores/library'
 import { BoundaryState } from '../types'
 import SvgBoundary from '../components/SvgBoundary.vue'
 import { SvgPathGenerator } from '../utils/svgUtils'
 
 // Store和路由
 const editorStore = useEditorStore()
+const libraryStore = useLibraryStore()
 const router = useRouter()
 
 // 模板引用
@@ -320,6 +385,11 @@ const localGridConfig = reactive({
 
 const showImportDialog = ref(false)
 const importData = ref('')
+const showAddToLibraryDialog = ref(false)
+const libraryItemName = ref('')
+const libraryItemCategory = ref('自定义')
+const libraryItemTags = ref('')
+const isAddingToLibrary = ref(false)
 
 // 计算属性
 const currentImage = computed(() => editorStore.currentImage)
@@ -466,6 +536,64 @@ const exportPuzzle = () => {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+}
+
+const addToLibrary = () => {
+  if (!canExport.value) return
+  
+  // 设置默认值
+  libraryItemName.value = puzzleName.value || '我的拼图'
+  libraryItemCategory.value = '自定义'
+  libraryItemTags.value = ''
+  
+  showAddToLibraryDialog.value = true
+}
+
+const closeAddToLibraryDialog = () => {
+  showAddToLibraryDialog.value = false
+  libraryItemName.value = ''
+  libraryItemCategory.value = '自定义'
+  libraryItemTags.value = ''
+  isAddingToLibrary.value = false
+}
+
+const handleAddToLibrary = async () => {
+  if (!libraryItemName.value.trim()) {
+    alert('请输入拼图名称')
+    return
+  }
+  
+  if (!currentImage.value || !editorStore.originalImageFile) {
+    alert('没有找到原始图片文件')
+    return
+  }
+  
+  try {
+    isAddingToLibrary.value = true
+    
+    // 解析标签
+    const tags = libraryItemTags.value
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0)
+    
+    // 添加到素材库
+    await libraryStore.addLibraryItem(
+      editorStore.originalImageFile,
+      libraryItemName.value.trim(),
+      libraryItemCategory.value,
+      tags
+    )
+    
+    alert('成功添加到素材库！')
+    closeAddToLibraryDialog()
+    
+  } catch (error) {
+    console.error('添加到素材库失败:', error)
+    alert('添加到素材库失败，请重试')
+  } finally {
+    isAddingToLibrary.value = false
   }
 }
 
@@ -724,6 +852,30 @@ onMounted(() => {
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
 }
 
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block mb-2 font-medium text-gray-700;
+}
+
+.form-input,
+.form-select {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply transition-colors duration-200;
+}
+
+.form-input:disabled,
+.form-select:disabled {
+  @apply bg-gray-100 cursor-not-allowed;
+}
+
+.form-hint {
+  @apply mt-1 text-xs text-gray-500;
+}
+
 .modal-footer {
   @apply flex justify-end space-x-2 p-4 border-t;
 }
@@ -735,5 +887,9 @@ onMounted(() => {
 
 .modal-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
+}
+
+.modal-btn:disabled {
+  @apply opacity-60 cursor-not-allowed;
 }
 </style>
