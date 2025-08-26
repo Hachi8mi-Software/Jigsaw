@@ -401,20 +401,8 @@ const shufflePieces = () => {
 }
 
 const resetPuzzle = () => {
-  // 重置所有拼图块
-  pieces.value.forEach(piece => {
-    piece.isPlaced = false
-    piece.isCorrect = undefined
-    piece.gridPosition = undefined
-  })
-  
-  initializePieces()
-  
-  // 通知GameStore重置游戏
+  // 直接通知GameStore重置游戏，让watch监听器处理本地状态更新
   gameStore.resetGame()
-  
-  // 同步状态到GameStore
-  syncPiecesToStore()
 }
 
 const autoSolve = () => {
@@ -732,6 +720,20 @@ watch(() => gameStore.isGameActive, (newValue) => {
     console.log('游戏已暂停')
   }
 })
+
+// 监听gameStore中pieces的变化，确保重置时能正确同步
+watch(() => gameStore.pieces, (newPieces) => {
+  if (props.puzzleData && gameStore.currentPuzzle?.id === props.puzzleData.id) {
+    // 当gameStore的pieces发生变化时，重新同步到本地
+    if (newPieces.length === 0) {
+      // 如果pieces被清空，重新初始化
+      initializePieces()
+    } else {
+      // 否则同步状态
+      syncPiecesFromStore()
+    }
+  }
+}, { deep: true })
 
 // 监听拼图数据变化
 watch(() => props.puzzleData, async (newPuzzleData) => {
