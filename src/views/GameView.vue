@@ -19,11 +19,14 @@
       :difficulty="currentDifficulty"
       :is-paused="isPaused"
       @show-settings="showSettingsModal = true"
+      @toggle-pause="handleTogglePause"
+      @return-to-library="handleReturnToLibrary"
     />
 
     <!-- 游戏主内容 -->
     <div class="game-content" v-if="currentPuzzle">
       <PuzzleBoard
+        :controller="gameViewManager.gameController"
         :puzzle-data="currentPuzzle"
       />
       
@@ -187,44 +190,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted, watch, onUnmounted } from 'vue'
+import { computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useGameStore } from '../stores/game'
-import { useLibraryStore } from '../stores/library'
-import type { PuzzleData, Achievement, Boundary } from '../types'
+import type { PuzzleData, Achievement } from '../types'
 import PuzzleBoard from '../components/PuzzleBoard.vue'
 import GameStatusBar from '../components/GameStatusBar.vue'
+import { GameViewManager } from '../viewModels/gameView'
 
-// Store和路由
-const gameStore = useGameStore()
-const libraryStore = useLibraryStore()
+// 路由
 const router = useRouter()
 const route = useRoute()
 
-// 响应式状态
-const showCompletionModal = ref(false)
-const showSettingsModal = ref(false)
-const newAchievements = ref<Achievement[]>([])
+// 业务逻辑管理器
+const gameViewManager = GameViewManager.getInstance()
 
-// 游戏设置
-const gameSettings = reactive({
-  showBackground: true,
-  showGrid: true,
-  autoSnap: true,
-  showTimer: true,
-  soundVolume: 70
-})
+// 从管理器获取响应式状态
+const showCompletionModal = gameViewManager.showCompletionModal
+const showSettingsModal = gameViewManager.showSettingsModal
+const newAchievements = gameViewManager.newAchievements
+const gameSettings = gameViewManager.gameSettings
 
-// 计算属性
-const currentPuzzle = computed(() => gameStore.currentPuzzle)
-const isGameActive = computed(() => gameStore.isGameActive)
-const isCompleted = computed(() => gameStore.isCompleted)
-const isPaused = computed(() => gameStore.isPaused)
-const isAutoPaused = computed(() => gameStore.isAutoPaused)
-const completionPercentage = computed(() => gameStore.completionPercentage)
-const elapsedTime = computed(() => gameStore.elapsedTime)
-const moveCount = computed(() => gameStore.moveCount)
-const currentDifficulty = computed(() => gameStore.currentDifficulty)
+// 计算属性 - 通过GameViewManager访问
+const currentPuzzle = computed(() => gameViewManager.currentPuzzle)
+const isGameActive = computed(() => gameViewManager.isGameActive)
+const isCompleted = computed(() => gameViewManager.isCompleted)
+const isPaused = computed(() => gameViewManager.isPaused)
+const isAutoPaused = computed(() => gameViewManager.isAutoPaused)
+const completionPercentage = computed(() => gameViewManager.completionPercentage)
+const elapsedTime = computed(() => gameViewManager.elapsedTime)
+const moveCount = computed(() => gameViewManager.moveCount)
+const currentDifficulty = computed(() => gameViewManager.currentDifficulty)
 
 // 拼图相关计算属性
 const totalPieces = computed(() => {
@@ -233,19 +228,12 @@ const totalPieces = computed(() => {
 })
 
 const placedPieces = computed(() => {
-  return gameStore.pieces.filter(p => p.isPlaced).length
+  return gameViewManager.pieces.filter(p => p.isPlaced).length
 })
 
 // 方法
 const formatTime = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
-  
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-  return `${minutes}:${secs.toString().padStart(2, '0')}`
+  return gameViewManager.formatTime(seconds)
 }
 
 const handlePieceMoved = (pieceId: string, x: number, y: number) => {
@@ -254,51 +242,35 @@ const handlePieceMoved = (pieceId: string, x: number, y: number) => {
 }
 
 const handlePiecePlaced = (pieceId: string, row: number, col: number) => {
-  // 拼图块放置处理
-  console.log(`拼图块 ${pieceId} 放置到 (${row}, ${col})`)
-  
-  // 播放放置音效
-  if (gameSettings.soundVolume > 0) {
-    playSound('place')
-  }
+  gameViewManager.handlePiecePlaced(pieceId, row, col)
 }
 
 const handleGameCompleted = () => {
-  showCompletionModal.value = true
-  
-  // 检查新解锁的成就
-  const hasNewAchievements = libraryStore.checkAchievements(libraryStore.userStats)
-  if (hasNewAchievements) {
-    newAchievements.value = libraryStore.unlockedAchievements.filter(
-      achievement => achievement.unlockedAt && 
-      Date.now() - achievement.unlockedAt < 1000
-    )
+  gameViewManager.handleGameCompleted()
+}
+
+const handleTogglePause = () => {
+  if (isPaused.value) {
+    resumeGame()
+  } else {
+    pauseGame()
   }
-  
-  // 播放完成音效
-  if (gameSettings.soundVolume > 0) {
-    playSound('complete')
-  }
+}
+
+const handleReturnToLibrary = () => {
+  router.push('/library')
 }
 
 const pauseGame = () => {
-  gameStore.pauseGame()
+  gameViewManager.pauseGame()
 }
 
 const resumeGame = () => {
-  gameStore.resumeGame()
+  gameViewManager.resumeGame()
 }
 
 const playAgain = () => {
-  if (currentPuzzle.value) {
-    // 使用新的restartGame方法，强制开始新游戏
-    gameStore.restartGame()
-    closeCompletionModal()
-  }
-}
-
-const returnToLibrary = () => {
-  router.push('/library')
+  gameViewManager.playAgain()
 }
 
 const goToLibrary = () => {
@@ -310,133 +282,55 @@ const goToEditor = () => {
 }
 
 const closeCompletionModal = () => {
-  showCompletionModal.value = false
-  newAchievements.value = []
+  gameViewManager.closeCompletionModal()
 }
 
 const closeSettingsModal = () => {
-  showSettingsModal.value = false
+  gameViewManager.closeSettingsModal()
 }
 
 const saveSettings = () => {
-  // 保存设置到本地存储
-  localStorage.setItem('game_settings', JSON.stringify(gameSettings))
-  closeSettingsModal()
+  gameViewManager.saveSettings()
 }
 
 const resetSettings = () => {
-  Object.assign(gameSettings, {
-    showBackground: true,
-    showGrid: true,
-    autoSnap: true,
-    showTimer: true,
-    soundVolume: 70
-  })
+  gameViewManager.resetSettings()
 }
 
-const loadSettings = () => {
-  try {
-    const saved = localStorage.getItem('game_settings')
-    if (saved) {
-      Object.assign(gameSettings, JSON.parse(saved))
-    }
-  } catch (error) {
-    console.error('加载设置失败:', error)
-  }
-}
-
-const playSound = (type: 'place' | 'complete') => {
-  // 简单的音效实现
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-  const oscillator = audioContext.createOscillator()
-  const gainNode = audioContext.createGain()
-  
-  oscillator.connect(gainNode)
-  gainNode.connect(audioContext.destination)
-  
-  const volume = gameSettings.soundVolume / 100 * 0.1
-  gainNode.gain.setValueAtTime(volume, audioContext.currentTime)
-  
-  if (type === 'place') {
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
-    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1)
-  } else if (type === 'complete') {
-    oscillator.frequency.setValueAtTime(600, audioContext.currentTime)
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1)
-    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2)
-  }
-  
-  oscillator.start()
-  oscillator.stop(audioContext.currentTime + 0.3)
+const openSettingsModal = () => {
+  gameViewManager.openSettingsModal()
 }
 
 const loadPuzzleFromRoute = async () => {
   const puzzleId = route.params.puzzleId as string
   if (puzzleId) {
-    // 从素材库查找拼图
-    const libraryItem = libraryStore.items.find(item => item.id === puzzleId)
-    if (libraryItem) {
-      // 检查是否有正在进行的游戏需要切换
-      const hasActiveGame = gameStore.currentPuzzle && 
-                           gameStore.currentPuzzle.id !== puzzleId && 
-                           gameStore.isGameActive && 
-                           !gameStore.isCompleted
-      
-      if (hasActiveGame) {
-        console.log(`切换拼图: ${gameStore.currentPuzzle?.name} -> ${libraryItem.name}`)
-      }
-      
-      // 生成简单的边界数据（平直边界用于演示）
-      const boundaries: Boundary[] = []
-      const rows = 3, cols = 4
-      
-      // 创建拼图数据
-      const puzzleData: PuzzleData = {
-        id: libraryItem.id,
-        name: libraryItem.name,
-        imageUrl: libraryItem.imageUrl,
-        gridConfig: {
-          rows,
-          cols,
-          pieceWidth: 150,
-          pieceHeight: 100
-        },
-        boundaries,
-        createdAt: new Date(),
-        difficulty: libraryItem.difficulty
-      }
-      
-      // 使用新的startNewGame方法，会自动处理游戏切换的暂停逻辑
-      gameStore.startNewGame(puzzleData, false)
-    }
+    await gameViewManager.loadPuzzleFromRoute(puzzleId)
   }
 }
 
 // 生命周期
 onMounted(() => {
-  loadSettings()
-  
   // 如果路由中有拼图ID，加载对应拼图
   if (route.params.puzzleId) {
     loadPuzzleFromRoute()
   }
   
   // 监听游戏完成事件
-  watch(() => gameStore.isCompleted, (completed) => {
+  watch(() => gameViewManager.isCompleted, (completed) => {
     if (completed) {
       handleGameCompleted()
     }
   })
   
   // 监听游戏状态变化
-  watch(() => gameStore.isGameActive, (active) => {
-    if (!active && gameStore.currentPuzzle && !gameStore.isCompleted) {
+  watch(() => gameViewManager.isGameActive, (active) => {
+    if (!active && gameViewManager.currentPuzzle && !gameViewManager.isCompleted) {
       console.log('游戏已暂停')
     }
   })
 
   // 监听暂停状态变化
-  watch(() => gameStore.isPaused, (paused) => {
+  watch(() => gameViewManager.isPaused, (paused) => {
     if (paused) {
       console.log('游戏已暂停，可以显示暂停提示')
     }
@@ -452,23 +346,12 @@ watch(() => route.params.puzzleId, (newId) => {
 
 // 监听路由路径变化，离开游戏页面时自动暂停
 watch(() => route.path, (newPath, oldPath) => {
-  // 如果从游戏页面切换到其他页面，且游戏正在运行，则自动暂停
-  if (oldPath && oldPath.startsWith('/game') && !newPath.startsWith('/game')) {
-    if (gameStore.isGameActive && !gameStore.isCompleted && !gameStore.isPaused) {
-      console.log('离开游戏页面，自动暂停游戏')
-      gameStore.pauseGame(true) // 标记为自动暂停
-    }
-  }
+  gameViewManager.handleRouteChange(newPath, oldPath)
 })
 
 // 组件卸载时清理
 onUnmounted(() => {
-  // 组件卸载时自动暂停游戏
-  if (gameStore.isGameActive && !gameStore.isCompleted && !gameStore.isPaused) {
-    console.log('组件卸载，自动暂停游戏')
-    gameStore.pauseGame(true) // 标记为自动暂停
-  }
-  gameStore.cleanup()
+  gameViewManager.handleComponentUnmount()
 })
 </script>
 

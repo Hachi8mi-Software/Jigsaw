@@ -101,8 +101,10 @@
 import { computed, ref, onMounted, watch, nextTick } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { PuzzleData } from '../types'
+import { GameController } from '@/viewModels/gameController';
 
 interface Props {
+  controller: GameController,
   puzzleData: PuzzleData | null
 }
 
@@ -401,8 +403,20 @@ const shufflePieces = () => {
 }
 
 const resetPuzzle = () => {
-  // 直接通知GameStore重置游戏，让watch监听器处理本地状态更新
-  gameStore.resetGame()
+  // 重置所有拼图块
+  pieces.value.forEach(piece => {
+    piece.isPlaced = false
+    piece.isCorrect = undefined
+    piece.gridPosition = undefined
+  })
+  
+  initializePieces()
+  
+  // 同步状态到GameStore
+  syncPiecesToStore()
+
+  // 通知GameController重启游戏
+  props.controller.restartGame()
 }
 
 const autoSolve = () => {
@@ -516,15 +530,6 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   } else if (piece.isPlaced) {
     // 已放置拼图块拖拽到网格外，回到原位置
     resetPlacedPiecePosition(draggingPieceIndex.value)
-  } else {
-    // 未放置拼图块拖拽到网格外，检查是否在拼图块区域内
-    if (!isInPiecesArea(clientX, clientY)) {
-      // 不在拼图块区域内，约束回拼图块区域
-      constrainToPiecesArea(draggingPieceIndex.value)
-    } else {
-      // 在拼图块区域内，但需要确保不超出边界
-      constrainToPiecesArea(draggingPieceIndex.value)
-    }
   }
   
   draggingPieceIndex.value = -1
@@ -591,8 +596,12 @@ const constrainToPiecesArea = (pieceIndex: number) => {
 
 // 吸附到网格
 const snapToGrid = (pieceIndex: number, gridIndex: number) => {
+  console.log("snapToGrid 被调用:", pieceIndex, gridIndex)
   const piece = pieces.value[pieceIndex]
-  if (!piece) return
+  if (!piece) {
+    console.log("找不到拼图块:", pieceIndex)
+    return
+  }
   
   // 检查是否是正确位置
   const isCorrect = piece.originalIndex === gridIndex
@@ -609,7 +618,7 @@ const snapToGrid = (pieceIndex: number, gridIndex: number) => {
   piece.currentY = 8 + row * (pieceSize.value.height + 2)
   
   // 通知GameStore更新步数
-  gameStore.moveCount++
+  gameStore.incrementMoveCount()
   
   // 同步状态到GameStore
   syncPiecesToStore()
@@ -782,12 +791,13 @@ const syncPiecesToStore = () => {
     }
   })
   
-  // 通过placePiece方法更新GameStore状态
-  storePieces.forEach((piece, index) => {
-    if (piece.isPlaced) {
-      gameStore.placePiece(piece.id, true)
-    }
+  // 通过updatePiecePlacement方法更新GameStore状态
+  console.log("syncPiecesToStore - 开始同步拼图块状态")
+  storePieces.forEach((piece) => {
+    console.log("同步拼图块:", piece.id, "isPlaced:", piece.isPlaced)
+    gameStore.updatePiecePlacement(piece.id, piece.isPlaced)
   })
+  console.log("syncPiecesToStore - 同步完成")
 }
 </script>
 

@@ -78,6 +78,12 @@ interface Props {
   isPaused?: boolean
 }
 
+interface Emits {
+  (e: 'show-settings'): void
+  (e: 'toggle-pause'): void
+  (e: 'return-to-library'): void
+}
+
 const props = withDefaults(defineProps<Props>(), {
   puzzleName: '拼图游戏',
   gridRows: 0,
@@ -111,11 +117,7 @@ const formatTime = (seconds: number): string => {
 }
 
 const togglePause = () => {
-  if (props.isPaused) {
-    gameStore.resumeGame()
-  } else {
-    gameStore.pauseGame()
-  }
+  emit('toggle-pause')
 }
 
 const showSettings = () => {
@@ -124,12 +126,14 @@ const showSettings = () => {
 }
 
 const returnToLibrary = () => {
-  router.push('/library')
+  emit('return-to-library')
 }
 
 // 定义事件
 const emit = defineEmits<{
   'show-settings': []
+  'toggle-pause': []
+  'return-to-library': []
 }>()
 </script>
 
