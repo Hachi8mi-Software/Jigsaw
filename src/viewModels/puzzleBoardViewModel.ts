@@ -20,15 +20,17 @@ export class PuzzleBoardViewModel {
     this.initializePiecesWatcher()
   }
 
+  private oldPieces: PieceStatus[] = []
   // 初始化pieces监听器
   private initializePiecesWatcher() {
     // 监听puzzleBoardStore中pieces的变化
     this.unwatchPieces = watch(
       () => this.puzzleBoardStore.pieces,
-      (newPieces, oldPieces) => {
+      (newPieces) => {
         // 深度比较，只有实际变化时才同步
-        if (this.shouldSyncToGameStore(newPieces, oldPieces)) {
+        if (this.shouldSyncToGameStore(newPieces, this.oldPieces)) {
           this.syncToGameStore()
+          this.oldPieces = JSON.parse(JSON.stringify(newPieces)) // 深拷贝
         }
       },
       { 
@@ -50,8 +52,6 @@ export class PuzzleBoardViewModel {
       if (!oldPiece) return true
       
       return (
-        newPiece.currentX !== oldPiece.currentX ||
-        newPiece.currentY !== oldPiece.currentY ||
         newPiece.isPlaced !== oldPiece.isPlaced ||
         newPiece.isCorrect !== oldPiece.isCorrect ||
         newPiece.gridPosition !== oldPiece.gridPosition
