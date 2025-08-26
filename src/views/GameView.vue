@@ -13,6 +13,8 @@
           <div class="stat-item">
             <span class="stat-label">进度</span>
             <span class="stat-value">{{ completionPercentage }}%</span>
+            <!-- 调试信息 -->
+            <small class="debug-info">({{ gameStore.pieces?.length || 0 }} 总块, {{ gameStore.pieces?.filter(p => p.isPlaced).length || 0 }} 已放置)</small>
           </div>
           <div class="stat-item">
             <span class="stat-label">时间</span>
@@ -217,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted, watch } from 'vue'
+import { computed, ref, reactive, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useGameStore } from '../stores/game'
 import { useLibraryStore } from '../stores/library'
@@ -425,6 +427,20 @@ onMounted(() => {
   if (route.params.puzzleId) {
     loadPuzzleFromRoute()
   }
+  
+  // 监听游戏完成事件
+  watch(() => gameStore.isCompleted, (completed) => {
+    if (completed) {
+      handleGameCompleted()
+    }
+  })
+  
+  // 监听游戏状态变化
+  watch(() => gameStore.isGameActive, (active) => {
+    if (!active && gameStore.currentPuzzle && !gameStore.isCompleted) {
+      console.log('游戏已暂停')
+    }
+  })
 })
 
 // 监听路由变化
@@ -432,6 +448,11 @@ watch(() => route.params.puzzleId, (newId) => {
   if (newId) {
     loadPuzzleFromRoute()
   }
+})
+
+// 组件卸载时清理
+onUnmounted(() => {
+  gameStore.cleanup()
 })
 </script>
 
@@ -466,6 +487,10 @@ watch(() => route.params.puzzleId, (newId) => {
 
 .stat-value {
   @apply text-lg font-semibold text-gray-800;
+}
+
+.debug-info {
+  @apply text-xs text-gray-500 mt-1 block;
 }
 
 .game-controls {

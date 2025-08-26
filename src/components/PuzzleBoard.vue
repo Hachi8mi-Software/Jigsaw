@@ -1,6 +1,6 @@
 <!--
-  简化的拼图游戏板组件
-  用于演示基本功能
+  重构后的拼图游戏板组件
+  参考SimplePuzzleGame的简洁实现
 -->
 
 <template>
@@ -15,25 +15,22 @@
       <!-- 游戏区域 -->
       <div class="game-area">
         <!-- 左侧：散乱的拼图块 -->
-        <div class="pieces-area" ref="piecesAreaRef" :style="{ position: 'relative', zIndex: isDraggingFromScattered ? 20 : 1 }">
+        <div class="pieces-area">
           <h4>拼图块</h4>
           <div class="scattered-pieces">
             <div
-              v-for="(piece, index) in scatteredPieces"
-              :key="`scattered-${index}`"
-              class="puzzle-piece scattered"
-              :class="{ 
-                /* 【修正】这里的判断也需要加上 pieceType */
-                'dragging': draggedPiece?.pieceType === 'scattered' && draggedPiece?.index === index,
-                'selected': selectedPiece === index 
-              }"
-              :style="getScatteredPieceStyle(piece, index) as any"
-              @mousedown="startDrag('scattered', index, $event)"
-              @touchstart="startDrag('scattered', index, $event)"
+              v-for="(piece, index) in pieces"
+              :key="`piece-${index}`"
+              v-show="!piece.isPlaced"
+              class="puzzle-piece"
+              :class="{ 'dragging': draggingPieceIndex === index }"
+              :style="getPieceStyle(piece)"
+              @mousedown="startDrag(index, $event)"
+              @touchstart="startDrag(index, $event)"
             >
               <div 
                 class="piece-image"
-                :style="getPieceImageStyle(piece.originalIndex)"
+                :style="getPieceImageStyle(piece)"
               >
                 <span class="piece-number">{{ piece.originalIndex + 1 }}</span>
               </div>
@@ -42,40 +39,37 @@
         </div>
 
         <!-- 右侧：目标拼图网格 -->
-        <div class="target-area" style="position: relative; z-index: 10;">
+        <div class="target-area">
           <h4>目标区域</h4>
-          <div class="puzzle-grid" :style="gridStyle as any" ref="puzzleGridRef">
+          <div class="puzzle-grid" :style="gridStyle as any">
             <!-- 网格占位符 -->
             <div
               v-for="index in totalPieces"
               :key="`slot-${index}`"
               class="grid-slot"
               :class="{ 'occupied': isSlotOccupied(index - 1) }"
-              :data-slot-index="index - 1"
-              @drop="handleDrop($event, index - 1)"
-              @dragover.prevent
-              @dragenter.prevent
             >
               <span class="slot-number">{{ index }}</span>
             </div>
             
             <!-- 已放置的拼图块 -->
             <div
-              v-for="(piece, index) in placedPieces"
+              v-for="(piece, index) in pieces"
               :key="`placed-${index}`"
+              v-show="piece.isPlaced"
               class="puzzle-piece placed"
               :class="{ 
                 'correct': piece.isCorrect,
                 'incorrect': piece.isCorrect === false,
-                'dragging': piece.isDragging
+                'dragging': draggingPieceIndex === index
               }"
               :style="getPlacedPieceStyle(piece)"
-              @mousedown="startDrag('placed', index, $event)"
-              @touchstart="startDrag('placed', index, $event)"
+              @mousedown="startDrag(index, $event)"
+              @touchstart="startDrag(index, $event)"
             >
               <div 
                 class="piece-image"
-                :style="getPieceImageStyle(piece.originalIndex)"
+                :style="getPieceImageStyle(piece)"
               >
                 <span class="piece-number">{{ piece.originalIndex + 1 }}</span>
               </div>
@@ -105,7 +99,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, reactive } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useGameStore } from '../stores/game'
 import type { PuzzleData } from '../types'
 
 interface Props {
@@ -114,34 +109,22 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 拼图块状态
-interface PieceState {
-  originalIndex: number  // 原始索引（正确位置）
-  currentX: number       // 当前X坐标
-  currentY: number       // 当前Y坐标
-  isPlaced: boolean      // 是否已放置
-  isCorrect?: boolean    // 是否放在正确位置
-  gridPosition?: number  // 网格位置索引
-  isDragging?: boolean   // 是否正在拖拽
+// 获取游戏store
+const gameStore = useGameStore()
+
+// 拼图块状态 - 简化后的数据结构
+interface Piece {
+  originalIndex: number      // 原始索引（正确位置）
+  currentX: number          // 当前X坐标
+  currentY: number          // 当前Y坐标
+  isPlaced: boolean         // 是否已放置
+  isCorrect?: boolean       // 是否放在正确位置
+  gridPosition?: number     // 网格位置索引
 }
 
-const scatteredPieces = ref<PieceState[]>([])
-const placedPieces = ref<PieceState[]>([])
-const draggedPiece = ref<{ 
-  index: number, 
-  piece: PieceState, 
-  offsetX: number, 
-  offsetY: number,
-  pieceType: 'scattered' | 'placed',
-  startRect: DOMRect,
-  gridRect: DOMRect
-} | null>(null)
-const selectedPiece = ref<number | null>(null)
-const isDraggingFromScattered = ref(false)
-
-// 模板引用
-const piecesAreaRef = ref<HTMLElement>()
-const puzzleGridRef = ref<HTMLElement>()
+const pieces = ref<Piece[]>([])
+const draggingPieceIndex = ref(-1)
+const dragOffset = ref({ x: 0, y: 0 })
 
 // 计算属性
 const totalPieces = computed(() => {
@@ -173,7 +156,6 @@ const gridStyle = computed(() => ({
 
 const pieceSize = computed(() => {
   // 计算每个网格单元的实际尺寸
-  // 总宽度400px，减去左右padding 16px，减去gap (cols-1) * 2px
   const availableWidth = 400 - 16 - (gridCols.value - 1) * 2
   const availableHeight = 300 - 16 - (gridRows.value - 1) * 2
   
@@ -184,11 +166,11 @@ const pieceSize = computed(() => {
 })
 
 // 方法
-const getPieceImageStyle = (originalIndex: number) => {
+const getPieceImageStyle = (piece: Piece) => {
   if (!props.puzzleData) return {}
   
-  const correctRow = Math.floor(originalIndex / gridCols.value)
-  const correctCol = originalIndex % gridCols.value
+  const correctRow = Math.floor(piece.originalIndex / gridCols.value)
+  const correctCol = piece.originalIndex % gridCols.value
   
   return {
     backgroundImage: `url(${props.puzzleData.imageUrl})`,
@@ -205,12 +187,9 @@ const getPieceImageStyle = (originalIndex: number) => {
   }
 }
 
-const getScatteredPieceStyle = (piece: PieceState, index: number) => {
-  // 【修正】增加 pieceType 的判断，确保只为当前拖拽的、且类型为 scattered 的图块提升 z-index
-  const isDraggingThis = draggedPiece.value?.pieceType === 'scattered' && draggedPiece.value?.index === index;
-  
+const getPieceStyle = (piece: Piece) => {
   return {
-    position: 'absolute',
+    position: 'absolute' as const,
     left: `${piece.currentX}px`,
     top: `${piece.currentY}px`,
     width: `${pieceSize.value.width}px`,
@@ -221,22 +200,19 @@ const getScatteredPieceStyle = (piece: PieceState, index: number) => {
     overflow: 'hidden',
     backgroundColor: 'white',
     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-    zIndex: isDraggingThis ? 1000 : 10, // 【修正】使用新的判断变量
-    transform: isDraggingThis ? 'scale(1.05)' : 'scale(1)',
-    transition: isDraggingThis ? 'none' : 'transform 0.2s ease'
+    zIndex: draggingPieceIndex.value === piece.originalIndex ? 1000 : 10,
+    transform: draggingPieceIndex.value === piece.originalIndex ? 'scale(1.05)' : 'scale(1)',
+    transition: draggingPieceIndex.value === piece.originalIndex ? 'none' : 'transform 0.2s ease'
   }
 }
 
-const getPlacedPieceStyle = (piece: PieceState) => {
+const getPlacedPieceStyle = (piece: Piece) => {
   const gridIndex = piece.gridPosition || 0
   const row = Math.floor(gridIndex / gridCols.value)
   const col = gridIndex % gridCols.value
   
-  // 检查是否是当前拖拽的已放置拼图块
-  const isDraggingThis = draggedPiece.value?.pieceType === 'placed' && draggedPiece.value?.index === piece.originalIndex;
-  
   // 如果正在拖拽，使用拖拽位置
-  if (piece.isDragging) {
+  if (draggingPieceIndex.value === piece.originalIndex) {
     return {
       position: 'absolute' as const,
       left: `${piece.currentX}px`,
@@ -254,6 +230,7 @@ const getPlacedPieceStyle = (piece: PieceState) => {
     }
   }
   
+  // 正常放置位置
   return {
     position: 'absolute' as const,
     left: `${8 + col * (pieceSize.value.width + 2)}px`,
@@ -265,8 +242,6 @@ const getPlacedPieceStyle = (piece: PieceState) => {
     overflow: 'hidden',
     backgroundColor: 'white',
     zIndex: 5,
-    transform: isDraggingThis ? 'scale(1.05)' : 'scale(1)',
-    transition: isDraggingThis ? 'none' : 'transform 0.2s ease',
     cursor: 'grab'
   }
 }
@@ -278,16 +253,16 @@ const initializePieces = () => {
   const piecesAreaWidth = 300
   const piecesAreaHeight = 400
   
-  // 初始化散乱的拼图块
-  scatteredPieces.value = Array.from({ length: total }, (_, i) => ({
+  // 初始化所有拼图块
+  pieces.value = Array.from({ length: total }, (_, i) => ({
     originalIndex: i,
     currentX: Math.random() * (piecesAreaWidth - pieceSize.value.width),
     currentY: Math.random() * (piecesAreaHeight - pieceSize.value.height),
     isPlaced: false
   }))
   
-  // 清空已放置的拼图块
-  placedPieces.value = []
+  // 同步状态到GameStore
+  syncPiecesToStore()
 }
 
 const shufflePieces = () => {
@@ -297,103 +272,100 @@ const shufflePieces = () => {
   const piecesAreaHeight = 400
   
   // 重新随机散布所有未放置的拼图块
-  scatteredPieces.value = scatteredPieces.value.map(piece => ({
-    ...piece,
-    currentX: Math.random() * (piecesAreaWidth - pieceSize.value.width),
-    currentY: Math.random() * (piecesAreaHeight - pieceSize.value.height)
-  }))
+  pieces.value.forEach(piece => {
+    if (!piece.isPlaced) {
+      piece.currentX = Math.random() * (piecesAreaWidth - pieceSize.value.width)
+      piece.currentY = Math.random() * (piecesAreaHeight - pieceSize.value.height)
+    }
+  })
+  
+  // 通知GameStore更新步数
+  gameStore.moveCount++
+  
+  // 同步状态到GameStore
+  syncPiecesToStore()
 }
 
 const resetPuzzle = () => {
-  // 将所有已放置的拼图块移回散乱区域
-  const allPieces = [...scatteredPieces.value, ...placedPieces.value]
-  scatteredPieces.value = allPieces.map(piece => ({
-    ...piece,
-    isPlaced: false,
-    isCorrect: undefined,
-    gridPosition: undefined
-  }))
-  placedPieces.value = []
+  // 重置所有拼图块
+  pieces.value.forEach(piece => {
+    piece.isPlaced = false
+    piece.isCorrect = undefined
+    piece.gridPosition = undefined
+  })
+  
   initializePieces()
+  
+  // 通知GameStore重置游戏
+  gameStore.resetGame()
+  
+  // 同步状态到GameStore
+  syncPiecesToStore()
 }
 
 const autoSolve = () => {
   if (!props.puzzleData) return
   
   // 将所有拼图块放到正确位置
-  const allPieces = [...scatteredPieces.value, ...placedPieces.value]
-  placedPieces.value = allPieces.map((piece, index) => ({
-    ...piece,
-    isPlaced: true,
-    isCorrect: true,
-    gridPosition: piece.originalIndex
-  }))
-  scatteredPieces.value = []
+  pieces.value.forEach((piece, index) => {
+    piece.isPlaced = true
+    piece.isCorrect = true
+    piece.gridPosition = piece.originalIndex
+  })
+  
+  // 同步状态到GameStore
+  syncPiecesToStore()
+  
+  // 检查游戏是否完成
+  checkGameCompletion()
 }
 
 const isSlotOccupied = (slotIndex: number): boolean => {
-  return placedPieces.value.some(piece => piece.gridPosition === slotIndex)
+  return pieces.value.some(piece => piece.isPlaced && piece.gridPosition === slotIndex)
 }
 
-// 拖拽相关方法
-const startDrag = (pieceType: 'scattered' | 'placed', index: number, event: MouseEvent | TouchEvent) => {
+// 检查游戏完成状态
+const checkGameCompletion = () => {
+  const allPlaced = pieces.value.every(p => p.isPlaced)
+  const allCorrect = pieces.value.every(p => p.isCorrect)
+  
+  if (allPlaced && allCorrect) {
+    console.log('拼图完成！')
+    // 通知GameStore游戏完成
+    gameStore.completeGame()
+  }
+}
+
+// 简化的拖拽逻辑
+const startDrag = (index: number, event: MouseEvent | TouchEvent) => {
   event.preventDefault()
   
-  // 根据 pieceType 从正确的数组中获取 piece
-  const piece = pieceType === 'scattered' 
-    ? scatteredPieces.value[index] 
-    : placedPieces.value[index]
-  
+  const piece = pieces.value[index]
   if (!piece) return
   
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
   const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
   
-  // 缓存边界矩形，避免重复计算
-  const piecesAreaRect = piecesAreaRef.value?.getBoundingClientRect()
-  const gridRect = puzzleGridRef.value?.getBoundingClientRect()
-  if (!piecesAreaRect || !gridRect) return
-  
   // 计算偏移量
-  let offsetX: number, offsetY: number
-  
-  if (pieceType === 'scattered') {
-    offsetX = clientX - piecesAreaRect.left - piece.currentX
-    offsetY = clientY - piecesAreaRect.top - piece.currentY
-  } else {
-    // 已放置的拼图块，从网格位置计算偏移
+  if (piece.isPlaced) {
+    // 已放置的拼图块，计算相对于网格的偏移
     const gridIndex = piece.gridPosition || 0
     const row = Math.floor(gridIndex / gridCols.value)
     const col = gridIndex % gridCols.value
     const pieceXInGrid = col * (pieceSize.value.width + 2) + 8
     const pieceYInGrid = row * (pieceSize.value.height + 2) + 8
     
-    // 计算鼠标相对于 grid 的坐标
-    const mouseXInGrid = clientX - gridRect.left
-    const mouseYInGrid = clientY - gridRect.top
-    
-    // 计算鼠标在图块内部的偏移
-    offsetX = mouseXInGrid - pieceXInGrid
-    offsetY = mouseYInGrid - pieceYInGrid
+    // 临时设置拖拽位置
+    piece.currentX = pieceXInGrid
+    piece.currentY = pieceYInGrid
   }
   
-  draggedPiece.value = {
-    index,
-    piece,
-    offsetX,
-    offsetY,
-    pieceType,
-    startRect: piecesAreaRect,
-    gridRect: gridRect
+  dragOffset.value = {
+    x: clientX - piece.currentX,
+    y: clientY - piece.currentY
   }
   
-  // 设置拖拽状态，提升z-index
-  piece.isDragging = true
-  
-  // 设置拖拽源状态
-  if (pieceType === 'scattered') {
-    isDraggingFromScattered.value = true
-  }
+  draggingPieceIndex.value = index
   
   document.addEventListener('mousemove', handleDrag, { passive: false })
   document.addEventListener('mouseup', stopDrag)
@@ -402,54 +374,34 @@ const startDrag = (pieceType: 'scattered' | 'placed', index: number, event: Mous
 }
 
 const handleDrag = (event: MouseEvent | TouchEvent) => {
-  if (!draggedPiece.value) return
+  if (draggingPieceIndex.value === -1) return
   
   event.preventDefault()
   
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
   const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
   
-  // 使用缓存的边界矩形，避免重复计算
-  const { startRect, gridRect, pieceType, offsetX, offsetY } = draggedPiece.value
+  const piece = pieces.value[draggingPieceIndex.value]
+  if (!piece) return
   
-  let newX: number, newY: number
-  
-  if (pieceType === 'scattered') {
-    // 散乱拼图块的拖拽
-    newX = clientX - startRect.left - offsetX
-    newY = clientY - startRect.top - offsetY
-    
-    // 更新拼图块位置
-    draggedPiece.value.piece.currentX = newX
-    draggedPiece.value.piece.currentY = newY
-  } else {
-    // 已放置拼图块的拖拽，坐标应相对于 grid
-    const mouseXInGrid = clientX - gridRect.left
-    const mouseYInGrid = clientY - gridRect.top
-    
-    newX = mouseXInGrid - offsetX
-    newY = mouseYInGrid - offsetY
-    
-    // 更新拼图块位置（临时拖拽位置）
-    draggedPiece.value.piece.currentX = newX
-    draggedPiece.value.piece.currentY = newY
-  }
+  // 更新拼图块位置
+  piece.currentX = clientX - dragOffset.value.x
+  piece.currentY = clientY - dragOffset.value.y
 }
 
 const stopDrag = (event: MouseEvent | TouchEvent) => {
-  if (!draggedPiece.value) return
+  if (draggingPieceIndex.value === -1) return
   
   event.preventDefault()
   
-  const { piece, pieceType, gridRect } = draggedPiece.value
+  const piece = pieces.value[draggingPieceIndex.value]
+  if (!piece) return
   
-  // 清除拖拽状态
-  piece.isDragging = false
+  const clientX = 'touches' in event ? (event.changedTouches?.[0]?.clientX ?? 0) : event.clientX
+  const clientY = 'touches' in event ? (event.changedTouches?.[0]?.clientY ?? 0) : event.clientY
   
   // 检查是否在目标网格区域内
-  const clientX = 'touches' in event ? event.changedTouches[0].clientX : event.clientX
-  const clientY = 'touches' in event ? event.changedTouches[0].clientY : event.clientY
-  
+  const gridRect = document.querySelector('.puzzle-grid')?.getBoundingClientRect()
   if (gridRect && 
       clientX >= gridRect.left && clientX <= gridRect.right &&
       clientY >= gridRect.top && clientY <= gridRect.bottom) {
@@ -465,26 +417,18 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
     
     // 检查网格位置是否有效且未被占据
     if (gridIndex >= 0 && gridIndex < totalPieces.value && !isSlotOccupied(gridIndex)) {
-      if (pieceType === 'scattered') {
-        // 散乱拼图块吸附到网格
-        snapToGrid(draggedPiece.value.index, gridIndex)
-      } else {
-        // 已放置拼图块移动到新位置
-        movePlacedPiece(draggedPiece.value.index, gridIndex)
-      }
-    } else if (pieceType === 'placed') {
+      // 吸附到网格
+      snapToGrid(draggingPieceIndex.value, gridIndex)
+    } else if (piece.isPlaced) {
       // 已放置拼图块回到原位置
-      resetPlacedPiecePosition(draggedPiece.value.index)
+      resetPlacedPiecePosition(draggingPieceIndex.value)
     }
-  } else if (pieceType === 'placed') {
+  } else if (piece.isPlaced) {
     // 已放置拼图块拖拽到网格外，回到原位置
-    resetPlacedPiecePosition(draggedPiece.value.index)
+    resetPlacedPiecePosition(draggingPieceIndex.value)
   }
   
-  // 清除拖拽源状态
-  isDraggingFromScattered.value = false
-  
-  draggedPiece.value = null
+  draggingPieceIndex.value = -1
   
   document.removeEventListener('mousemove', handleDrag)
   document.removeEventListener('mouseup', stopDrag)
@@ -492,78 +436,54 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   document.removeEventListener('touchend', stopDrag)
 }
 
+// 吸附到网格
 const snapToGrid = (pieceIndex: number, gridIndex: number) => {
-  const piece = scatteredPieces.value[pieceIndex]
+  const piece = pieces.value[pieceIndex]
   if (!piece) return
   
   // 检查是否是正确位置
   const isCorrect = piece.originalIndex === gridIndex
   
-  // 创建已放置的拼图块
-  const placedPiece: PieceState = {
-    ...piece,
-    isPlaced: true,
-    isCorrect,
-    gridPosition: gridIndex
-  }
+  // 更新拼图块状态
+  piece.isPlaced = true
+  piece.isCorrect = isCorrect
+  piece.gridPosition = gridIndex
   
-  // 从散乱区域移除，添加到已放置区域
-  scatteredPieces.value.splice(pieceIndex, 1)
-  placedPieces.value.push(placedPiece)
+  // 计算网格中的实际位置
+  const row = Math.floor(gridIndex / gridCols.value)
+  const col = gridIndex % gridCols.value
+  piece.currentX = 8 + col * (pieceSize.value.width + 2)
+  piece.currentY = 8 + row * (pieceSize.value.height + 2)
+  
+  // 通知GameStore更新步数
+  gameStore.moveCount++
+  
+  // 同步状态到GameStore
+  syncPiecesToStore()
   
   // 显示反馈
   if (isCorrect) {
     console.log('正确放置！')
-    // 这里可以添加成功的视觉/音效反馈
   } else {
     console.log('位置不正确')
-    // 这里可以添加错误的视觉反馈
   }
   
   // 检查是否完成
-  if (scatteredPieces.value.length === 0) {
-    const allCorrect = placedPieces.value.every(p => p.isCorrect)
-    if (allCorrect) {
-      console.log('拼图完成！')
-      // 这里可以添加完成的庆祝效果
-    }
-  }
+  checkGameCompletion()
 }
 
-const movePlacedPiece = (pieceIndex: number, newGridIndex: number) => {
-  const piece = placedPieces.value[pieceIndex]
-  if (!piece) return
-  
-  // 检查是否是正确位置
-  const isCorrect = piece.originalIndex === newGridIndex
-  
-  // 更新拼图块位置
-  piece.gridPosition = newGridIndex
-  piece.isCorrect = isCorrect
-  
-  // 显示反馈
-  if (isCorrect) {
-    console.log('正确移动！')
-  } else {
-    console.log('位置不正确')
-  }
-}
-
+// 重置已放置拼图块位置
 const resetPlacedPiecePosition = (pieceIndex: number) => {
-  const piece = placedPieces.value[pieceIndex]
-  if (!piece) return
+  const piece = pieces.value[pieceIndex]
+  if (!piece || !piece.isPlaced) return
   
   // 重置到原来的网格位置
   const originalGridIndex = piece.gridPosition || 0
-  piece.gridPosition = originalGridIndex
+  const row = Math.floor(originalGridIndex / gridCols.value)
+  const col = originalGridIndex % gridCols.value
   
-  // 清除拖拽状态
-  piece.isDragging = false
-}
-
-const handleDrop = (event: DragEvent, slotIndex: number) => {
-  // 这个方法用于HTML5拖拽API，目前我们使用鼠标/触摸事件
-  event.preventDefault()
+  piece.currentX = 8 + col * (pieceSize.value.width + 2)
+  piece.currentY = 8 + row * (pieceSize.value.height + 2)
 }
 
 // 监听拼图数据变化
@@ -572,6 +492,50 @@ onMounted(() => {
     initializePieces()
   }
 })
+
+// 监听游戏状态变化
+watch(() => gameStore.isGameActive, (newValue) => {
+  if (!newValue && props.puzzleData) {
+    console.log('游戏已暂停')
+  }
+})
+
+// 同步拼图块状态到GameStore
+const syncPiecesToStore = () => {
+  if (!props.puzzleData) return
+  
+  const total = totalPieces.value
+  
+  // 创建PiecePosition数组
+  const storePieces = Array.from({ length: total }, (_, i) => {
+    const piece = pieces.value.find(p => p.originalIndex === i)
+    
+    if (piece && piece.isPlaced) {
+      return {
+        id: `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`,
+        x: piece.currentX,
+        y: piece.currentY,
+        rotation: 0,
+        isPlaced: true
+      }
+    } else {
+      return {
+        id: `piece_${Math.floor(i / gridCols.value)}_${i % gridCols.value}`,
+        x: piece?.currentX || 0,
+        y: piece?.currentY || 0,
+        rotation: 0,
+        isPlaced: false
+      }
+    }
+  })
+  
+  // 通过placePiece方法更新GameStore状态
+  storePieces.forEach((piece, index) => {
+    if (piece.isPlaced) {
+      gameStore.placePiece(piece.id, true)
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -627,30 +591,14 @@ onMounted(() => {
   user-select: none;
 }
 
-.puzzle-piece.scattered {
-  @apply hover:shadow-lg;
-}
-
-.puzzle-piece.scattered:hover {
+.puzzle-piece:hover {
   transform: scale(1.02);
 }
 
-.puzzle-piece.scattered.dragging {
+.puzzle-piece.dragging {
   @apply shadow-2xl;
   transform: scale(1.05) !important;
   cursor: grabbing !important;
-}
-
-.puzzle-piece.scattered.selected {
-  @apply ring-2 ring-blue-500;
-}
-
-.puzzle-piece.placed {
-  @apply hover:shadow-lg;
-}
-
-.puzzle-piece.placed:hover {
-  transform: scale(1.02);
 }
 
 .puzzle-piece.placed.correct {
@@ -660,12 +608,6 @@ onMounted(() => {
 
 .puzzle-piece.placed.incorrect {
   animation: incorrectPlacement 0.4s ease-out;
-}
-
-.puzzle-piece.placed.dragging {
-  @apply shadow-2xl;
-  transform: scale(1.05) !important;
-  cursor: grabbing !important;
 }
 
 @keyframes correctPlacement {

@@ -4,7 +4,7 @@
  */
 
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import type { GameState, PuzzleData, PiecePosition, UserStats } from '../types'
 
 /**
@@ -101,43 +101,82 @@ export const useGameStore = defineStore('game', () => {
     achievements: []
   })
 
+  // 实时计时器状态
+  const currentTime = ref<Date>(new Date())
+  const timerInterval = ref<number | null>(null)
+
   // 游戏管理器实例
   const gameManager = new GameManager()
 
   // 计算属性
   const elapsedTime = computed(() => {
-    if (!startTime.value) return 0
-    const end = endTime.value || new Date()
-    return gameManager.calculateElapsedTime(startTime.value, end)
+    if (!startTime.value || !isGameActive.value) return 0
+    return gameManager.calculateElapsedTime(startTime.value, currentTime.value)
   })
 
   const completionPercentage = computed(() => {
-    if (pieces.value.length === 0) return 0
+    // 如果没有拼图数据，返回0
+    if (!currentPuzzle.value) return 0
+    
+    // 计算总拼图块数量
+    const totalPieces = currentPuzzle.value.gridConfig.rows * currentPuzzle.value.gridConfig.cols
+    
+    // 如果没有pieces数据，尝试从currentPuzzle计算
+    if (pieces.value.length === 0) {
+      return 0
+    }
+    
     const placedPieces = pieces.value.filter(piece => piece.isPlaced)
-    return Math.round((placedPieces.length / pieces.value.length) * 100)
+    return Math.round((placedPieces.length / totalPieces) * 100)
   })
 
   const currentDifficulty = computed(() => {
     return currentPuzzle.value?.difficulty || 1
   })
 
+  // 实时计时器
+  const startRealTimeTimer = () => {
+    if (timerInterval.value) return
+    
+    timerInterval.value = window.setInterval(() => {
+      if (isGameActive.value && !isCompleted.value) {
+        currentTime.value = new Date()
+      }
+    }, 1000) // 每秒更新一次
+  }
+
+  const stopRealTimeTimer = () => {
+    if (timerInterval.value) {
+      clearInterval(timerInterval.value)
+      timerInterval.value = null
+    }
+  }
+
   // Actions
   const startNewGame = (puzzleData: PuzzleData) => {
     currentPuzzle.value = puzzleData
     pieces.value = gameManager.generateInitialPieces(puzzleData)
     startTime.value = gameManager.startTimer()
+    currentTime.value = new Date()
     endTime.value = null
     moveCount.value = 0
     isCompleted.value = false
     isGameActive.value = true
+    
+    // 启动实时计时器
+    startRealTimeTimer()
   }
 
   const pauseGame = () => {
     isGameActive.value = false
+    // 暂停时停止计时器更新
+    stopRealTimeTimer()
   }
 
   const resumeGame = () => {
     isGameActive.value = true
+    // 恢复时重新启动计时器
+    startRealTimeTimer()
   }
 
   const movePiece = (pieceId: string, x: number, y: number) => {
@@ -175,6 +214,9 @@ export const useGameStore = defineStore('game', () => {
       isCompleted.value = true
       isGameActive.value = false
       
+      // 停止实时计时器
+      stopRealTimeTimer()
+      
       // 更新用户统计
       updateUserStats()
     }
@@ -199,10 +241,14 @@ export const useGameStore = defineStore('game', () => {
     if (currentPuzzle.value) {
       pieces.value = gameManager.shufflePieces(pieces.value)
       startTime.value = gameManager.startTimer()
+      currentTime.value = new Date()
       endTime.value = null
       moveCount.value = 0
       isCompleted.value = false
       isGameActive.value = true
+      
+      // 重新启动计时器
+      startRealTimeTimer()
     }
   }
 
@@ -222,8 +268,12 @@ export const useGameStore = defineStore('game', () => {
     // 实现游戏加载逻辑
     pieces.value = gameData.pieces
     startTime.value = new Date(gameData.startTime)
+    currentTime.value = new Date()
     moveCount.value = gameData.moveCount
     isGameActive.value = true
+    
+    // 启动计时器
+    startRealTimeTimer()
   }
 
   const getHint = () => {
@@ -267,6 +317,11 @@ export const useGameStore = defineStore('game', () => {
     return null
   }
 
+  // 清理定时器
+  const cleanup = () => {
+    stopRealTimeTimer()
+  }
+
   return {
     // 状态
     currentPuzzle,
@@ -297,6 +352,9 @@ export const useGameStore = defineStore('game', () => {
     getHint,
     snapPieceToGrid,
     isPieceAtPosition,
-    getCorrectPositionForPiece
+    getCorrectPositionForPiece,
+    
+    // 清理方法
+    cleanup
   }
 })
