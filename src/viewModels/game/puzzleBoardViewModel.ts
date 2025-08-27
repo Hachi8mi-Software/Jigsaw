@@ -3,7 +3,7 @@
  * 处理拼图块相关的业务逻辑，连接Store和View
  */
 
-import type { PieceStatus, PuzzleData } from '../types'
+import type { PieceStatus, PuzzleData } from '../../types'
 import { nextTick, StyleValue } from 'vue'
 import { getGridPos } from '@/utils/gridUtils'
 import { GameController } from './gameController'

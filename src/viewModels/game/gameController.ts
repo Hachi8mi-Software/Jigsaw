@@ -3,9 +3,9 @@
  * 处理与界面相关的游戏业务逻辑，持有 store 实例
  */
 
-import { useGameStore } from '../stores/game'
-import { useLibraryStore } from '../stores/library'
-import type { PiecePosition, PieceStatus, PuzzleData, UserStats } from '../types'
+import { useGameStore } from '../../stores/game'
+import { useLibraryStore } from '../../stores/library'
+import type { PiecePosition, PieceStatus, PuzzleData, UserStats } from '../../types'
 
 /**
  * 游戏核心控制器 - 处理游戏业务逻辑，持有store实例

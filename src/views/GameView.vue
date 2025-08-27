@@ -27,7 +27,7 @@
     <!-- 游戏主内容 -->
     <div class="game-content" v-if="currentPuzzle">
       <PuzzleBoard
-        :controller="gameViewManager.gameController"
+        :controller="gameViewModel.gameController"
         :puzzle-data="currentPuzzle"
       />
       
@@ -196,31 +196,31 @@ import { useRouter, useRoute } from 'vue-router'
 import type { PuzzleData, Achievement } from '../types'
 import PuzzleBoard from '../components/PuzzleBoard.vue'
 import GameStatusBar from '../components/GameStatusBar.vue'
-import { GameViewManager } from '../viewModels/gameView'
+import { GameViewModel } from '../viewModels/game/gameViewModel'
 
 // 路由
 const router = useRouter()
 const route = useRoute()
 
 // 业务逻辑管理器
-const gameViewManager = GameViewManager.getInstance()
+const gameViewModel = GameViewModel.getInstance()
 
 // 从管理器获取响应式状态
-const showCompletionModal = gameViewManager.showCompletionModal
-const showSettingsModal = gameViewManager.showSettingsModal
-const newAchievements = gameViewManager.newAchievements
-const gameSettings = gameViewManager.gameSettings
+const showCompletionModal = gameViewModel.showCompletionModal
+const showSettingsModal = gameViewModel.showSettingsModal
+const newAchievements = gameViewModel.newAchievements
+const gameSettings = gameViewModel.gameSettings
 
-// 计算属性 - 通过GameViewManager访问
-const currentPuzzle = computed(() => gameViewManager.currentPuzzle)
-const isGameActive = computed(() => gameViewManager.isGameActive)
-const isCompleted = computed(() => gameViewManager.isCompleted)
-const isPaused = computed(() => gameViewManager.isPaused)
-const isAutoPaused = computed(() => gameViewManager.isAutoPaused)
-const completionPercentage = computed(() => gameViewManager.completionPercentage)
-const elapsedTime = computed(() => gameViewManager.elapsedTime)
-const moveCount = computed(() => gameViewManager.moveCount)
-const currentDifficulty = computed(() => gameViewManager.currentDifficulty)
+// 计算属性 - 通过GameViewModel访问
+const currentPuzzle = computed(() => gameViewModel.currentPuzzle)
+const isGameActive = computed(() => gameViewModel.isGameActive)
+const isCompleted = computed(() => gameViewModel.isCompleted)
+const isPaused = computed(() => gameViewModel.isPaused)
+const isAutoPaused = computed(() => gameViewModel.isAutoPaused)
+const completionPercentage = computed(() => gameViewModel.completionPercentage)
+const elapsedTime = computed(() => gameViewModel.elapsedTime)
+const moveCount = computed(() => gameViewModel.moveCount)
+const currentDifficulty = computed(() => gameViewModel.currentDifficulty)
 
 // 拼图相关计算属性
 const totalPieces = computed(() => {
@@ -229,12 +229,12 @@ const totalPieces = computed(() => {
 })
 
 const placedPieces = computed(() => {
-  return gameViewManager.pieces.filter(p => p.isPlaced).length
+  return gameViewModel.pieces.filter(p => p.isPlaced).length
 })
 
 // 方法
 const formatTime = (seconds: number): string => {
-  return gameViewManager.formatTime(seconds)
+  return gameViewModel.formatTime(seconds)
 }
 
 const handlePieceMoved = (pieceId: string, x: number, y: number) => {
@@ -243,11 +243,11 @@ const handlePieceMoved = (pieceId: string, x: number, y: number) => {
 }
 
 const handlePiecePlaced = (pieceId: string, row: number, col: number) => {
-  gameViewManager.handlePiecePlaced(pieceId, row, col)
+  gameViewModel.handlePiecePlaced(pieceId, row, col)
 }
 
 const handleGameCompleted = () => {
-  gameViewManager.handleGameCompleted()
+  gameViewModel.handleGameCompleted()
 }
 
 const handleTogglePause = () => {
@@ -264,25 +264,25 @@ const handleReturnToLibrary = () => {
 
 const handleResetGame = () => {
   if (confirm('确定要重置当前游戏吗？所有进度将被清除。')) {
-    gameViewManager.resetGame()
+    gameViewModel.resetGame()
   }
 }
 
 const pauseGame = () => {
-  gameViewManager.pauseGame()
+  gameViewModel.pauseGame()
 }
 
 const resumeGame = () => {
-  gameViewManager.resumeGame()
+  gameViewModel.resumeGame()
 }
 
 const playAgain = () => {
-  gameViewManager.playAgain()
+  gameViewModel.playAgain()
 }
 
 const goToLibrary = () => {
   // 清除当前游戏状态
-  gameViewManager.clearCurrentGame()
+  gameViewModel.clearCurrentGame()
   router.push('/library')
 }
 
@@ -291,29 +291,29 @@ const goToEditor = () => {
 }
 
 const closeCompletionModal = () => {
-  gameViewManager.closeCompletionModal()
+  gameViewModel.closeCompletionModal()
 }
 
 const closeSettingsModal = () => {
-  gameViewManager.closeSettingsModal()
+  gameViewModel.closeSettingsModal()
 }
 
 const saveSettings = () => {
-  gameViewManager.saveSettings()
+  gameViewModel.saveSettings()
 }
 
 const resetSettings = () => {
-  gameViewManager.resetSettings()
+  gameViewModel.resetSettings()
 }
 
 const openSettingsModal = () => {
-  gameViewManager.openSettingsModal()
+  gameViewModel.openSettingsModal()
 }
 
 const loadPuzzleFromRoute = async () => {
   const puzzleId = route.params.puzzleId as string
   if (puzzleId) {
-    await gameViewManager.loadPuzzleFromRoute(puzzleId)
+    await gameViewModel.loadPuzzleFromRoute(puzzleId)
   }
 }
 
@@ -325,21 +325,21 @@ onMounted(() => {
   }
   
   // 监听游戏完成事件
-  watch(() => gameViewManager.isCompleted, (completed) => {
+  watch(() => gameViewModel.isCompleted, (completed) => {
     if (completed) {
       handleGameCompleted()
     }
   })
   
   // 监听游戏状态变化
-  watch(() => gameViewManager.isGameActive, (active) => {
-    if (!active && gameViewManager.currentPuzzle && !gameViewManager.isCompleted) {
+  watch(() => gameViewModel.isGameActive, (active) => {
+    if (!active && gameViewModel.currentPuzzle && !gameViewModel.isCompleted) {
       console.log('游戏已暂停')
     }
   })
 
   // 监听暂停状态变化
-  watch(() => gameViewManager.isPaused, (paused) => {
+  watch(() => gameViewModel.isPaused, (paused) => {
     if (paused) {
       console.log('游戏已暂停，可以显示暂停提示')
     }
@@ -355,12 +355,12 @@ watch(() => route.params.puzzleId, (newId) => {
 
 // 监听路由路径变化，离开游戏页面时自动暂停
 watch(() => route.path, (newPath, oldPath) => {
-  gameViewManager.handleRouteChange(newPath, oldPath)
+  gameViewModel.handleRouteChange(newPath, oldPath)
 })
 
 // 组件卸载时清理
 onUnmounted(() => {
-  gameViewManager.handleComponentUnmount()
+  gameViewModel.handleComponentUnmount()
 })
 </script>
 

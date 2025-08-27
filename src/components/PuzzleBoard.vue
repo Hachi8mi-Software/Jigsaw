@@ -100,9 +100,9 @@
 <script setup lang="ts">
 import { computed, onMounted, watch, nextTick, ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { PuzzleBoardViewModel } from '../viewModels/puzzleBoardViewModel'
+import { PuzzleBoardViewModel } from '../viewModels/game/puzzleBoardViewModel'
 import type { PieceStatus, PuzzleData } from '../types'
-import { GameController } from '@/viewModels/gameController'
+import { GameController } from '@/viewModels/game/gameController'
 
 interface Props {
   controller: GameController,
