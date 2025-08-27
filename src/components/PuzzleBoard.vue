@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch, nextTick } from 'vue'
+import { computed, onMounted, watch, nextTick, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { PuzzleBoardViewModel } from '../viewModels/puzzleBoardViewModel'
 import type { PuzzleData } from '../types'
@@ -115,7 +115,9 @@ const props = defineProps<Props>()
 const gameStore = useGameStore()
 
 // 创建ViewModel实例
-const viewModel = computed(() => new PuzzleBoardViewModel(props.puzzleData))
+// 视图状态
+const viewModel = ref<PuzzleBoardViewModel>(new PuzzleBoardViewModel(props.puzzleData))
+const isInitializing = ref(false) // 防护标记，避免初始化时触发循环
 
 // 计算属性 - 从ViewModel获取
 const totalPieces = computed(() => viewModel.value.totalPieces)
@@ -192,22 +194,25 @@ onMounted(async () => {
     await new Promise(resolve => setTimeout(resolve, 100))
     
     try {
+      isInitializing.value = true // 开始初始化
+      
       // 尝试从localStorage恢复状态
       const restored = viewModel.value.restoreFromLocalStorage()
       if (restored) {
         console.log('成功恢复拼图块位置')
-      } else if (gameStore.currentPuzzle?.id === props.puzzleData.id && gameStore.pieces.length > 0) {
-        console.log('从GameStore恢复游戏状态')
-        viewModel.value.syncFromGameStore()
       } else {
         console.log('初始化新游戏')
         viewModel.value.initializePieces()
       }
+      
+      isInitializing.value = false // 初始化完成
+      
     } catch (error) {
       console.error('初始化拼图块时出错:', error)
       if (props.puzzleData) {
         viewModel.value.initializePieces()
       }
+      isInitializing.value = false
     }
   } else {
     gameStore.clearPuzzleBoardPieces()
@@ -221,21 +226,24 @@ watch(() => props.puzzleData, async (newPuzzleData) => {
     await new Promise(resolve => setTimeout(resolve, 100))
     
     try {
+      isInitializing.value = true
+      
       const restored = viewModel.value.restoreFromLocalStorage()
       if (restored) {
         console.log('成功恢复拼图块位置')
-      } else if (gameStore.currentPuzzle?.id === newPuzzleData.id && gameStore.pieces.length > 0) {
-        console.log('从GameStore恢复拼图状态')
-        viewModel.value.syncFromGameStore()
       } else {
         console.log('初始化新拼图')
         viewModel.value.initializePieces()
       }
+      
+      isInitializing.value = false
+      
     } catch (error) {
       console.error('处理拼图数据变化时出错:', error)
       if (newPuzzleData) {
         viewModel.value.initializePieces()
       }
+      isInitializing.value = false
     }
   } else {
     gameStore.clearPuzzleBoardPieces()
@@ -243,22 +251,28 @@ watch(() => props.puzzleData, async (newPuzzleData) => {
 })
 
 // 监听GameStore pieces变化
-watch(() => gameStore.pieces, (newPieces) => {
-  if (props.puzzleData && gameStore.currentPuzzle?.id === props.puzzleData.id) {
-    try {
-      if (newPieces.length === 0) {
-        console.log('GameStore pieces被清空，重新初始化')
-        viewModel.value.initializePieces()
-      } else {
-        console.log('GameStore pieces变化，同步状态')
-        viewModel.value.syncFromGameStore()
-      }
-    } catch (error) {
-      console.error('同步GameStore pieces时出错:', error)
-      if (props.puzzleData) {
-        viewModel.value.initializePieces()
-      }
+watch(() => gameStore.pieces, (newPieces, oldPieces) => {
+  // 如果正在初始化，跳过处理避免循环
+  if (isInitializing.value) {
+    return
+  }
+  
+  if (!props.puzzleData || gameStore.currentPuzzle?.id !== props.puzzleData.id) {
+    return
+  }
+  
+  try {
+    // 只有当从有数据变为无数据时才重新初始化，避免无限循环
+    if (newPieces.length === 0 && oldPieces && oldPieces.length > 0) {
+      console.log('GameStore pieces被清空，重新初始化')
+      isInitializing.value = true
+      viewModel.value.initializePieces()
+      isInitializing.value = false
     }
+    // 移除了对有数据情况的处理，避免循环调用
+  } catch (error) {
+    console.error('处理GameStore pieces变化时出错:', error)
+    isInitializing.value = false
   }
 }, { deep: true })
 </script>
