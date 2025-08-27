@@ -3,6 +3,12 @@
  * 采用Pinia + 面向对象设计模式
  */
 
+/**
+ * 🗑️不符合MVVM规范的代码：useLibraryStore直接被View持有
+ * 或许存在更多不规范问题
+ * 在未来应该修改
+ */
+
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue } from '../types'
@@ -13,7 +19,7 @@ import { BUILTIN_PUZZLES, ACHIEVEMENTS } from '../data'
 /**
  * 素材库管理器类
  */
-class LibraryManager {
+class LibraryViewModel {
   private readonly STORAGE_KEY = 'puzzle_library'
   private readonly USER_STATS_KEY = 'user_stats'
   private readonly ACHIEVEMENTS_KEY = 'puzzle_achievements'
@@ -170,9 +176,9 @@ export const useLibraryStore = defineStore('library', () => {
   const isLoading = ref(false)
 
   // 素材库管理器实例
-  const libraryManager = new LibraryManager()
+  const libraryViewModel = new LibraryViewModel()
 
-  const userStats = ref<UserStats>(libraryManager.loadUserStats())
+  const userStats = ref<UserStats>(libraryViewModel.loadUserStats())
 
   // 计算属性
   const filteredItems = computed(() => {
@@ -237,25 +243,25 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = true
     
     // 加载内置素材
-    const builtIn = libraryManager.getBuiltInLibrary()
+    const builtIn = libraryViewModel.getBuiltInLibrary()
     
     // 加载用户素材
-    const userLibrary = libraryManager.loadFromStorage()
+    const userLibrary = libraryViewModel.loadFromStorage()
     
     // 合并素材库
     items.value = [...builtIn, ...userLibrary]
     
     // 加载成就
-    achievements.value = libraryManager.loadAchievements()
+    achievements.value = libraryViewModel.loadAchievements()
 
     // 加载统计数据
-    userStats.value = libraryManager.loadUserStats()
+    userStats.value = libraryViewModel.loadUserStats()
 
     isLoading.value = false
   }
 
   const addLibraryItem = async (file: File, name: string, category: string, tags: string[]) => {
-    if (!libraryManager.validateImageFile(file)) {
+    if (!libraryViewModel.validateImageFile(file)) {
       throw new Error('无效的图片文件')
     }
 
@@ -263,7 +269,7 @@ export const useLibraryStore = defineStore('library', () => {
       isLoading.value = true
       
       // 生成缩略图
-      const thumbnail = await libraryManager.generateThumbnail(file)
+      const thumbnail = await libraryViewModel.generateThumbnail(file)
       
       // 创建新的库项目
       const newItem: LibraryItem = {
@@ -277,7 +283,7 @@ export const useLibraryStore = defineStore('library', () => {
       }
 
       items.value.push(newItem)
-      libraryManager.saveToStorage(items.value)
+      libraryViewModel.saveToStorage(items.value)
       
       return newItem
     } catch (error) {
@@ -292,7 +298,7 @@ export const useLibraryStore = defineStore('library', () => {
     const index = items.value.findIndex(item => item.id === itemId)
     if (index !== -1 && !items.value[index].isBuiltIn) {
       items.value.splice(index, 1)
-      libraryManager.saveToStorage(items.value)
+      libraryViewModel.saveToStorage(items.value)
     }
   }
 
@@ -300,7 +306,7 @@ export const useLibraryStore = defineStore('library', () => {
     const item = items.value.find(item => item.id === itemId)
     if (item && !item.isBuiltIn) {
       Object.assign(item, updates)
-      libraryManager.saveToStorage(items.value)
+      libraryViewModel.saveToStorage(items.value)
     }
   }
 
@@ -332,7 +338,7 @@ export const useLibraryStore = defineStore('library', () => {
     })
 
     if (newAchievements) {
-      libraryManager.saveAchievements(achievements.value)
+      libraryViewModel.saveAchievements(achievements.value)
     }
 
     return newAchievements
@@ -360,7 +366,7 @@ export const useLibraryStore = defineStore('library', () => {
           }
         })
         
-        libraryManager.saveToStorage(items.value)
+        libraryViewModel.saveToStorage(items.value)
         return true
       }
       
@@ -375,13 +381,13 @@ export const useLibraryStore = defineStore('library', () => {
     const newStats = modifier(userStats.value)
     if (newStats) {
       userStats.value = newStats
-      libraryManager.saveUserStats(userStats.value)
+      libraryViewModel.saveUserStats(userStats.value)
     }
   }
 
   const clearUserLibrary = () => {
     items.value = items.value.filter(item => item.isBuiltIn)
-    libraryManager.saveToStorage(items.value)
+    libraryViewModel.saveToStorage(items.value)
   }
 
   return {

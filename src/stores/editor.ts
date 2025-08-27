@@ -3,6 +3,12 @@
  * 采用Pinia + 面向对象设计模式
  */
 
+/**
+ * 🗑️不符合MVVM规范的代码：useEditorStore直接被View持有
+ * 或许存在更多不规范问题
+ * 在未来应该修改
+ */
+
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { EditorState, GridConfig, Boundary, PuzzleData } from '../types'
@@ -12,7 +18,7 @@ import { BoundaryManager } from '../utils/svgUtils'
 /**
  * 编辑器管理器类
  */
-class EditorManager {
+class EditorViewModel {
   /**
    * 验证网格配置是否有效
    */
@@ -94,7 +100,7 @@ export const useEditorStore = defineStore('editor', () => {
   const isModified = ref(false)
 
   // 编辑器管理器实例
-  const editorManager = new EditorManager()
+  const editorManager = new EditorViewModel()
 
   // 计算属性
   const totalPieces = computed(() => {
