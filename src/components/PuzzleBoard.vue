@@ -185,7 +185,6 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   document.removeEventListener('touchend', stopDrag)
 }
 
-// 公共初始化函数
 const initializePuzzle = async (puzzleData: PuzzleData | null) => {
   if (puzzleData) {
     await nextTick()
@@ -193,8 +192,8 @@ const initializePuzzle = async (puzzleData: PuzzleData | null) => {
     
     try {
       isInitializing.value = true
-      
-      const restored = viewModel.value.restoreFromLocalStorage()
+
+      const restored = viewModel.value.pieces.length == viewModel.value.totalPieces
       if (restored) {
         console.log('成功恢复拼图块位置')
       } else {

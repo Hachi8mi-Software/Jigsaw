@@ -340,38 +340,4 @@ export class PuzzleBoardViewModel {
   private checkGameCompletion() {
     this.gameController.checkPuzzleBoardCompletion()
   }
-
-  // 保存状态到localStorage
-  saveToLocalStorage() {
-    if (!this.puzzleData) return
-    
-    const stateData = {
-      puzzleId: this.puzzleData.id,
-      pieces: this.gameController.getPuzzleBoardSnapshot(),
-      timestamp: Date.now()
-    }
-    
-    localStorage.setItem(`puzzle_exact_state_${this.puzzleData.id}`, JSON.stringify(stateData))
-  }
-
-  // 从localStorage恢复状态
-  restoreFromLocalStorage(): boolean {
-    if (!this.puzzleData) return false
-    
-    const savedState = localStorage.getItem(`puzzle_exact_state_${this.puzzleData.id}`)
-    if (!savedState) return false
-    
-    try {
-      const stateData = JSON.parse(savedState)
-      if (stateData.puzzleId !== this.puzzleData.id) return false
-      
-      this.gameController.restorePuzzleBoardPieces(stateData.pieces)
-      console.log('成功从localStorage恢复拼图块状态')
-      
-      return true
-    } catch (error) {
-      console.error('从localStorage恢复状态失败:', error)
-      return false
-    }
-  }
 }
