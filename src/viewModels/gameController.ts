@@ -5,7 +5,7 @@
 
 import { useGameStore } from '../stores/game'
 import { useLibraryStore } from '../stores/library'
-import type { PiecePosition, PuzzleData, UserStats } from '../types'
+import type { PiecePosition, PieceStatus, PuzzleData, UserStats } from '../types'
 
 /**
  * 游戏核心控制器 - 处理游戏业务逻辑，持有store实例
@@ -142,7 +142,7 @@ export class GameController {
     this.saveGameState()
     
     // 检查游戏是否完成
-    if (this.gameStore.checkCompletion(this.gameStore.pieces.length)) {
+    if (this.gameStore.checkGameCompletion()) {
       this.completeGame()
     }
   }
@@ -300,7 +300,7 @@ export class GameController {
     return this.gameStore.currentPuzzle
   }
 
-  get pieces(): PiecePosition[] {
+  get pieces(): PieceStatus[] {
     return this.gameStore.pieces
   }
 

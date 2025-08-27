@@ -5,12 +5,12 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { PuzzleData, PiecePosition, UserStats } from '../types'
+import type { PuzzleData, PiecePosition, UserStats, PieceStatus } from '../types'
 
 export const useGameStore = defineStore('game', () => {
   // 基础游戏状态
   const currentPuzzle = ref<PuzzleData | null>(null)
-  const pieces = ref<PiecePosition[]>([])
+  const pieces = ref<PieceStatus[]>([])
   const startTime = ref<Date | null>(null)
   const endTime = ref<Date | null>(null)
   const moveCount = ref(0)
@@ -27,6 +27,37 @@ export const useGameStore = defineStore('game', () => {
     totalSuccessMovements: 0
   })
   const isRestarting = ref(true)
+
+  const draggingPieceIndex = ref(-1)
+  const dragOffset = ref({ x: 0, y: 0 })
+
+  // 转换函数：将 PiecePosition[] 转换为 PieceStatus[]
+  const convertPiecePositionsToStatus = (piecePositions: PiecePosition[]): PieceStatus[] => {
+    return piecePositions.map((piece, index) => ({
+      // 统一使用 x, y 坐标
+      id: piece.id,
+      x: piece.x,
+      y: piece.y,
+      rotation: piece.rotation,
+      
+      // PieceStatus 属性
+      originalIndex: index,
+      isPlaced: piece.isPlaced,
+      isCorrect: undefined,
+      gridPosition: undefined
+    }))
+  }
+
+  // 转换函数：将 PieceStatus[] 转换为 PiecePosition[]  
+  const convertStatusToPiecePositions = (pieceStatuses: PieceStatus[]): PiecePosition[] => {
+    return pieceStatuses.map(piece => ({
+      id: piece.id || `piece_${piece.originalIndex}`,
+      x: piece.x,
+      y: piece.y,
+      rotation: piece.rotation || 0,
+      isPlaced: piece.isPlaced
+    }))
+  }
 
   const totalPieces = computed(() => {
     if (!currentPuzzle.value) return 0
@@ -62,6 +93,24 @@ export const useGameStore = defineStore('game', () => {
     return currentPuzzle.value?.difficulty || 1
   })
 
+  // 拼图板相关计算属性
+  const unplacedPieces = computed(() => {
+    return pieces.value.filter(piece => !piece.isPlaced)
+  })
+
+  const placedPieces = computed(() => {
+    return pieces.value.filter(piece => piece.isPlaced)
+  })
+
+  const correctlyPlacedPieces = computed(() => {
+    return pieces.value.filter(piece => piece.isPlaced && piece.isCorrect)
+  })
+
+  const puzzleBoardCompletionRate = computed(() => {
+    if (pieces.value.length === 0) return 0
+    return Math.round((correctlyPlacedPieces.value.length / pieces.value.length) * 100)
+  })
+
   const updateCurrentTime = () => {
     if (!isCompleted.value) {
       currentTime.value = new Date()
@@ -70,11 +119,12 @@ export const useGameStore = defineStore('game', () => {
 
   const initializeNewGame = (data: {
     puzzleData: PuzzleData
-    pieces: PiecePosition[]
+    pieces: PieceStatus[]
     startTime: Date
     gameSessionId: string
   }) => {
     currentPuzzle.value = data.puzzleData
+    // 直接使用 PieceStatus[]
     pieces.value = data.pieces
     startTime.value = data.startTime
     currentTime.value = new Date()
@@ -89,7 +139,7 @@ export const useGameStore = defineStore('game', () => {
 
   const restoreGameState = (data: {
     puzzleData: PuzzleData
-    pieces: PiecePosition[]
+    pieces: PieceStatus[]
     startTime: Date
     moveCount: number
     isCompleted: boolean
@@ -98,6 +148,7 @@ export const useGameStore = defineStore('game', () => {
     gameSessionId: string
   }) => {
     currentPuzzle.value = data.puzzleData
+    // 直接使用 PieceStatus[]
     pieces.value = data.pieces
     startTime.value = data.startTime
     currentTime.value = new Date()
@@ -144,11 +195,114 @@ export const useGameStore = defineStore('game', () => {
     const piece = pieces.value.find(p => p.id === pieceId)
     if (piece) {
       piece.isPlaced = isPlaced
-      // 不再自动调用checkCompletion，由PuzzleBoard组件控制完成检查
-      // checkCompletion(totalPieces.value)
+      checkGameCompletion()
     } else {
       console.log("updatePiecePlacement 找不到拼图块:", pieceId)
     }
+  }
+
+  // 拼图板相关方法 (现在使用统一的 pieces 数组)
+  const initializePuzzleBoardPieces = (totalPieces: number) => {
+    pieces.value = Array.from({ length: totalPieces }, (_, i) => ({
+      id: `piece_${i}`,
+      x: 0,
+      y: 0,
+      rotation: 0,
+      originalIndex: i,
+      currentX: 0,
+      currentY: 0,
+      isPlaced: false
+    }))
+  }
+
+  const updatePuzzleBoardPiecePosition = (index: number, x: number, y: number) => {
+    const piece = pieces.value[index]
+    if (piece) {
+      piece.x = x
+      piece.y = y
+    }
+  }
+
+  const setPuzzleBoardPiecePlaced = (index: number, isPlaced: boolean, gridPosition?: number, isCorrect?: boolean) => {
+    const piece = pieces.value[index]
+    if (piece) {
+      piece.isPlaced = isPlaced
+      piece.gridPosition = gridPosition
+      piece.isCorrect = isCorrect
+
+      // 检查游戏是否完成
+      if (isPuzzleBoardGameCompleted()) {
+        isCompleted.value = true
+      }
+    }
+  }
+
+  const getPuzzleBoardPiece = (index: number): PieceStatus | undefined => {
+    return pieces.value[index]
+  }
+
+  const isPuzzleBoardSlotOccupied = (slotIndex: number): boolean => {
+    return pieces.value.some(piece => piece.isPlaced && piece.gridPosition === slotIndex)
+  }
+
+  const resetAllPuzzleBoardPieceStates = () => {
+    pieces.value.forEach(piece => {
+      piece.isPlaced = false
+      piece.isCorrect = undefined
+      piece.gridPosition = undefined
+    })
+  }
+
+  const clearPuzzleBoardPieces = () => {
+    pieces.value = []
+    draggingPieceIndex.value = -1
+    dragOffset.value = { x: 0, y: 0 }
+  }
+
+  const setDraggingPiece = (index: number) => {
+    draggingPieceIndex.value = index
+  }
+
+  const clearDragging = () => {
+    draggingPieceIndex.value = -1
+  }
+
+  const setDragOffset = (offset: { x: number, y: number }) => {
+    dragOffset.value = offset
+  }
+
+  const restorePuzzleBoardPiecesFromData = (piecesData: PieceStatus[]) => {
+    pieces.value = piecesData.map(piece => ({ ...piece }))
+  }
+
+  const getPuzzleBoardPiecesSnapshot = (): PieceStatus[] => {
+    return pieces.value.map(piece => ({ ...piece }))
+  }
+
+  const isPuzzleBoardGameCompleted = (): boolean => {
+    if (pieces.value.length === 0) return false
+    return pieces.value.every(piece => piece.isPlaced && piece.isCorrect)
+  }
+
+  // 检查游戏完成 (两种拼图系统都支持)
+  const checkGameCompletion = () => {
+    // 基于 pieces (PiecePosition[]) 的检查
+    const totalPieces = pieces.value.length
+    if (totalPieces > 0) {
+      const placedPieces = pieces.value.filter(piece => piece.isPlaced)
+      if (placedPieces.length === totalPieces) {
+        isCompleted.value = true
+        return true
+      }
+    }
+
+    // 基于 puzzleBoardPieces (PieceStatus[]) 的检查
+    if (isPuzzleBoardGameCompleted()) {
+      isCompleted.value = true
+      return true
+    }
+
+    return false
   }
 
   const completeGameState = (completionTime: Date) => {
@@ -160,7 +314,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const loadGameSnapshot = (data: {
-    pieces: PiecePosition[]
+    pieces: PieceStatus[]
     startTime: Date
     moveCount: number
   }) => {
@@ -229,17 +383,20 @@ export const useGameStore = defineStore('game', () => {
     return Math.floor(adjustedElapsed / 1000)
   }
 
-  const generateInitialPieces = (puzzleData: PuzzleData): PiecePosition[] => {
-    const pieces: PiecePosition[] = []
+  const generateInitialPieces = (puzzleData: PuzzleData): PieceStatus[] => {
+    const pieces: PieceStatus[] = []
     const { rows, cols } = puzzleData.gridConfig
     
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
+        const x = Math.random() * 300 + 50
+        const y = Math.random() * 400 + 50
         pieces.push({
           id: `piece_${row}_${col}`,
-          x: Math.random() * 300 + 50, // 随机散布在侧边栏
-          y: Math.random() * 400 + 50,
+          x: x,
+          y: y,
           rotation: 0,
+          originalIndex: row * cols + col,
           isPlaced: false
         })
       }
@@ -248,57 +405,18 @@ export const useGameStore = defineStore('game', () => {
     return pieces
   }
 
-  const shufflePieces = (pieces: PiecePosition[]): PiecePosition[] => {
-    return pieces.map(piece => ({
-      ...piece,
-      x: Math.random() * 300 + 50,
-      y: Math.random() * 400 + 50,
-      rotation: Math.random() * 360,
-      isPlaced: false
-    }))
-  }
-
-  const checkCompletion = (totalPieces: number): boolean => {
-    const placedPieces = pieces.value.filter(piece => piece.isPlaced)
-    
-    // 首先检查是否所有拼图块都已放置
-    if (placedPieces.length !== totalPieces) {
-      isCompleted.value = false
-      return false
-    }
-    
-    // 然后检查每个拼图块是否放在正确位置
-    const allCorrect = pieces.value.every(piece => {
-      if (!piece.isPlaced) return false
-      
-      // 从piece.id解析出正确的行列位置
-      const [, row, col] = piece.id.split('_').map(Number)
-      if (isNaN(row) || isNaN(col)) return false
-      
-      // 计算正确的网格索引
-      const correctGridIndex = row * (currentPuzzle.value?.gridConfig.cols || 0) + col
-      
-      // 从piece.x, piece.y计算当前网格位置
-      const gridCols = currentPuzzle.value?.gridConfig.cols || 0
-      const pieceWidth = currentPuzzle.value?.gridConfig.pieceWidth || 100
-      const pieceHeight = currentPuzzle.value?.gridConfig.pieceHeight || 75
-      
-      const currentCol = Math.floor((piece.x - 8) / (pieceWidth + 2))
-      const currentRow = Math.floor((piece.y - 8) / (pieceHeight + 2))
-      const currentGridIndex = currentRow * gridCols + currentCol
-      
-      return correctGridIndex === currentGridIndex
+  const shufflePieces = (pieces: PieceStatus[]): PieceStatus[] => {
+    return pieces.map(piece => {
+      const x = Math.random() * 300 + 50
+      const y = Math.random() * 400 + 50
+      return {
+        ...piece,
+        x: x,
+        y: y,
+        rotation: Math.random() * 360,
+        isPlaced: false
+      }
     })
-    
-    isCompleted.value = allCorrect
-    console.log('游戏完成检查:', {
-      已放置数量: placedPieces.length,
-      总数量: totalPieces,
-      全部正确: allCorrect,
-      游戏完成: isCompleted.value
-    })
-    
-    return isCompleted.value
   }
 
   const getCorrectPositionForPiece = (pieceId: string): { row: number, col: number } | null => {
@@ -322,6 +440,7 @@ export const useGameStore = defineStore('game', () => {
     return pieces.value.some(piece => 
       piece.id !== excludePieceId &&
       piece.isPlaced &&
+      piece.x !== undefined && piece.y !== undefined &&
       Math.abs(piece.x - targetX) < 10 &&
       Math.abs(piece.y - targetY) < 10
     )
@@ -336,8 +455,10 @@ export const useGameStore = defineStore('game', () => {
     const piece = pieces.value.find(p => p.id === pieceId)
     if (piece) {
       const { pieceWidth, pieceHeight } = gridConfig
-      piece.x = gridCol * pieceWidth
-      piece.y = gridRow * pieceHeight
+      const newX = gridCol * pieceWidth
+      const newY = gridRow * pieceHeight
+      piece.x = newX
+      piece.y = newY
     }
   }
 
@@ -398,10 +519,21 @@ export const useGameStore = defineStore('game', () => {
     userStats,
     isRestarting,
 
+    // 拖拽状态
+    draggingPieceIndex,
+    dragOffset,
+
     // 计算属性
     elapsedTime,
     completionPercentage,
     currentDifficulty,
+    totalPieces,
+    
+    // 拼图板计算属性
+    unplacedPieces,
+    placedPieces,
+    correctlyPlacedPieces,
+    puzzleBoardCompletionRate,
     
     // 基础数据操作方法
     updateCurrentTime,
@@ -417,6 +549,21 @@ export const useGameStore = defineStore('game', () => {
     resetGameState,
     incrementMoveCount,
     
+    // 拼图板方法
+    initializePuzzleBoardPieces,
+    updatePuzzleBoardPiecePosition,
+    setPuzzleBoardPiecePlaced,
+    getPuzzleBoardPiece,
+    isPuzzleBoardSlotOccupied,
+    resetAllPuzzleBoardPieceStates,
+    clearPuzzleBoardPieces,
+    setDraggingPiece,
+    clearDragging,
+    setDragOffset,
+    restorePuzzleBoardPiecesFromData,
+    getPuzzleBoardPiecesSnapshot,
+    isPuzzleBoardGameCompleted,
+    
     // 核心业务逻辑方法
     startTimer,
     pauseTimer,
@@ -424,7 +571,7 @@ export const useGameStore = defineStore('game', () => {
     calculateElapsedTime,
     generateInitialPieces,
     shufflePieces,
-    checkCompletion,
+    checkGameCompletion,
     getCorrectPositionForPiece,
     isPieceAtPosition,
     snapPieceToGrid,
@@ -434,6 +581,10 @@ export const useGameStore = defineStore('game', () => {
     generateSessionId,
     saveGameState,
     loadGameState,
-    clearGameState
+    clearGameState,
+
+    // 转换函数
+    convertPiecePositionsToStatus,
+    convertStatusToPiecePositions
   }
 })

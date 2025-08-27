@@ -19,6 +19,21 @@ export interface PiecePosition {
   isPlaced: boolean
 }
 
+// 拼图块状态接口 - 合并了 PiecePosition 和 PieceStatus 的功能
+export interface PieceStatus {
+  // 基础属性
+  id?: string               // 拼图块ID (用于drag&drop系统)
+  x: number                // X坐标
+  y: number                // Y坐标
+
+  rotation?: number        // 旋转角度 (用于drag&drop系统)
+  
+  originalIndex: number      // 原始索引（正确位置）
+  isPlaced: boolean         // 是否已放置
+  isCorrect?: boolean       // 是否放在正确位置
+  gridPosition?: number     // 网格位置索引
+}
+
 // 边界信息接口
 export interface Boundary {
   id: string

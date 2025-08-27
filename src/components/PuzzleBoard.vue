@@ -100,7 +100,6 @@
 <script setup lang="ts">
 import { computed, onMounted, watch, nextTick } from 'vue'
 import { useGameStore } from '../stores/game'
-import { usePuzzleBoardStore } from '../stores/puzzleBoard'
 import { PuzzleBoardViewModel } from '../viewModels/puzzleBoardViewModel'
 import type { PuzzleData } from '../types'
 import { GameController } from '@/viewModels/gameController'
@@ -114,7 +113,6 @@ const props = defineProps<Props>()
 
 // 获取store实例
 const gameStore = useGameStore()
-const puzzleBoardStore = usePuzzleBoardStore()
 
 // 创建ViewModel实例
 const viewModel = computed(() => new PuzzleBoardViewModel(props.puzzleData))
@@ -212,7 +210,7 @@ onMounted(async () => {
       }
     }
   } else {
-    puzzleBoardStore.resetPieces()
+    gameStore.clearPuzzleBoardPieces()
   }
 })
 
@@ -240,7 +238,7 @@ watch(() => props.puzzleData, async (newPuzzleData) => {
       }
     }
   } else {
-    puzzleBoardStore.resetPieces()
+    gameStore.clearPuzzleBoardPieces()
   }
 })
 
