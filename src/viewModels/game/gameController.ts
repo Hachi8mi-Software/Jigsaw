@@ -5,7 +5,7 @@
 
 import { useGameStore } from '../../stores/game'
 import { useLibraryStore } from '../../stores/library'
-import type { PiecePosition, PieceStatus, PuzzleData, UserStats } from '../../types'
+import type { PieceStatus, PuzzleData, UserStats } from '../../types'
 
 /**
  * 游戏核心控制器 - 处理游戏业务逻辑，持有store实例
@@ -187,41 +187,6 @@ export class GameController {
   }
 
   /**
-   * 获取拼图块的正确位置
-   */
-  getCorrectPositionForPiece(pieceId: string): { row: number, col: number } | null {
-    return this.gameStore.getCorrectPositionForPiece(pieceId)
-  }
-
-  /**
-   * 检查指定位置是否有拼图块
-   */
-  isPieceAtPosition(row: number, col: number, excludePieceId?: string): boolean {
-    if (!this.gameStore.currentPuzzle) return false
-    
-    return this.gameStore.isPieceAtPosition(
-      row, 
-      col, 
-      this.gameStore.currentPuzzle.gridConfig, 
-      excludePieceId
-    )
-  }
-
-  /**
-   * 拼图块吸附到网格
-   */
-  snapPieceToGrid(pieceId: string, gridRow: number, gridCol: number): void {
-    if (this.gameStore.currentPuzzle) {
-      this.gameStore.snapPieceToGrid(
-        pieceId, 
-        gridRow, 
-        gridCol, 
-        this.gameStore.currentPuzzle.gridConfig
-      )
-    }
-  }
-
-  /**
    * 更新用户统计数据
    */
   private updateUserStats(puzzleData: PuzzleData, gameTime: number): void {
@@ -366,118 +331,5 @@ export class GameController {
 
   get moveCount() {
     return this.gameStore.moveCount
-  }
-
-  // ========== 拼图板相关数据方法 ==========
-  
-  /**
-   * 初始化拼图块数据
-   */
-  initializePuzzleBoardData(totalPieces: number): void {
-    this.gameStore.initializePuzzleBoardPieces(totalPieces)
-  }
-
-  /**
-   * 获取拼图板相关数据
-   */
-  get puzzleBoardData() {
-    return {
-      pieces: this.gameStore.pieces,
-      draggingPieceIndex: this.gameStore.draggingPieceIndex,
-      completionRate: this.gameStore.puzzleBoardCompletionRate,
-      unplacedPieces: this.gameStore.unplacedPieces
-    }
-  }
-
-  /**
-   * 更新拼图块位置
-   */
-  updatePiecePosition(index: number, x: number, y: number): void {
-    this.gameStore.updatePuzzleBoardPiecePosition(index, x, y)
-  }
-
-  /**
-   * 设置拼图块放置状态
-   */
-  setPiecePlaced(index: number, isPlaced: boolean, gridPosition?: number, isCorrect?: boolean): void {
-    this.gameStore.setPuzzleBoardPiecePlaced(index, isPlaced, gridPosition, isCorrect)
-  }
-
-  /**
-   * 获取指定拼图块
-   */
-  getPiece(index: number): PieceStatus | null {
-    return this.gameStore.getPuzzleBoardPiece(index) || null
-  }
-
-  /**
-   * 检查插槽是否被占用
-   */
-  isSlotOccupied(slotIndex: number): boolean {
-    return this.gameStore.isPuzzleBoardSlotOccupied(slotIndex)
-  }
-
-  /**
-   * 设置拖拽状态
-   */
-  setDraggingState(index: number, dragOffset?: { x: number; y: number }): void {
-    this.gameStore.setDraggingPiece(index)
-    if (dragOffset) {
-      this.gameStore.setDragOffset(dragOffset)
-    }
-  }
-
-  /**
-   * 清除拖拽状态
-   */
-  clearDraggingState(): void {
-    this.gameStore.clearDragging()
-  }
-
-  /**
-   * 获取拖拽偏移量
-   */
-  get dragOffset() {
-    return this.gameStore.dragOffset
-  }
-
-  /**
-   * 重置所有拼图块状态
-   */
-  resetAllPuzzleBoardPieces(): void {
-    this.gameStore.resetAllPuzzleBoardPieceStates()
-  }
-
-  /**
-   * 检查游戏是否完成
-   */
-  checkPuzzleBoardCompletion(): boolean {
-    const isCompleted = this.gameStore.isPuzzleBoardGameCompleted()
-    if (isCompleted) {
-      this.gameStore.isCompleted = true
-      this.gameStore.completeGameState(new Date())
-    }
-    return isCompleted
-  }
-
-  /**
-   * 增加步数
-   */
-  incrementMoveCount(): void {
-    this.gameStore.incrementMoveCount()
-  }
-
-  /**
-   * 从数据恢复拼图块状态
-   */
-  restorePuzzleBoardPieces(pieces: PieceStatus[]): void {
-    this.gameStore.restorePuzzleBoardPiecesFromData(pieces)
-  }
-
-  /**
-   * 获取拼图块状态快照
-   */
-  getPuzzleBoardSnapshot(): PieceStatus[] {
-    return this.gameStore.getPuzzleBoardPiecesSnapshot()
   }
 }

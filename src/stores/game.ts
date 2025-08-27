@@ -174,12 +174,17 @@ export const useGameStore = defineStore('game', () => {
   }
 
 
-  const updatePiecePosition = (pieceId: string, x: number, y: number) => {
-    const piece = pieces.value.find(p => p.id === pieceId)
+  const updatePiecePosition = (pieceId: string | number, x: number, y: number) => {
+    console.log("update piece position called")
+    const piece = typeof pieceId === "string"
+    ? pieces.value.find(p => p.id === pieceId)
+    : pieces.value.find(p => p.originalIndex === pieceId);
+
     if (piece) {
       piece.x = x
       piece.y = y
       moveCount.value++
+      console.log("Update place: ",pieceId, "-> (",x,",", y,")")
     }
   }
 

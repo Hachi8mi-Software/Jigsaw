@@ -24,10 +24,14 @@ import {
 import {
   reshufflePieces
 } from '@/utils/scatterUtils'
+import { useGameStore } from '@/stores/game'
 
 export class PuzzleBoardViewModel {
   // GameController 实例
   private gameController: GameController
+
+  // 添加对 game store 的依赖
+  private gameStore = useGameStore()
 
   constructor(private puzzleData: PuzzleData | null) {
     this.gameController = new GameController()
@@ -48,17 +52,25 @@ export class PuzzleBoardViewModel {
   }
 
   get pieces() {
-    return this.gameController.puzzleBoardData.pieces
+    return this.gameStore.getPuzzleBoardPiecesSnapshot()
   }
 
   get draggingPieceIndex() {
-    return this.gameController.puzzleBoardData.draggingPieceIndex
+    return this.gameStore.draggingPieceIndex
   }
 
   get completionRate() {
-    return this.gameController.puzzleBoardData.completionRate
+    return this.puzzleBoardData.completionRate
   }
 
+  get puzzleBoardData() {
+    return {
+      pieces: this.gameStore.pieces,
+      draggingPieceIndex: this.gameStore.draggingPieceIndex,
+      completionRate: this.gameStore.puzzleBoardCompletionRate,
+      unplacedPieces: this.gameStore.unplacedPieces
+    }
+  }
   // 计算网格样式
   getGridStyle(): StyleValue {
     return createGridStyle(this.gridCols, this.gridRows)
@@ -101,7 +113,7 @@ export class PuzzleBoardViewModel {
     }
     
     // 初始化拼图块数据
-    this.gameController.initializePuzzleBoardData(total)
+    this.gameStore.initializePuzzleBoardPieces(total)
     
     // 散落拼图块
     nextTick(() => {
@@ -117,7 +129,7 @@ export class PuzzleBoardViewModel {
     const piecesAreaHeight = 420
     const pieceSize = this.getPieceSize()
     
-    const unplacedPieces = this.gameController.puzzleBoardData.unplacedPieces
+    const unplacedPieces = this.gameStore.getPuzzleBoardPiecesSnapshot().filter(piece => !piece.isPlaced)
     if (unplacedPieces.length === 0) return
     
     reshufflePieces(
@@ -127,14 +139,14 @@ export class PuzzleBoardViewModel {
       pieceSize.width, 
       pieceSize.height,
       (index: number, x: number, y: number) => {
-        this.gameController.updatePiecePosition(index, x, y)
+        this.gameStore.updatePiecePosition(index, x, y)
       }
     )
   }
 
   // 重置拼图
   resetPuzzle() {
-    this.gameController.resetAllPuzzleBoardPieces()
+    this.gameStore.resetAllPuzzleBoardPieceStates()
     this.initializePieces()
   }
 
@@ -144,20 +156,20 @@ export class PuzzleBoardViewModel {
     
     this.pieces.forEach((piece: PieceStatus, index: number) => {
       const correctPos = getGridPos(index, this.getPieceSize(), this.gridCols)
-      this.gameController.updatePiecePosition(index, correctPos.x, correctPos.y)
-      this.gameController.setPiecePlaced(index, true, piece.originalIndex, true)
+      this.gameStore.updatePiecePosition(index, correctPos.x, correctPos.y)
+      this.gameStore.setPuzzleBoardPiecePlaced(index, true, piece.originalIndex, true)
       console.log(`Piece ${index} snapped to grid position:`, correctPos)
     })
   }
 
   // 检查插槽是否被占用
   isSlotOccupied(slotIndex: number): boolean {
-    return this.gameController.isSlotOccupied(slotIndex)
+    return this.gameStore.isPuzzleBoardSlotOccupied(slotIndex)
   }
 
   // 拖拽开始
   startDrag(index: number, clientX: number, clientY: number) {
-    const piece = this.gameController.getPiece(index)
+    const piece = this.gameStore.getPuzzleBoardPiece(index)
     if (!piece) return
     
     // 计算偏移量
@@ -169,7 +181,7 @@ export class PuzzleBoardViewModel {
       const pieceXInGrid = col * (pieceSize.width + 2) + 8
       const pieceYInGrid = row * (pieceSize.height + 2) + 8
       
-      this.gameController.updatePiecePosition(index, pieceXInGrid, pieceYInGrid)
+      this.gameStore.updatePiecePosition(index, pieceXInGrid, pieceYInGrid)
     }
     
     const dragOffset = {
@@ -177,27 +189,34 @@ export class PuzzleBoardViewModel {
       y: clientY - piece.y
     }
     
-    this.gameController.setDraggingState(index, dragOffset)
+    this.gameStore.setDraggingPiece(index)
+    this.gameStore.setDragOffset(dragOffset)
+  }
+  
+  toStringIndex(index: number): string {
+    let sindex:string = index.toString()
+    let strIndex:string = 'piece_' + sindex
+    return strIndex
   }
 
   // 拖拽过程中
   handleDrag(clientX: number, clientY: number) {
     if (this.draggingPieceIndex === -1) return
     
-    const piece = this.gameController.getPiece(this.draggingPieceIndex)
+    const piece = this.getPiece(this.draggingPieceIndex)
     if (!piece) return
     
-    const newX = clientX - this.gameController.dragOffset.x
-    const newY = clientY - this.gameController.dragOffset.y
-    
-    this.gameController.updatePiecePosition(this.draggingPieceIndex, newX, newY)
+    const newX = clientX - this.gameStore.dragOffset.x
+    const newY = clientY - this.gameStore.dragOffset.y
+    console.log('Dragging piece', this.draggingPieceIndex, 'toString', this.draggingPieceIndex, 'new position:', { newX, newY })
+    this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
   }
 
   // 拖拽结束
   stopDrag(clientX: number, clientY: number, gridRect: DOMRect | null) {
     if (this.draggingPieceIndex === -1) return
     
-    const piece = this.gameController.getPiece(this.draggingPieceIndex)
+    const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece) return
     
     if (gridRect && 
@@ -209,7 +228,7 @@ export class PuzzleBoardViewModel {
       this.handleOutsideDrop()
     }
     
-    this.gameController.clearDraggingState()
+    this.gameStore.clearDragging()
   }
 
   // 处理在网格内放置
@@ -233,7 +252,7 @@ export class PuzzleBoardViewModel {
 
   // 处理在网格外放置
   private handleOutsideDrop() {
-    const piece = this.gameController.getPiece(this.draggingPieceIndex)
+    const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece) return
     
     if (piece.isPlaced) {
@@ -245,7 +264,7 @@ export class PuzzleBoardViewModel {
 
   // 处理无效网格放置
   private handleInvalidGridDrop() {
-    const piece = this.gameController.getPiece(this.draggingPieceIndex)
+    const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece) return
     
     if (piece.isPlaced) {
@@ -257,17 +276,17 @@ export class PuzzleBoardViewModel {
 
   // 吸附到网格
   private snapToGrid(gridIndex: number) {
-    const piece = this.gameController.getPiece(this.draggingPieceIndex)
+    const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece) return
 
     const { x: newX, y: newY } = getGridPos(gridIndex, this.getPieceSize(), this.gridCols)
     const isCorrect = piece.originalIndex === gridIndex
     
-    this.gameController.updatePiecePosition(this.draggingPieceIndex, newX, newY)
-    this.gameController.setPiecePlaced(this.draggingPieceIndex, true, gridIndex, isCorrect)
+    this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
+    this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, isCorrect)
     
     // 通知GameController增加步数
-    this.gameController.incrementMoveCount()
+    this.incrementMoveCount()
     
     // 检查游戏完成
     this.checkGameCompletion()
@@ -275,9 +294,14 @@ export class PuzzleBoardViewModel {
     console.log(isCorrect ? '正确放置！' : '位置不正确')
   }
 
+  // 将 incrementMoveCount 方法迁移到 PuzzleBoardViewModel
+  incrementMoveCount() {
+    this.gameStore.moveCount++
+  }
+
   // 重置已放置拼图块位置
   private resetPlacedPiecePosition() {
-    const piece = this.gameController.getPiece(this.draggingPieceIndex)
+    const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece || !piece.isPlaced) return
     
     const pieceSize = this.getPieceSize()
@@ -288,12 +312,12 @@ export class PuzzleBoardViewModel {
     const originalX = 8 + col * (pieceSize.width + 2)
     const originalY = 8 + row * (pieceSize.height + 2)
     
-    this.gameController.updatePiecePosition(this.draggingPieceIndex, originalX, originalY)
+    this.gameStore.updatePiecePosition(this.draggingPieceIndex, originalX, originalY)
   }
 
   // 约束到拼图块区域
   private constrainToPiecesArea() {
-    const piece = this.gameController.getPiece(this.draggingPieceIndex)
+    const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece || piece.isPlaced) return
     
     const piecesAreaWidth = 320
@@ -309,13 +333,13 @@ export class PuzzleBoardViewModel {
       while (!validPosition && attempts < 20) {
         const randomPos = generateRandomPosition(piecesAreaWidth, piecesAreaHeight, pieceSize.width, pieceSize.height)
         
-        const hasOverlap = this.gameController.puzzleBoardData.unplacedPieces.some((otherPiece: PieceStatus) => {
+        const hasOverlap = this.gameStore.getPuzzleBoardPiecesSnapshot().some((otherPiece: PieceStatus) => {
           if (otherPiece === piece) return false
           return isPieceOverlapping(randomPos, otherPiece, pieceSize.width, pieceSize.height)
         })
         
         if (!hasOverlap) {
-          this.gameController.updatePiecePosition(this.draggingPieceIndex, randomPos.x, randomPos.y)
+          this.gameStore.updatePiecePosition(this.draggingPieceIndex, randomPos.x, randomPos.y)
           validPosition = true
         }
         
@@ -331,13 +355,67 @@ export class PuzzleBoardViewModel {
           piecesAreaWidth, 
           piecesAreaHeight
         )
-        this.gameController.updatePiecePosition(this.draggingPieceIndex, constrainedPos.x, constrainedPos.y)
+        this.gameStore.updatePiecePosition(this.draggingPieceIndex, constrainedPos.x, constrainedPos.y)
       }
     }
   }
 
   // 检查游戏完成
   private checkGameCompletion() {
-    this.gameController.checkPuzzleBoardCompletion()
+    this.gameStore.checkGameCompletion()
+  }
+
+  // 检查某个位置是否有拼图块
+  isPieceAtPosition(row: number, col: number, excludePieceId?: string): boolean {
+    if (!this.gameStore.currentPuzzle) return false
+    return this.gameStore.isPieceAtPosition(row, col, this.gameStore.currentPuzzle.gridConfig, excludePieceId)
+  }
+
+  // 将拼图块吸附到网格
+  snapPieceToGrid(pieceId: string, gridRow: number, gridCol: number): void {
+    if (this.gameStore.currentPuzzle) {
+      this.gameStore.snapPieceToGrid(pieceId, gridRow, gridCol, this.gameStore.currentPuzzle.gridConfig)
+    }
+  }
+
+  // 初始化拼图块数据
+  initializePuzzleBoardData(total: number): void {
+    this.gameStore.initializePuzzleBoardPieces(total)
+  }
+
+  // 设置拼图块放置状态
+  setPiecePlaced(index: number, isPlaced: boolean, gridPosition?: number, isCorrect?: boolean): void {
+    this.gameStore.setPuzzleBoardPiecePlaced(index, isPlaced, gridPosition, isCorrect)
+  }
+
+  // 获取拼图块
+  getPiece(index: number): PieceStatus | undefined {
+    return this.gameStore.getPuzzleBoardPiece(index)
+  }
+
+  // 设置拖拽状态
+  setDraggingState(index: number, dragOffset: { x: number, y: number }): void {
+    this.gameStore.setDraggingPiece(index)
+    this.gameStore.setDragOffset(dragOffset)
+  }
+
+  // 清除拖拽状态
+  clearDraggingState(): void {
+    this.gameStore.clearDragging()
+  }
+
+  // 重置所有拼图块状态
+  resetAllPuzzleBoardPieces(): void {
+    this.gameStore.resetAllPuzzleBoardPieceStates()
+  }
+
+  // 检查拼图板完成状态
+  checkPuzzleBoardCompletion(): void {
+    this.gameStore.checkGameCompletion()
+  }
+
+  // 获取拼图板快照
+  getPuzzleBoardSnapshot(): PieceStatus[] {
+    return this.gameStore.getPuzzleBoardPiecesSnapshot()
   }
 }

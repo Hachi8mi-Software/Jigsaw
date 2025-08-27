@@ -149,48 +149,6 @@ export class GameViewModel {
   }
 
   /**
-   * 移动拼图块
-   */
-  movePiece(pieceId: string, x: number, y: number): void {
-    this.gameController.movePiece(pieceId, x, y)
-  }
-
-  /**
-   * 旋转拼图块
-   */
-  rotatePiece(pieceId: string, rotation: number): void {
-    this.gameController.rotatePiece(pieceId, rotation)
-  }
-
-  /**
-   * 放置拼图块
-   */
-  placePiece(pieceId: string, isPlaced: boolean): void {
-    this.gameController.placePiece(pieceId, isPlaced)
-  }
-
-  /**
-   * 检查指定位置是否有拼图块
-   */
-  isPieceAtPosition(row: number, col: number, excludePieceId?: string): boolean {
-    return this.gameController.isPieceAtPosition(row, col, excludePieceId)
-  }
-
-  /**
-   * 拼图块吸附到网格
-   */
-  snapPieceToGrid(pieceId: string, gridRow: number, gridCol: number): void {
-    this.gameController.snapPieceToGrid(pieceId, gridRow, gridCol)
-  }
-
-  /**
-   * 获取拼图块的正确位置
-   */
-  getCorrectPositionForPiece(pieceId: string): { row: number, col: number } | null {
-    return this.gameController.getCorrectPositionForPiece(pieceId)
-  }
-
-  /**
    * 关闭完成对话框
    */
   closeCompletionModal(): void {
