@@ -6,16 +6,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue } from '../types'
+import { BUILTIN_PUZZLES, ACHIEVEMENTS } from '../data'
 
-/**
- * 获取图片资源的完整路径
- * 支持开发环境和生产环境的不同base路径
- */
-function getImagePath(imageName: string): string {
-  // 使用Vite定义的全局常量
-  const baseUrl = __BASE_URL__ || '/Jigsaw/'
-  return `${baseUrl}images/${imageName}`
-}
+
 
 /**
  * 素材库管理器类
@@ -29,80 +22,14 @@ class LibraryManager {
    * 获取内置素材库数据
    */
   getBuiltInLibrary(): LibraryItem[] {
-    return [
-      {
-        id: 'builtin_1',
-        name: '美丽的日落',
-        imageUrl: getImagePath('sunset.svg'),
-        category: '自然风光',
-        tags: ['日落', '天空', '美景'],
-        difficulty: 3,
-        isBuiltIn: true
-      },
-      {
-        id: 'builtin_2',
-        name: '城市夜景',
-        imageUrl: getImagePath('city-night.svg'),
-        category: '城市建筑',
-        tags: ['城市', '夜景', '灯光'],
-        difficulty: 4,
-        isBuiltIn: true
-      },
-      {
-        id: 'builtin_3',
-        name: '可爱的猫咪',
-        imageUrl: getImagePath('cat.svg'),
-        category: '可爱动物',
-        tags: ['猫', '宠物', '可爱'],
-        difficulty: 2,
-        isBuiltIn: true
-      }
-    ]
+    return BUILTIN_PUZZLES
   }
 
   /**
    * 获取成就定义
    */
   getAchievements(): Achievement[] {
-    return [
-      {
-        id: 'first_puzzle',
-        name: '初试身手',
-        description: '完成第一个拼图',
-        icon: '🧩',
-        condition: (stats) => stats.totalGamesPlayed >= 1
-      },
-      {
-        id: 'speed_demon',
-        name: '快如闪电',
-        description: '10分钟内完成100块拼图',
-        icon: '⚡',
-        condition: (stats) => {
-          return Object.values(stats.bestTimes).some(time => time <= 600)
-        }
-      },
-      {
-        id: 'persistent',
-        name: '持之以恒',
-        description: '完成10个拼图',
-        icon: '🏆',
-        condition: (stats) => stats.totalGamesPlayed >= 10
-      },
-      {
-        id: 'master',
-        name: '拼图大师',
-        description: '完成1000块以上的拼图',
-        icon: '👑',
-        condition: (stats) => stats.totalGamesPlayed >= 1 // 简化条件，实际应检查拼图大小
-      },
-      {
-        id: 'time_spent',
-        name: '时间投入',
-        description: '累计游戏时间超过10小时',
-        icon: '⏰',
-        condition: (stats) => stats.totalTimeSpent >= 36000 // 10小时
-      }
-    ]
+    return ACHIEVEMENTS
   }
 
   /**
