@@ -4,7 +4,7 @@
  */
 
 import type { PieceStatus, PuzzleData } from '../types'
-import { StyleValue } from 'vue'
+import { nextTick, StyleValue } from 'vue'
 import { getGridPos } from '@/utils/gridUtils'
 import { GameController } from './gameController'
 import { 
@@ -22,7 +22,6 @@ import {
   createPlacedPieceStyle
 } from '@/utils/puzzleStyleUtils'
 import {
-  scatterPieces,
   reshufflePieces
 } from '@/utils/scatterUtils'
 
@@ -95,9 +94,6 @@ export class PuzzleBoardViewModel {
     if (!this.puzzleData) return
     
     const total = this.totalPieces
-    const piecesAreaWidth = 320
-    const piecesAreaHeight = 420
-    const pieceSize = this.getPieceSize()
     
     if (total === 0 || this.gridCols === 0 || this.gridRows === 0) {
       console.warn('拼图参数异常，跳过初始化:', { total, gridCols: this.gridCols, gridRows: this.gridRows })
@@ -108,16 +104,9 @@ export class PuzzleBoardViewModel {
     this.gameController.initializePuzzleBoardData(total)
     
     // 散落拼图块
-    scatterPieces(
-      this.gameController.puzzleBoardData.unplacedPieces,
-      piecesAreaWidth,
-      piecesAreaHeight,
-      pieceSize.width,
-      pieceSize.height,
-      (index: number, x: number, y: number) => {
-        this.gameController.updatePiecePosition(index, x, y)
-      }
-    )
+    nextTick(() => {
+      this.shufflePieces()
+    })
   }
 
   // 打乱拼图块

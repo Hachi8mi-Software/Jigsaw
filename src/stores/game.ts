@@ -389,12 +389,11 @@ export const useGameStore = defineStore('game', () => {
     
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const x = Math.random() * 300 + 50
-        const y = Math.random() * 400 + 50
         pieces.push({
           id: `piece_${row}_${col}`,
-          x: x,
-          y: y,
+          // 设为0，让PuzzleBoardViewModel.shufflePieces()处理散落
+          x: 0,
+          y: 0,
           rotation: 0,
           originalIndex: row * cols + col,
           isPlaced: false
