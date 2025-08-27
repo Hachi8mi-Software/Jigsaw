@@ -185,43 +185,9 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   document.removeEventListener('touchend', stopDrag)
 }
 
-// 生命周期管理
-onMounted(async () => {
-  console.log('PuzzleBoard onMounted, puzzleData:', props.puzzleData)
-  
-  if (props.puzzleData) {
-    await nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    try {
-      isInitializing.value = true // 开始初始化
-      
-      // 尝试从localStorage恢复状态
-      const restored = viewModel.value.restoreFromLocalStorage()
-      if (restored) {
-        console.log('成功恢复拼图块位置')
-      } else {
-        console.log('初始化新游戏')
-        viewModel.value.initializePieces()
-      }
-      
-      isInitializing.value = false // 初始化完成
-      
-    } catch (error) {
-      console.error('初始化拼图块时出错:', error)
-      if (props.puzzleData) {
-        viewModel.value.initializePieces()
-      }
-      isInitializing.value = false
-    }
-  } else {
-    gameStore.clearPuzzleBoardPieces()
-  }
-})
-
-// 监听拼图数据变化
-watch(() => props.puzzleData, async (newPuzzleData) => {
-  if (newPuzzleData) {
+// 公共初始化函数
+const initializePuzzle = async (puzzleData: PuzzleData | null) => {
+  if (puzzleData) {
     await nextTick()
     await new Promise(resolve => setTimeout(resolve, 100))
     
@@ -239,8 +205,8 @@ watch(() => props.puzzleData, async (newPuzzleData) => {
       isInitializing.value = false
       
     } catch (error) {
-      console.error('处理拼图数据变化时出错:', error)
-      if (newPuzzleData) {
+      console.error('初始化拼图块时出错:', error)
+      if (puzzleData) {
         viewModel.value.initializePieces()
       }
       isInitializing.value = false
@@ -248,6 +214,20 @@ watch(() => props.puzzleData, async (newPuzzleData) => {
   } else {
     gameStore.clearPuzzleBoardPieces()
   }
+}
+
+// 生命周期管理
+onMounted(async () => {
+  console.log('PuzzleBoard onMounted, puzzleData:', props.puzzleData)
+  await initializePuzzle(props.puzzleData)
+})
+
+// 监听拼图数据变化
+watch(() => props.puzzleData, async (newPuzzleData) => {
+  // 重新创建 ViewModel 实例以更新 puzzleData
+  viewModel.value = new PuzzleBoardViewModel(newPuzzleData)
+  
+  await initializePuzzle(newPuzzleData)
 })
 
 // 监听GameStore pieces变化
