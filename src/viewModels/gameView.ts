@@ -117,6 +117,17 @@ export class GameViewManager {
   }
 
   /**
+   * 重置游戏
+   */
+  resetGame(): void {
+    if (this.gameController.currentPuzzle) {
+      this.gameController.restartGame()
+      this.closeCompletionModal()
+      this.closeSettingsModal()
+    }
+  }
+
+  /**
    * 暂停游戏
    */
   pauseGame(): void {

@@ -46,6 +46,10 @@
           {{ isPaused ? '继续' : '暂停' }}
         </button>
         
+        <button @click="resetGame" class="control-btn">
+          🔄 重置
+        </button>
+        
         <button @click="showSettings" class="control-btn">
           ⚙️ 设置
         </button>
@@ -82,6 +86,7 @@ interface Emits {
   (e: 'show-settings'): void
   (e: 'toggle-pause'): void
   (e: 'return-to-library'): void
+  (e: 'reset-game'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -129,11 +134,16 @@ const returnToLibrary = () => {
   emit('return-to-library')
 }
 
+const resetGame = () => {
+  emit('reset-game')
+}
+
 // 定义事件
 const emit = defineEmits<{
   'show-settings': []
   'toggle-pause': []
   'return-to-library': []
+  'reset-game': []
 }>()
 </script>
 

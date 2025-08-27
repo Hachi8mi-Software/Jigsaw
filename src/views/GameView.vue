@@ -21,6 +21,7 @@
       @show-settings="showSettingsModal = true"
       @toggle-pause="handleTogglePause"
       @return-to-library="handleReturnToLibrary"
+      @reset-game="handleResetGame"
     />
 
     <!-- 游戏主内容 -->
@@ -259,6 +260,12 @@ const handleTogglePause = () => {
 
 const handleReturnToLibrary = () => {
   router.push('/library')
+}
+
+const handleResetGame = () => {
+  if (confirm('确定要重置当前游戏吗？所有进度将被清除。')) {
+    gameViewManager.resetGame()
+  }
 }
 
 const pauseGame = () => {
