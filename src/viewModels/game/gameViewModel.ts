@@ -12,7 +12,7 @@ import { GameController } from './gameController'
  * 游戏视图管理器
  */
 export class GameViewModel {
-  private libraryStore = useLibraryStore()
+  // 移除构造函数中的store获取，改为在需要时获取
   readonly gameController: GameController
 
   // 界面状态
@@ -40,6 +40,13 @@ export class GameViewModel {
       GameViewModel.instance = new GameViewModel()
     }
     return GameViewModel.instance
+  }
+
+  /**
+   * 获取libraryStore实例
+   */
+  private get libraryStore() {
+    return useLibraryStore()
   }
 
   /**

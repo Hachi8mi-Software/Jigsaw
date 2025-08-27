@@ -6,9 +6,13 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useLibraryStore } from './stores/library'
 
 const router = useRouter()
 const route = useRoute()
+
+// Store
+const libraryStore = useLibraryStore()
 
 // 计算当前路由名称
 const currentRouteName = computed(() => route.name as string)
@@ -31,6 +35,10 @@ const navigateTo = (path: string) => {
 onMounted(() => {
   // 应用初始化
   console.log('拼图乐应用已启动')
+  
+  // 确保素材库在应用启动时就被初始化
+  // 这样无论用户访问哪个页面，成就系统都能正常工作
+  libraryStore.initializeLibrary()
 })
 </script>
 

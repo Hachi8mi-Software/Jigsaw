@@ -436,7 +436,8 @@ const closeUploadModal = () => {
 
 // 生命周期
 onMounted(() => {
-  libraryStore.initializeLibrary()
+  // 素材库已在App.vue中统一初始化，无需重复调用
+  console.log('LibraryView 已加载')
 })
 </script>
 

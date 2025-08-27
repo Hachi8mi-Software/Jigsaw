@@ -11,14 +11,26 @@ import type { PiecePosition, PieceStatus, PuzzleData, UserStats } from '../../ty
  * 游戏核心控制器 - 处理游戏业务逻辑，持有store实例
  */
 export class GameController {
-  // Store实例
-  private gameStore = useGameStore()
-  private libraryStore = useLibraryStore()
+  // 移除构造函数中的store获取，改为在需要时获取
   
   // 计时器管理
   private timerInterval: number | null = null
   private visibilityChangeHandler: (() => void) | null = null
 
+  /**
+   * 获取gameStore实例
+   */
+  private get gameStore() {
+    return useGameStore()
+  }
+
+  /**
+   * 获取libraryStore实例
+   */
+  private get libraryStore() {
+    return useLibraryStore()
+  }
+  
   /**
    * 开始新游戏
    */
