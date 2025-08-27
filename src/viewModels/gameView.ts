@@ -68,6 +68,7 @@ export class GameViewManager {
       }
       
       // 开始新游戏，允许恢复现有游戏状态
+      console.debug("[startNewGame]", puzzleData.id, puzzleData.name)
       this.gameController.startNewGame(puzzleData, false)
     }
   }
@@ -304,6 +305,23 @@ export class GameViewManager {
    */
   cleanup(): void {
     this.gameController.cleanup()
+  }
+
+  /**
+   * 清除当前游戏状态
+   */
+  clearCurrentGame(): void {
+    if (this.gameController.currentPuzzle) {
+      // 清除游戏控制器状态
+      this.gameController.clearCurrentGame()
+      
+      // 关闭所有模态框
+      this.showCompletionModal.value = false
+      this.showSettingsModal.value = false
+      this.newAchievements.value = []
+      
+      console.log('游戏状态已清除')
+    }
   }
 
   // Getter方法，提供对gameController状态的访问

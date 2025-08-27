@@ -31,6 +31,9 @@ export class GameController {
     
     if (existingState && !forceNew && !existingState.isCompleted) {
       // 恢复现有游戏
+      console.log('恢复游戏状态，puzzleData:', puzzleData)
+      console.log('puzzleData.imageUrl:', puzzleData.imageUrl)
+      
       this.gameStore.restoreGameState({
         puzzleData,
         pieces: existingState.pieces,
@@ -49,6 +52,8 @@ export class GameController {
       }
       
       console.log('恢复现有游戏状态')
+      console.log('恢复后的currentPuzzle:', this.gameStore.currentPuzzle)
+      console.log('恢复后的currentPuzzle.imageUrl:', this.gameStore.currentPuzzle?.imageUrl)
     } else {
       // 开始新游戏
       const initialPieces = this.gameStore.generateInitialPieces(puzzleData)
@@ -293,6 +298,21 @@ export class GameController {
       document.removeEventListener('visibilitychange', this.visibilityChangeHandler)
       this.visibilityChangeHandler = null
     }
+  }
+
+  /**
+   * 清除当前游戏状态
+   */
+  clearCurrentGame(): void {
+    // 停止所有计时器
+    this.stopRealTimeTimer()
+    
+    // 重置游戏状态
+    this.gameStore.resetGameState()
+    
+    // 清空拼图数据
+    this.gameStore.currentPuzzle = null
+    this.gameStore.pieces = []
   }
 
   // Getter方法，提供对store状态的访问

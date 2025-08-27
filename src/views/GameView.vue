@@ -274,6 +274,8 @@ const playAgain = () => {
 }
 
 const goToLibrary = () => {
+  // 清除当前游戏状态
+  gameViewManager.clearCurrentGame()
   router.push('/library')
 }
 

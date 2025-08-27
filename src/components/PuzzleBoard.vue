@@ -101,7 +101,7 @@
 import { computed, onMounted, watch, nextTick, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { PuzzleBoardViewModel } from '../viewModels/puzzleBoardViewModel'
-import type { PuzzleData } from '../types'
+import type { PieceStatus, PuzzleData } from '../types'
 import { GameController } from '@/viewModels/gameController'
 
 interface Props {
@@ -128,9 +128,9 @@ const draggingPieceIndex = computed(() => viewModel.value.draggingPieceIndex)
 const gridStyle = computed(() => viewModel.value.getGridStyle())
 
 // 视图方法 - 委托给ViewModel
-const getPieceImageStyle = (piece: any) => viewModel.value.getPieceImageStyle(piece)
-const getPieceStyle = (piece: any) => viewModel.value.getPieceStyle(piece)
-const getPlacedPieceStyle = (piece: any) => viewModel.value.getPlacedPieceStyle(piece)
+const getPieceImageStyle = (piece: PieceStatus) => viewModel.value.getPieceImageStyle(piece)
+const getPieceStyle = (piece: PieceStatus) => viewModel.value.getPieceStyle(piece)
+const getPlacedPieceStyle = (piece: PieceStatus) => viewModel.value.getPlacedPieceStyle(piece)
 const isSlotOccupied = (slotIndex: number) => viewModel.value.isSlotOccupied(slotIndex)
 
 // 业务操作方法 - 委托给ViewModel

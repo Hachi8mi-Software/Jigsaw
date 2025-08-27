@@ -473,6 +473,10 @@ export const useGameStore = defineStore('game', () => {
     const stateToSave = {
       sessionId: gameSessionId.value,
       puzzleId: puzzleData.id,
+      puzzleName: puzzleData.name,
+      puzzleImageUrl: puzzleData.imageUrl,
+      puzzleDifficulty: puzzleData.difficulty,
+      gridConfig: puzzleData.gridConfig,
       pieces: pieces.value,
       startTime: startTime.value?.toISOString(),
       moveCount: moveCount.value,
