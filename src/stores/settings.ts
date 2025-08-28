@@ -23,12 +23,9 @@ export interface AudioSettings {
 export interface PerformanceSettings {
   renderQuality: 'high' | 'medium' | 'low'
   maxPieces: number
-  enableGPUAcceleration: boolean
 }
 
 export interface DataSettings {
-  autoSave: boolean
-  saveInterval: number
 }
 
 export interface AppSettings {
@@ -36,7 +33,6 @@ export interface AppSettings {
   ui: UiSettings
   audio: AudioSettings
   performance: PerformanceSettings
-  data: DataSettings
 }
 
 const defaultSettings: AppSettings = {
@@ -58,12 +54,7 @@ const defaultSettings: AppSettings = {
   },
   performance: {
     renderQuality: 'high',
-    maxPieces: 1000,
-    enableGPUAcceleration: true
-  },
-  data: {
-    autoSave: true,
-    saveInterval: 60
+    maxPieces: 1000
   }
 }
 
