@@ -6,7 +6,6 @@
 import type { PieceStatus, PuzzleData } from '../../types'
 import { nextTick, StyleValue } from 'vue'
 import { getGridPos } from '@/utils/gridUtils'
-import { GameController } from './gameController'
 import { 
   calculatePieceSize, 
   generateRandomPosition,
@@ -27,14 +26,11 @@ import {
 import { useGameStore } from '@/stores/game'
 
 export class PuzzleBoardViewModel {
-  // GameController 实例
-  private gameController: GameController
 
   // 添加对 game store 的依赖
   private gameStore = useGameStore()
 
   constructor(private puzzleData: PuzzleData | null) {
-    this.gameController = new GameController()
   }
 
   // 计算属性
@@ -60,17 +56,9 @@ export class PuzzleBoardViewModel {
   }
 
   get completionRate() {
-    return this.puzzleBoardData.completionRate
+    return this.gameStore.puzzleBoardCompletionRate
   }
 
-  get puzzleBoardData() {
-    return {
-      pieces: this.gameStore.pieces,
-      draggingPieceIndex: this.gameStore.draggingPieceIndex,
-      completionRate: this.gameStore.puzzleBoardCompletionRate,
-      unplacedPieces: this.gameStore.unplacedPieces
-    }
-  }
   // 计算网格样式
   getGridStyle(): StyleValue {
     return createGridStyle(this.gridCols, this.gridRows)
@@ -193,12 +181,6 @@ export class PuzzleBoardViewModel {
     this.gameStore.setDragOffset(dragOffset)
   }
   
-  toStringIndex(index: number): string {
-    let sindex:string = index.toString()
-    let strIndex:string = 'piece_' + sindex
-    return strIndex
-  }
-
   // 拖拽过程中
   handleDrag(clientX: number, clientY: number) {
     if (this.draggingPieceIndex === -1) return
@@ -243,6 +225,7 @@ export class PuzzleBoardViewModel {
       this.gridCols
     )
     
+    // 处理无效网格放置
     if (gridIndex >= 0 && gridIndex < this.totalPieces && !this.isSlotOccupied(gridIndex)) {
       this.snapToGrid(gridIndex)
     } else {
@@ -285,7 +268,7 @@ export class PuzzleBoardViewModel {
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
     this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, isCorrect)
     
-    // 通知GameController增加步数
+    // 增加步数
     this.incrementMoveCount()
     
     // 检查游戏完成
@@ -365,57 +348,8 @@ export class PuzzleBoardViewModel {
     this.gameStore.checkGameCompletion()
   }
 
-  // 检查某个位置是否有拼图块
-  isPieceAtPosition(row: number, col: number, excludePieceId?: string): boolean {
-    if (!this.gameStore.currentPuzzle) return false
-    return this.gameStore.isPieceAtPosition(row, col, this.gameStore.currentPuzzle.gridConfig, excludePieceId)
-  }
-
-  // 将拼图块吸附到网格
-  snapPieceToGrid(pieceId: string, gridRow: number, gridCol: number): void {
-    if (this.gameStore.currentPuzzle) {
-      this.gameStore.snapPieceToGrid(pieceId, gridRow, gridCol, this.gameStore.currentPuzzle.gridConfig)
-    }
-  }
-
-  // 初始化拼图块数据
-  initializePuzzleBoardData(total: number): void {
-    this.gameStore.initializePuzzleBoardPieces(total)
-  }
-
-  // 设置拼图块放置状态
-  setPiecePlaced(index: number, isPlaced: boolean, gridPosition?: number, isCorrect?: boolean): void {
-    this.gameStore.setPuzzleBoardPiecePlaced(index, isPlaced, gridPosition, isCorrect)
-  }
-
   // 获取拼图块
   getPiece(index: number): PieceStatus | undefined {
     return this.gameStore.getPuzzleBoardPiece(index)
-  }
-
-  // 设置拖拽状态
-  setDraggingState(index: number, dragOffset: { x: number, y: number }): void {
-    this.gameStore.setDraggingPiece(index)
-    this.gameStore.setDragOffset(dragOffset)
-  }
-
-  // 清除拖拽状态
-  clearDraggingState(): void {
-    this.gameStore.clearDragging()
-  }
-
-  // 重置所有拼图块状态
-  resetAllPuzzleBoardPieces(): void {
-    this.gameStore.resetAllPuzzleBoardPieceStates()
-  }
-
-  // 检查拼图板完成状态
-  checkPuzzleBoardCompletion(): void {
-    this.gameStore.checkGameCompletion()
-  }
-
-  // 获取拼图板快照
-  getPuzzleBoardSnapshot(): PieceStatus[] {
-    return this.gameStore.getPuzzleBoardPiecesSnapshot()
   }
 }
