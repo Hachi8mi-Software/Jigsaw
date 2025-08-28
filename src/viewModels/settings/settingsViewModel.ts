@@ -1,5 +1,6 @@
 import { useSettingsStore } from '@/stores/settings'
 import { computed } from 'vue'
+import { audioManager } from '@/utils/audioManager'
 
 export class SettingsViewModel {
   private settingsStore = useSettingsStore()
@@ -117,5 +118,34 @@ export class SettingsViewModel {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('app-theme', theme)
     console.log('ViewModel主题已切换到:', theme, '| DOM data-theme:', document.documentElement.getAttribute('data-theme'))
+  }
+
+  // 音频试听方法
+  public async playTestSound() {
+    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioManager.setEnabled(this.audioSettings.value.enableSounds)
+    await audioManager.playTestSound()
+  }
+
+  public async playPiecePlacedSound() {
+    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioManager.setEnabled(this.audioSettings.value.enableSounds)
+    await audioManager.playPiecePlaced()
+  }
+
+  public async playPuzzleCompletedSound() {
+    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioManager.setEnabled(this.audioSettings.value.enableSounds)
+    await audioManager.playPuzzleCompleted()
+  }
+
+  public async playButtonClickSound() {
+    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioManager.setEnabled(this.audioSettings.value.enableSounds)
+    await audioManager.playButtonClick()
   }
 }

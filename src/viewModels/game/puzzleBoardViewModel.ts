@@ -23,6 +23,7 @@ import {
 import {
   reshufflePieces
 } from '@/utils/scatterUtils'
+import { audioManager } from '@/utils/audioManager'
 import { useGameStore } from '@/stores/game'
 
 export class PuzzleBoardViewModel {
@@ -268,6 +269,9 @@ export class PuzzleBoardViewModel {
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
     this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, isCorrect)
     
+    // 播放拼图块放置音效
+    audioManager.playPiecePlaced()
+    
     // 增加步数
     this.incrementMoveCount()
     
@@ -345,7 +349,9 @@ export class PuzzleBoardViewModel {
 
   // 检查游戏完成
   private checkGameCompletion() {
-    this.gameStore.checkGameCompletion()
+    if (this.gameStore.checkGameCompletion()) {
+      audioManager.playPuzzleCompleted()
+    }
   }
 
   // 获取拼图块

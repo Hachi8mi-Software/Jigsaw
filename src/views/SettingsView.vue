@@ -163,6 +163,36 @@
               </label>
               <p class="setting-description">播放拼图放置和完成音效</p>
             </div>
+
+            <div class="setting-item">
+              <label class="setting-label">
+                音效试听
+              </label>
+              <div class="audio-test-controls">
+                <button 
+                  @click="viewModel.playTestSound"
+                  :disabled="!viewModel.audioSettings.value.enableSounds"
+                  class="audio-test-btn"
+                >
+                  🔊 试听音效
+                </button>
+                <button 
+                  @click="viewModel.playPiecePlacedSound"
+                  :disabled="!viewModel.audioSettings.value.enableSounds"
+                  class="audio-test-btn"
+                >
+                  🎯 拼图音效
+                </button>
+                <button 
+                  @click="viewModel.playPuzzleCompletedSound"
+                  :disabled="!viewModel.audioSettings.value.enableSounds"
+                  class="audio-test-btn"
+                >
+                  🎉 完成音效
+                </button>
+              </div>
+              <p class="setting-description">点击按钮试听不同音效（需先启用音效）</p>
+            </div>
           </div>
         </div>
 
@@ -473,6 +503,36 @@ const viewModel = new SettingsViewModel()
 
 .footer-btn.primary:hover {
   background-color: var(--settings-accent-hover);
+}
+
+/* 音效试听按钮样式 */
+.audio-test-controls {
+  @apply flex flex-wrap gap-2 mt-2;
+}
+
+.audio-test-btn {
+  @apply px-3 py-1 text-xs font-medium rounded transition-colors duration-200;
+  background-color: var(--settings-accent);
+  color: white;
+  border: none;
+  min-width: 80px;
+}
+
+.audio-test-btn:hover:not(:disabled) {
+  background-color: var(--settings-accent-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
+.audio-test-btn:disabled {
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.audio-test-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 </style>

@@ -477,6 +477,7 @@ onUnmounted(() => {
 
 .completion-content h2 {
   @apply text-2xl font-bold text-gray-800 mb-6;
+  color: var(--settings-text-primary);
 }
 
 .completion-stats {
@@ -485,14 +486,28 @@ onUnmounted(() => {
 
 .completion-stat {
   @apply flex flex-col items-center p-4 bg-gray-50 rounded-lg;
+  background-color: var(--settings-hover);
+}
+
+.completion-stat .stat-label {
+  @apply text-xs mb-1;
+  color: var(--settings-text-secondary);
+}
+
+.completion-stat .stat-value {
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
 }
 
 .new-achievements {
   @apply mb-6 p-4 bg-yellow-50 rounded-lg;
+  background-color: var(--settings-accent);
+  opacity: 0.1;
 }
 
 .new-achievements h3 {
   @apply text-lg font-semibold text-yellow-800 mb-3;
+  color: var(--settings-text-primary);
 }
 
 .achievement-list {
@@ -501,6 +516,8 @@ onUnmounted(() => {
 
 .achievement-item {
   @apply flex items-center p-2 bg-white rounded;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .achievement-icon {
@@ -513,10 +530,12 @@ onUnmounted(() => {
 
 .achievement-name {
   @apply font-medium text-gray-800;
+  color: var(--settings-text-primary);
 }
 
 .achievement-desc {
   @apply text-sm text-gray-600;
+  color: var(--settings-text-secondary);
 }
 
 .completion-actions {
@@ -526,10 +545,22 @@ onUnmounted(() => {
 .completion-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
   @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-secondary);
+}
+
+.completion-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .completion-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.completion-btn.primary:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
 }
 
 .settings-modal {
