@@ -1,6 +1,6 @@
 import { useSettingsStore } from '@/stores/settings'
 import { computed } from 'vue'
-import { audioManager } from '@/utils/audioManager'
+import { audioUtils } from '@/utils/audioUtils'
 
 export class SettingsViewModel {
   private settingsStore = useSettingsStore()
@@ -122,30 +122,30 @@ export class SettingsViewModel {
 
   // 音频试听方法
   public async playTestSound() {
-    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
-    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
-    audioManager.setEnabled(this.audioSettings.value.enableSounds)
-    await audioManager.playTestSound()
+    audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    await audioUtils.playTestSound()
   }
 
   public async playPiecePlacedSound() {
-    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
-    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
-    audioManager.setEnabled(this.audioSettings.value.enableSounds)
-    await audioManager.playPiecePlaced()
+    audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    await audioUtils.playPiecePlaced()
   }
 
   public async playPuzzleCompletedSound() {
-    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
-    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
-    audioManager.setEnabled(this.audioSettings.value.enableSounds)
-    await audioManager.playPuzzleCompleted()
+    audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    await audioUtils.playPuzzleCompleted()
   }
 
   public async playButtonClickSound() {
-    audioManager.setMasterVolume(this.audioSettings.value.masterVolume)
-    audioManager.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
-    audioManager.setEnabled(this.audioSettings.value.enableSounds)
-    await audioManager.playButtonClick()
+    audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
+    audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
+    audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    await audioUtils.playButtonClick()
   }
 }

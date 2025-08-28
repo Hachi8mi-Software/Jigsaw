@@ -3,7 +3,7 @@
  * 负责管理应用的音效播放
  */
 
-export class AudioManager {
+export class AudioUtils {
   private audioContext: AudioContext | null = null
   private masterVolume = 0.7
   private soundEffectsVolume = 0.8
@@ -155,4 +155,4 @@ export class AudioManager {
 }
 
 // 创建全局音频管理器实例
-export const audioManager = new AudioManager()
+export const audioUtils = new AudioUtils()
