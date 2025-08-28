@@ -3,6 +3,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 全局主题变量 */
+:root {
+  --bg-primary: #f3f4f6;
+  --bg-secondary: #ffffff;
+  --bg-sidebar: #ffffff;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-accent: #2563eb;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --settings-bg: #f9fafb;
+  --settings-card-bg: #ffffff;
+  --settings-text-primary: #111827;
+  --settings-text-secondary: #6b7280;
+  --settings-border: #e5e7eb;
+  --settings-hover: #f3f4f6;
+  --settings-accent: #2563eb;
+  --settings-accent-hover: #1d4ed8;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-sidebar: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-accent: #3b82f6;
+  --border-color: #374151;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --settings-bg: #111827;
+  --settings-card-bg: #1f2937;
+  --settings-text-primary: #f9fafb;
+  --settings-text-secondary: #9ca3af;
+  --settings-border: #374151;
+  --settings-hover: #374151;
+  --settings-accent: #3b82f6;
+  --settings-accent-hover: #2563eb;
+}
+
 /* 全局样式 */
 * {
   box-sizing: border-box;
@@ -22,17 +61,17 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--settings-bg);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--settings-border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--settings-hover);
 }
 
 /* 动画类 */

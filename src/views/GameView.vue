@@ -366,7 +366,8 @@ onUnmounted(() => {
 
 <style scoped>
 .game-view {
-  @apply h-screen flex flex-col bg-gray-100;
+  @apply h-screen flex flex-col;
+  background-color: var(--settings-bg);
 }
 
 .game-header {
@@ -378,7 +379,8 @@ onUnmounted(() => {
 }
 
 .game-title {
-  @apply text-2xl font-bold text-gray-800;
+  @apply text-2xl font-bold;
+  color: var(--settings-text-primary);
 }
 
 .game-stats {
@@ -390,11 +392,13 @@ onUnmounted(() => {
 }
 
 .stat-label {
-  @apply text-xs text-gray-600 mb-1;
+  @apply text-xs mb-1;
+  color: var(--settings-text-secondary);
 }
 
 .stat-value {
-  @apply text-lg font-semibold text-gray-800;
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
 }
 
 .debug-info {
@@ -427,11 +431,13 @@ onUnmounted(() => {
 }
 
 .no-game-message h2 {
-  @apply text-2xl font-bold text-gray-800 mb-4;
+  @apply text-2xl font-bold mb-4;
+  color: var(--settings-text-primary);
 }
 
 .no-game-message p {
   @apply text-gray-600 mb-8;
+  color: var(--settings-text-secondary);
 }
 
 .no-game-actions {
@@ -453,6 +459,8 @@ onUnmounted(() => {
 
 .modal-dialog {
   @apply bg-white rounded-lg shadow-xl mx-4;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .completion-modal {
@@ -584,6 +592,8 @@ onUnmounted(() => {
 
 .pause-message {
   @apply bg-white rounded-lg p-8 text-center shadow-xl;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .pause-icon {
@@ -592,15 +602,23 @@ onUnmounted(() => {
 
 .pause-message h2 {
   @apply text-2xl font-bold text-gray-800 mb-2;
+  color: var(--settings-text-primary);
 }
 
 .pause-subtitle {
   @apply text-sm text-gray-600 mb-6;
+  color: var(--settings-text-secondary);
 }
 
 .resume-btn {
   @apply px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
   @apply transition-colors duration-200 font-medium;
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.resume-btn:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
 }
 
 
@@ -611,10 +629,17 @@ onUnmounted(() => {
 
 .pause-message h2 {
   @apply text-3xl font-bold mb-6;
+  color: var(--settings-text-primary);
 }
 
 .resume-btn {
   @apply px-8 py-4 text-lg font-medium bg-blue-500 text-white rounded-lg;
   @apply hover:bg-blue-600 transition-colors duration-200;
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.resume-btn:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
 }
 </style>

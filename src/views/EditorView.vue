@@ -639,11 +639,14 @@ onMounted(() => {
 
 <style scoped>
 .editor-view {
-  @apply h-screen flex flex-col bg-gray-100;
+  @apply h-screen flex flex-col;
+  background-color: var(--settings-bg);
 }
 
 .editor-toolbar {
-  @apply flex items-center justify-between px-6 py-4 bg-white shadow-sm border-b;
+  @apply flex items-center justify-between px-6 py-4 shadow-sm border-b;
+  background-color: var(--settings-card-bg);
+  border-bottom-color: var(--settings-border);
 }
 
 .toolbar-left {
@@ -651,7 +654,8 @@ onMounted(() => {
 }
 
 .editor-title {
-  @apply text-2xl font-bold text-gray-800;
+  @apply text-2xl font-bold;
+  color: var(--settings-text-primary);
 }
 
 .puzzle-info {
@@ -660,6 +664,8 @@ onMounted(() => {
 
 .info-item {
   @apply px-3 py-1 bg-gray-100 rounded-full;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-secondary);
 }
 
 .toolbar-right {
@@ -669,18 +675,35 @@ onMounted(() => {
 .toolbar-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
   @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-secondary);
+}
+
+.toolbar-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .toolbar-btn.active {
   @apply bg-blue-500 text-white;
+  background-color: var(--settings-accent);
+  color: white;
 }
 
 .toolbar-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.toolbar-btn.primary:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
 }
 
 .toolbar-btn:disabled {
   @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
 }
 
 .editor-content {
@@ -688,15 +711,18 @@ onMounted(() => {
 }
 
 .editor-sidebar {
-  @apply w-80 bg-white shadow-lg overflow-y-auto;
+  @apply w-80 shadow-lg overflow-y-auto;
+  background-color: var(--settings-card-bg);
 }
 
 .control-section {
-  @apply p-6 border-b border-gray-200;
+  @apply p-6 border-b;
+  border-bottom-color: var(--settings-border);
 }
 
 .section-title {
-  @apply text-lg font-semibold text-gray-800 mb-4;
+  @apply text-lg font-semibold mb-4;
+  color: var(--settings-text-primary);
 }
 
 .image-upload-area {
@@ -752,8 +778,15 @@ onMounted(() => {
 }
 
 .number-input, .text-input {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md;
+  @apply w-full px-3 py-2 border rounded-md;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.number-input:focus, .text-input:focus {
+  border-color: var(--settings-accent);
 }
 
 .boundary-controls {
@@ -763,6 +796,12 @@ onMounted(() => {
 .control-btn {
   @apply w-full px-4 py-2 text-sm font-medium rounded-md;
   @apply bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.control-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .selected-boundary-info {
@@ -808,6 +847,7 @@ onMounted(() => {
 
 .empty-canvas {
   @apply flex items-center justify-center h-96 bg-white rounded-lg shadow-lg;
+  background-color: var(--settings-card-bg);
 }
 
 .empty-message {
@@ -820,10 +860,12 @@ onMounted(() => {
 
 .empty-message h3 {
   @apply text-xl font-semibold text-gray-800 mb-2;
+  color: var(--settings-text-primary);
 }
 
 .empty-message p {
   @apply text-gray-600;
+  color: var(--settings-text-secondary);
 }
 
 .modal-overlay {
@@ -832,6 +874,8 @@ onMounted(() => {
 
 .modal-dialog {
   @apply bg-white rounded-lg shadow-xl w-full max-w-md mx-4;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .modal-header {

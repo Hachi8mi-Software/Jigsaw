@@ -149,7 +149,9 @@ const emit = defineEmits<{
 
 <style scoped>
 .game-status-bar {
-  @apply flex items-center justify-between px-6 py-4 bg-white shadow-sm border-b relative;
+  @apply flex items-center justify-between px-6 py-4 shadow-sm border-b relative;
+  background-color: var(--settings-card-bg);
+  border-bottom-color: var(--settings-border);
 }
 
 .status-left {
@@ -157,11 +159,13 @@ const emit = defineEmits<{
 }
 
 .puzzle-title h2 {
-  @apply text-2xl font-bold text-gray-800 mb-1;
+  @apply text-2xl font-bold mb-1;
+  color: var(--settings-text-primary);
 }
 
 .puzzle-dimensions {
-  @apply text-sm text-gray-600;
+  @apply text-sm;
+  color: var(--settings-text-secondary);
 }
 
 .status-center {
@@ -173,19 +177,23 @@ const emit = defineEmits<{
 }
 
 .stat-item {
-  @apply flex flex-col items-center px-3 py-2 bg-gray-50 rounded-lg min-w-[80px];
+  @apply flex flex-col items-center px-3 py-2 rounded-lg min-w-[80px];
+  background-color: var(--settings-hover);
 }
 
 .stat-label {
-  @apply text-xs text-gray-600 mb-1;
+  @apply text-xs mb-1;
+  color: var(--settings-text-secondary);
 }
 
 .stat-value {
-  @apply text-lg font-semibold text-gray-800;
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
 }
 
 .stat-detail {
-  @apply text-xs text-gray-500 mt-1;
+  @apply text-xs mt-1;
+  color: var(--settings-text-secondary);
 }
 
 .status-right {
@@ -197,12 +205,22 @@ const emit = defineEmits<{
 }
 
 .control-btn {
-  @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200;
-  @apply transition-colors duration-200 font-medium text-sm;
+  @apply px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.control-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .control-btn.paused {
-  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+  background-color: var(--settings-accent);
+  color: #ffffff;
+}
+
+.control-btn.paused:hover {
+  background-color: var(--settings-accent-hover);
 }
 
 

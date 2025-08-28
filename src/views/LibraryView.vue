@@ -443,11 +443,14 @@ onMounted(() => {
 
 <style scoped>
 .library-view {
-  @apply h-screen flex flex-col bg-gray-50;
+  @apply h-screen flex flex-col;
+  background-color: var(--settings-bg);
 }
 
 .library-header {
-  @apply flex items-center justify-between px-6 py-4 bg-white shadow-sm border-b;
+  @apply flex items-center justify-between px-6 py-4 shadow-sm border-b;
+  background-color: var(--settings-card-bg);
+  border-bottom-color: var(--settings-border);
 }
 
 .header-left {
@@ -455,15 +458,18 @@ onMounted(() => {
 }
 
 .library-title {
-  @apply text-2xl font-bold text-gray-800;
+  @apply text-2xl font-bold;
+  color: var(--settings-text-primary);
 }
 
 .library-stats {
-  @apply flex items-center space-x-4 text-sm text-gray-600;
+  @apply flex items-center space-x-4 text-sm;
+  color: var(--settings-text-secondary);
 }
 
 .stat-item {
-  @apply px-3 py-1 bg-gray-100 rounded-full;
+  @apply px-3 py-1 rounded-full;
+  background-color: var(--settings-hover);
 }
 
 .header-right {
@@ -472,15 +478,27 @@ onMounted(() => {
 
 .action-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.action-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .action-btn.primary {
-  @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: #ffffff;
+}
+
+.action-btn.primary:hover {
+  background-color: var(--settings-accent-hover);
 }
 
 .filter-bar {
-  @apply flex items-center justify-between px-6 py-4 bg-white border-b;
+  @apply flex items-center justify-between px-6 py-4 border-b;
+  background-color: var(--settings-card-bg);
+  border-bottom-color: var(--settings-border);
 }
 
 .search-box {
@@ -488,12 +506,20 @@ onMounted(() => {
 }
 
 .search-input {
-  @apply w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg;
+  @apply w-full pl-4 pr-10 py-2 border rounded-lg;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.search-input:focus {
+  border-color: var(--settings-accent);
 }
 
 .search-icon {
-  @apply absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400;
+  @apply absolute right-3 top-1/2 transform -translate-y-1/2;
+  color: var(--settings-text-secondary);
 }
 
 .filter-controls {
@@ -501,17 +527,35 @@ onMounted(() => {
 }
 
 .category-select {
-  @apply px-3 py-2 border border-gray-300 rounded-md;
+  @apply px-3 py-2 border rounded-md;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.category-select:focus {
+  border-color: var(--settings-accent);
+}
+
+.category-select option {
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .sort-btn {
   @apply px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.sort-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .sort-btn.active {
-  @apply bg-blue-500 text-white;
+  background-color: var(--settings-accent);
+  color: #ffffff;
 }
 
 .library-content {
@@ -535,11 +579,13 @@ onMounted(() => {
 }
 
 .empty-state h3 {
-  @apply text-xl font-semibold text-gray-800 mb-2;
+  @apply text-xl font-semibold mb-2;
+  color: var(--settings-text-primary);
 }
 
 .empty-state p {
   @apply text-gray-600 mb-6;
+  color: var(--settings-text-secondary);
 }
 
 .empty-action-btn {
@@ -554,6 +600,8 @@ onMounted(() => {
 .puzzle-card {
   @apply bg-white rounded-lg shadow-md overflow-hidden cursor-pointer;
   @apply transform transition-all duration-200 hover:scale-105 hover:shadow-lg;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .card-image {
@@ -600,6 +648,8 @@ onMounted(() => {
 
 .card-category {
   @apply text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded;
+  color: var(--settings-text-secondary);
+  background-color: var(--settings-hover);
 }
 
 .card-difficulty {
@@ -623,11 +673,15 @@ onMounted(() => {
 }
 
 .tag {
-  @apply text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded;
+  @apply text-xs px-2 py-1 rounded;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
 }
 
 .tag.more {
   @apply bg-gray-100 text-gray-600;
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
 }
 
 .modal-overlay {
@@ -636,6 +690,8 @@ onMounted(() => {
 
 .modal-dialog {
   @apply bg-white rounded-lg shadow-xl mx-4;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .upload-modal {
@@ -705,8 +761,15 @@ onMounted(() => {
 }
 
 .form-input, .form-select {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md;
+  @apply w-full px-3 py-2 border rounded-md;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: var(--settings-accent);
 }
 
 .modal-footer {

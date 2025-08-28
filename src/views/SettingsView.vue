@@ -16,19 +16,7 @@
             <div class="setting-item">
               <label class="setting-label">
                 <input 
-                  v-model="gameSettings.showBackground"
-                  type="checkbox"
-                  class="setting-checkbox"
-                />
-                显示背景参考图
-              </label>
-              <p class="setting-description">在游戏中显示半透明的原图作为参考</p>
-            </div>
-            
-            <div class="setting-item">
-              <label class="setting-label">
-                <input 
-                  v-model="gameSettings.showGrid"
+                  v-model="viewModel.gameSettings.value.showGrid"
                   type="checkbox"
                   class="setting-checkbox"
                 />
@@ -40,7 +28,7 @@
             <div class="setting-item">
               <label class="setting-label">
                 <input 
-                  v-model="gameSettings.autoSnap"
+                  v-model="viewModel.gameSettings.value.autoSnap"
                   type="checkbox"
                   class="setting-checkbox"
                 />
@@ -52,7 +40,7 @@
             <div class="setting-item">
               <label class="setting-label">
                 <input 
-                  v-model="gameSettings.enableRotation"
+                  v-model="viewModel.gameSettings.value.enableRotation"
                   type="checkbox"
                   class="setting-checkbox"
                 />
@@ -71,7 +59,7 @@
               <label class="setting-label">
                 主题色彩
               </label>
-              <select v-model="uiSettings.theme" class="setting-select">
+              <select v-model="viewModel.uiSettings.value.theme" class="setting-select">
                 <option value="light">浅色主题</option>
                 <option value="dark">深色主题</option>
                 <option value="auto">跟随系统</option>
@@ -82,7 +70,7 @@
               <label class="setting-label">
                 界面语言
               </label>
-              <select v-model="uiSettings.language" class="setting-select">
+              <select v-model="viewModel.uiSettings.value.language" class="setting-select">
                 <option value="zh-CN">简体中文</option>
                 <option value="en-US">English</option>
               </select>
@@ -92,11 +80,38 @@
               <label class="setting-label">
                 动画效果
               </label>
-              <select v-model="uiSettings.animations" class="setting-select">
+              <select v-model="viewModel.uiSettings.value.animations" class="setting-select">
                 <option value="full">完整动画</option>
                 <option value="reduced">减少动画</option>
                 <option value="none">禁用动画</option>
               </select>
+            </div>
+            
+            <div class="setting-item">
+              <label class="setting-label">
+                快速主题切换
+              </label>
+              <div class="theme-toggle-group">
+                <button 
+                  @click="viewModel.setTheme('light')"
+                  :class="['theme-btn', { active: viewModel.uiSettings.value.theme === 'light' }]"
+                >
+                  ☀️ 浅色
+                </button>
+                <button 
+                  @click="viewModel.setTheme('dark')"
+                  :class="['theme-btn', { active: viewModel.uiSettings.value.theme === 'dark' }]"
+                >
+                  🌙 深色
+                </button>
+                <button 
+                  @click="viewModel.setTheme('auto')"
+                  :class="['theme-btn', { active: viewModel.uiSettings.value.theme === 'auto' }]"
+                >
+                  🖥️ 自动
+                </button>
+              </div>
+              <p class="setting-description">快速切换主题色彩</p>
             </div>
           </div>
         </div>
@@ -111,13 +126,13 @@
               </label>
               <div class="volume-control">
                 <input 
-                  v-model.number="audioSettings.masterVolume"
+                  v-model.number="viewModel.audioSettings.value.masterVolume"
                   type="range"
                   min="0"
                   max="100"
                   class="setting-range"
                 />
-                <span class="volume-value">{{ audioSettings.masterVolume }}%</span>
+                <span class="volume-value">{{ viewModel.audioSettings.value.masterVolume }}%</span>
               </div>
             </div>
             
@@ -127,20 +142,20 @@
               </label>
               <div class="volume-control">
                 <input 
-                  v-model.number="audioSettings.soundEffects"
+                  v-model.number="viewModel.audioSettings.value.soundEffects"
                   type="range"
                   min="0"
                   max="100"
                   class="setting-range"
                 />
-                <span class="volume-value">{{ audioSettings.soundEffects }}%</span>
+                <span class="volume-value">{{ viewModel.audioSettings.value.soundEffects }}%</span>
               </div>
             </div>
             
             <div class="setting-item">
               <label class="setting-label">
                 <input 
-                  v-model="audioSettings.enableSounds"
+                  v-model="viewModel.audioSettings.value.enableSounds"
                   type="checkbox"
                   class="setting-checkbox"
                 />
@@ -159,7 +174,7 @@
               <label class="setting-label">
                 渲染质量
               </label>
-              <select v-model="performanceSettings.renderQuality" class="setting-select">
+              <select v-model="viewModel.performanceSettings.value.renderQuality" class="setting-select">
                 <option value="high">高质量</option>
                 <option value="medium">中等质量</option>
                 <option value="low">低质量</option>
@@ -170,7 +185,7 @@
               <label class="setting-label">
                 最大拼图块数
               </label>
-              <select v-model.number="performanceSettings.maxPieces" class="setting-select">
+              <select v-model.number="viewModel.performanceSettings.value.maxPieces" class="setting-select">
                 <option :value="100">100 块</option>
                 <option :value="500">500 块</option>
                 <option :value="1000">1000 块</option>
@@ -181,7 +196,7 @@
             <div class="setting-item">
               <label class="setting-label">
                 <input 
-                  v-model="performanceSettings.enableGPUAcceleration"
+                  v-model="viewModel.performanceSettings.value.enableGPUAcceleration"
                   type="checkbox"
                   class="setting-checkbox"
                 />
@@ -199,7 +214,7 @@
             <div class="setting-item">
               <label class="setting-label">
                 <input 
-                  v-model="dataSettings.autoSave"
+                  v-model="viewModel.dataSettings.value.autoSave"
                   type="checkbox"
                   class="setting-checkbox"
                 />
@@ -212,7 +227,7 @@
               <label class="setting-label">
                 保存间隔
               </label>
-              <select v-model.number="dataSettings.saveInterval" class="setting-select">
+              <select v-model.number="viewModel.dataSettings.value.saveInterval" class="setting-select">
                 <option :value="30">30 秒</option>
                 <option :value="60">1 分钟</option>
                 <option :value="300">5 分钟</option>
@@ -221,13 +236,13 @@
           </div>
           
           <div class="data-actions">
-            <button @click="exportData" class="data-btn">
+            <button @click="viewModel.exportData" class="data-btn">
               📤 导出数据
             </button>
-            <button @click="importData" class="data-btn">
+            <button @click="viewModel.importData" class="data-btn">
               📥 导入数据
             </button>
-            <button @click="clearData" class="data-btn danger">
+            <button @click="viewModel.clearData" class="data-btn danger">
               🗑️ 清除所有数据
             </button>
           </div>
@@ -243,10 +258,10 @@
               <p>基于 Tauri + Vue 3 构建的跨平台拼图应用</p>
             </div>
             <div class="about-links">
-              <button @click="openGitHub" class="link-btn">
+              <button @click="viewModel.openGitHub" class="link-btn">
                 📱 GitHub
               </button>
-              <button @click="showLicenses" class="link-btn">
+              <button @click="viewModel.showLicenses" class="link-btn">
                 📄 开源许可
               </button>
             </div>
@@ -256,10 +271,10 @@
 
       <!-- 底部操作按钮 -->
       <div class="settings-footer">
-        <button @click="resetToDefaults" class="footer-btn">
+        <button @click="viewModel.resetToDefaults" class="footer-btn">
           🔄 恢复默认
         </button>
-        <button @click="saveSettings" class="footer-btn primary">
+        <button @click="viewModel.saveSettings" class="footer-btn primary">
           💾 保存设置
         </button>
       </div>
@@ -268,202 +283,45 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { SettingsViewModel } from '@/viewModels/settings/settingsViewModel'
 
-// 设置状态
-const gameSettings = reactive({
-  showBackground: true,
-  showGrid: true,
-  autoSnap: true,
-  enableRotation: false
-})
-
-const uiSettings = reactive({
-  theme: 'light',
-  language: 'zh-CN',
-  animations: 'full'
-})
-
-const audioSettings = reactive({
-  masterVolume: 70,
-  soundEffects: 80,
-  enableSounds: true
-})
-
-const performanceSettings = reactive({
-  renderQuality: 'high',
-  maxPieces: 1000,
-  enableGPUAcceleration: true
-})
-
-const dataSettings = reactive({
-  autoSave: true,
-  saveInterval: 60
-})
-
-// 方法
-const saveSettings = () => {
-  const settings = {
-    game: gameSettings,
-    ui: uiSettings,
-    audio: audioSettings,
-    performance: performanceSettings,
-    data: dataSettings
-  }
-  
-  localStorage.setItem('app_settings', JSON.stringify(settings))
-  alert('设置已保存')
-}
-
-const loadSettings = () => {
-  try {
-    const saved = localStorage.getItem('app_settings')
-    if (saved) {
-      const settings = JSON.parse(saved)
-      Object.assign(gameSettings, settings.game || {})
-      Object.assign(uiSettings, settings.ui || {})
-      Object.assign(audioSettings, settings.audio || {})
-      Object.assign(performanceSettings, settings.performance || {})
-      Object.assign(dataSettings, settings.data || {})
-    }
-  } catch (error) {
-    console.error('加载设置失败:', error)
-  }
-}
-
-const resetToDefaults = () => {
-  if (confirm('确定要恢复所有设置到默认值吗？')) {
-    Object.assign(gameSettings, {
-      showBackground: true,
-      showGrid: true,
-      autoSnap: true,
-      enableRotation: false
-    })
-    
-    Object.assign(uiSettings, {
-      theme: 'light',
-      language: 'zh-CN',
-      animations: 'full'
-    })
-    
-    Object.assign(audioSettings, {
-      masterVolume: 70,
-      soundEffects: 80,
-      enableSounds: true
-    })
-    
-    Object.assign(performanceSettings, {
-      renderQuality: 'high',
-      maxPieces: 1000,
-      enableGPUAcceleration: true
-    })
-    
-    Object.assign(dataSettings, {
-      autoSave: true,
-      saveInterval: 60
-    })
-  }
-}
-
-const exportData = () => {
-  const data = {
-    settings: {
-      game: gameSettings,
-      ui: uiSettings,
-      audio: audioSettings,
-      performance: performanceSettings,
-      data: dataSettings
-    },
-    exportDate: new Date().toISOString()
-  }
-  
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'puzzle-settings.json'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
-const importData = () => {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.json'
-  input.onchange = (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const data = JSON.parse(e.target?.result as string)
-          if (data.settings) {
-            Object.assign(gameSettings, data.settings.game || {})
-            Object.assign(uiSettings, data.settings.ui || {})
-            Object.assign(audioSettings, data.settings.audio || {})
-            Object.assign(performanceSettings, data.settings.performance || {})
-            Object.assign(dataSettings, data.settings.data || {})
-            alert('设置导入成功')
-          }
-        } catch (error) {
-          alert('导入失败，文件格式不正确')
-        }
-      }
-      reader.readAsText(file)
-    }
-  }
-  input.click()
-}
-
-const clearData = () => {
-  if (confirm('确定要清除所有数据吗？这将删除所有设置、游戏记录和自定义拼图！')) {
-    if (confirm('此操作无法撤销，确定继续吗？')) {
-      localStorage.clear()
-      alert('所有数据已清除')
-      location.reload()
-    }
-  }
-}
-
-const openGitHub = () => {
-  window.open('https://github.com', '_blank')
-}
-
-const showLicenses = () => {
-  alert('开源许可信息将在后续版本中提供')
-}
-
-// 生命周期
-onMounted(() => {
-  loadSettings()
-})
+const viewModel = new SettingsViewModel()
 </script>
 
 <style scoped>
 .settings-view {
-  @apply min-h-screen bg-gray-50 py-8;
+  @apply h-screen py-8 overflow-hidden;
+  background-color: var(--settings-bg);
+  transition: background-color 0.3s ease;
 }
 
 .settings-container {
-  @apply max-w-4xl mx-auto px-6;
+  @apply max-w-4xl mx-auto px-6 h-full flex flex-col;
 }
 
 .settings-title {
-  @apply text-3xl font-bold text-center text-gray-800 mb-8;
+  @apply text-3xl font-bold text-center mb-8 flex-shrink-0;
+  color: var(--settings-text-primary);
 }
 
 .settings-content {
-  @apply space-y-8;
+  @apply space-y-8 flex-1 overflow-y-auto;
 }
 
 .settings-section {
-  @apply bg-white rounded-lg shadow-md p-6;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border: 1px solid var(--settings-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
 }
 
 .section-title {
-  @apply text-xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200;
+  @apply text-xl font-semibold mb-6 pb-2 border-b;
+  color: var(--settings-text-primary);
+  border-bottom-color: var(--settings-border);
 }
 
 .settings-grid {
@@ -475,7 +333,8 @@ onMounted(() => {
 }
 
 .setting-label {
-  @apply text-sm font-medium text-gray-700 mb-2 flex items-center cursor-pointer;
+  @apply text-sm font-medium mb-2 flex items-center cursor-pointer;
+  color: var(--settings-text-primary);
 }
 
 .setting-checkbox {
@@ -487,16 +346,30 @@ onMounted(() => {
 }
 
 .setting-select {
-  @apply px-3 py-2 border border-gray-300 rounded-md;
+  @apply w-full max-w-xs px-3 py-2 border rounded-md;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.setting-select:focus {
+  border-color: var(--settings-accent);
+}
+
+.setting-select option {
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .setting-range {
-  @apply appearance-none h-2 bg-gray-200 rounded-lg cursor-pointer;
+  @apply w-full max-w-xs appearance-none h-2 rounded-lg cursor-pointer;
+  background-color: var(--settings-border);
 }
 
 .setting-description {
-  @apply text-xs text-gray-500 mt-1;
+  @apply text-xs mt-1;
+  color: var(--settings-text-secondary);
 }
 
 .volume-control {
@@ -504,16 +377,23 @@ onMounted(() => {
 }
 
 .volume-value {
-  @apply text-sm text-gray-600 min-w-12;
+  @apply text-sm min-w-12;
+  color: var(--settings-text-secondary);
 }
 
 .data-actions {
-  @apply flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-200;
+  @apply flex flex-wrap gap-3 mt-6 pt-6 border-t flex-shrink-0;
+  border-top-color: var(--settings-border);
 }
 
 .data-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.data-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .data-btn.danger {
@@ -525,11 +405,13 @@ onMounted(() => {
 }
 
 .app-info h3 {
-  @apply text-lg font-semibold text-gray-800 mb-2;
+  @apply text-lg font-semibold mb-2;
+  color: var(--settings-text-primary);
 }
 
 .app-info p {
-  @apply text-sm text-gray-600 mb-1;
+  @apply text-sm mb-1;
+  color: var(--settings-text-secondary);
 }
 
 .about-links {
@@ -537,20 +419,60 @@ onMounted(() => {
 }
 
 .link-btn {
-  @apply px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded;
-  @apply hover:bg-blue-200 transition-colors duration-200;
+  @apply px-3 py-1 text-sm rounded;
+  background-color: var(--settings-accent);
+  color: #ffffff;
+}
+
+.link-btn:hover {
+  background-color: var(--settings-accent-hover);
+}
+
+.theme-toggle-group {
+  @apply flex space-x-2;
+}
+
+.theme-btn {
+  @apply px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.theme-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.theme-btn.active {
+  background-color: var(--settings-accent);
+  color: #ffffff;
+}
+
+.theme-btn.active:hover {
+  background-color: var(--settings-accent-hover);
 }
 
 .settings-footer {
-  @apply flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200;
+  @apply flex justify-end space-x-3 mt-8 pt-6 border-t flex-shrink-0;
+  border-top-color: var(--settings-border);
 }
 
 .footer-btn {
   @apply px-6 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.footer-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .footer-btn.primary {
-  @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: #ffffff;
 }
+
+.footer-btn.primary:hover {
+  background-color: var(--settings-accent-hover);
+}
+
 </style>

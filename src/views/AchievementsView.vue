@@ -95,7 +95,8 @@ onMounted(() => {
 
 <style scoped>
 .achievements-view {
-  @apply min-h-screen bg-gray-50 p-6;
+  @apply min-h-screen p-6;
+  background-color: var(--settings-bg);
 }
 
 .achievements-header {
@@ -103,7 +104,8 @@ onMounted(() => {
 }
 
 .achievements-title {
-  @apply text-3xl font-bold text-center text-gray-800 mb-6;
+  @apply text-3xl font-bold text-center mb-6;
+  color: var(--settings-text-primary);
 }
 
 .achievements-stats {
@@ -112,14 +114,18 @@ onMounted(() => {
 
 .stat-card {
   @apply bg-white rounded-lg shadow-md p-6 text-center min-w-24;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .stat-number {
-  @apply text-3xl font-bold text-blue-600 mb-2;
+  @apply text-3xl font-bold mb-2;
+  color: var(--settings-accent);
 }
 
 .stat-label {
-  @apply text-sm text-gray-600;
+  @apply text-sm;
+  color: var(--settings-text-secondary);
 }
 
 .achievements-content {
@@ -133,10 +139,14 @@ onMounted(() => {
 .achievement-card {
   @apply bg-white rounded-lg shadow-md p-6 flex items-start space-x-4;
   @apply transition-all duration-200 hover:shadow-lg;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .achievement-card.unlocked {
-  @apply ring-2 ring-yellow-400 bg-yellow-50;
+  @apply ring-2;
+  background-color: var(--settings-accent);
+  color: #ffffff;
 }
 
 .achievement-icon {
@@ -148,11 +158,13 @@ onMounted(() => {
 }
 
 .achievement-name {
-  @apply text-lg font-semibold text-gray-800 mb-2;
+  @apply text-lg font-semibold mb-2;
+  color: var(--settings-text-primary);
 }
 
 .achievement-description {
   @apply text-gray-600 mb-3;
+  color: var(--settings-text-secondary);
 }
 
 .achievement-date {

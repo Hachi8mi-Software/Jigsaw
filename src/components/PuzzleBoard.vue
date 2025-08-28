@@ -258,7 +258,8 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 
 <style scoped>
 .puzzle-board {
-  @apply flex flex-col items-center p-6 bg-gray-50 min-h-screen;
+  @apply flex flex-col items-center p-6 min-h-screen;
+  background-color: var(--settings-bg);
 }
 
 .puzzle-container {
@@ -270,11 +271,13 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 }
 
 .puzzle-info h3 {
-  @apply text-2xl font-bold text-gray-800 mb-2;
+  @apply text-2xl font-bold mb-2;
+  color: var(--settings-text-primary);
 }
 
 .puzzle-info p {
   @apply text-gray-600;
+  color: var(--settings-text-secondary);
 }
 
 .game-area {
@@ -285,8 +288,15 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   @apply flex flex-col;
 }
 
+.puzzle-grid {
+  @apply inline-block p-4 rounded-lg;
+  background-color: var(--settings-card-bg);
+  border: 2px dashed var(--settings-border);
+}
+
 .pieces-area h4 {
-  @apply text-lg font-semibold text-gray-700 mb-4 text-center;
+  @apply text-lg font-semibold mb-4 text-center;
+  color: var(--settings-text-primary);
 }
 
 .scattered-pieces {
@@ -294,6 +304,8 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   width: 320px;
   height: 420px;
   overflow: visible;
+  background-color: var(--settings-card-bg);
+  border-color: var(--settings-border);
 }
 
 .target-area {
@@ -302,6 +314,7 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 
 .target-area h4 {
   @apply text-lg font-semibold text-gray-700 mb-4 text-center;
+  color: var(--settings-text-primary);
 }
 
 .puzzle-piece {
@@ -353,10 +366,14 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 .grid-slot {
   @apply border border-gray-300 bg-gray-50 flex items-center justify-center;
   @apply transition-colors duration-200;
+  background-color: var(--settings-card-bg);
+  border-color: var(--settings-border);
 }
 
 .grid-slot:hover {
   @apply bg-blue-50 border-blue-300;
+  background-color: var(--settings-hover);
+  border-color: var(--settings-accent);
 }
 
 .grid-slot.occupied {
@@ -365,6 +382,7 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 
 .slot-number {
   @apply text-xs text-gray-400 font-mono;
+  color: var(--settings-text-secondary);
 }
 
 .controls {
@@ -374,9 +392,16 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 .control-btn {
   @apply px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
   @apply transition-colors duration-200 font-medium;
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.control-btn:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
 }
 
 .no-puzzle {
   @apply text-center text-gray-500 text-lg;
+  color: var(--settings-text-secondary);
 }
 </style>

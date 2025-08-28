@@ -16,10 +16,10 @@ export function createGridStyle(gridCols: number, gridRows: number): StyleValue 
     gap: '2px',
     width: '400px',
     height: '300px',
-    border: '2px solid #ccc',
+    border: `2px dashed var(--settings-border, #ccc)`,
     borderRadius: '8px',
     padding: '8px',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'var(--settings-card-bg, #f9f9f9)',
     position: 'relative' as const
   }
 }
@@ -70,7 +70,7 @@ export function createPieceStyle(
     borderRadius: '4px',
     cursor: 'grab',
     overflow: 'hidden',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--settings-card-bg, white)',
     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
     zIndex: isDragging ? 1000 : 10,
     transform: isDragging ? 'scale(1.05)' : 'scale(1)',
@@ -103,7 +103,7 @@ export function createPlacedPieceStyle(
       border: piece.isCorrect ? '2px solid #27ae60' : '2px solid #e74c3c',
       borderRadius: '4px',
       overflow: 'hidden',
-      backgroundColor: 'white',
+      backgroundColor: 'var(--settings-card-bg, white)',
       zIndex: 1000,
       transform: 'scale(1.05)',
       transition: 'none',
@@ -121,7 +121,7 @@ export function createPlacedPieceStyle(
     border: piece.isCorrect ? '2px solid #27ae60' : '2px solid #e74c3c',
     borderRadius: '4px',
     overflow: 'hidden',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--settings-card-bg, white)',
     zIndex: 5,
     cursor: 'grab'
   }
