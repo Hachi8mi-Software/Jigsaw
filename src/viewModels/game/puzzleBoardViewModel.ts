@@ -273,17 +273,12 @@ export class PuzzleBoardViewModel {
     audioUtils.playPiecePlaced()
     
     // 增加步数
-    this.incrementMoveCount()
+    this.gameStore.incrementMoveCount()
     
     // 检查游戏完成
     this.checkGameCompletion()
     
     console.log(isCorrect ? '正确放置！' : '位置不正确')
-  }
-
-  // 将 incrementMoveCount 方法迁移到 PuzzleBoardViewModel
-  incrementMoveCount() {
-    this.gameStore.moveCount++
   }
 
   // 重置已放置拼图块位置

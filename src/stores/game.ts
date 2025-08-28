@@ -183,7 +183,6 @@ export const useGameStore = defineStore('game', () => {
     if (piece) {
       piece.x = x
       piece.y = y
-      moveCount.value++
       console.log("Update place: ",pieceId, "-> (",x,",", y,")")
     }
   }
