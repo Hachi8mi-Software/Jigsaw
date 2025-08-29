@@ -730,9 +730,16 @@ onMounted(() => {
 }
 
 .upload-placeholder {
-  @apply w-full h-48 border-2 border-dashed border-gray-300 rounded-lg;
+  @apply w-full h-48 border-2 border-dashed rounded-lg;
   @apply flex flex-col items-center justify-center cursor-pointer;
-  @apply hover:border-blue-400 hover:bg-blue-50 transition-colors duration-200;
+  @apply transition-colors duration-200;
+  border-color: var(--settings-border);
+  background-color: var(--settings-card-bg);
+}
+
+.upload-placeholder:hover {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-hover);
 }
 
 .upload-icon {
@@ -740,7 +747,8 @@ onMounted(() => {
 }
 
 .upload-hint {
-  @apply text-xs text-gray-500 mt-1;
+  @apply text-xs mt-1;
+  color: var(--settings-text-secondary);
 }
 
 .uploaded-image {
@@ -774,7 +782,8 @@ onMounted(() => {
 }
 
 .control-group label {
-  @apply text-sm font-medium text-gray-700 mb-1;
+  @apply text-sm font-medium mb-1;
+  color: var(--settings-text-primary);
 }
 
 .number-input, .text-input {
@@ -805,11 +814,13 @@ onMounted(() => {
 }
 
 .selected-boundary-info {
-  @apply mt-4 p-3 bg-blue-50 rounded-lg;
+  @apply mt-4 p-3 rounded-lg;
+  background-color: var(--settings-hover);
 }
 
 .selected-boundary-info h4 {
-  @apply font-medium text-blue-800 mb-2;
+  @apply font-medium mb-2;
+  color: var(--settings-accent);
 }
 
 .boundary-state-controls {
@@ -817,8 +828,13 @@ onMounted(() => {
 }
 
 .state-btn {
-  @apply flex-1 px-2 py-1 text-xs font-medium rounded;
-  @apply bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-200;
+  @apply flex-1 px-2 py-1 text-xs font-medium rounded transition-colors duration-200;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+}
+
+.state-btn:hover {
+  background-color: var(--settings-hover);
 }
 
 .state-btn.active {
@@ -834,7 +850,8 @@ onMounted(() => {
 }
 
 .image-container {
-  @apply relative bg-white rounded-lg shadow-lg overflow-hidden;
+  @apply relative rounded-lg shadow-lg overflow-hidden;
+  background-color: var(--settings-card-bg);
 }
 
 .background-image {
@@ -846,7 +863,7 @@ onMounted(() => {
 }
 
 .empty-canvas {
-  @apply flex items-center justify-center h-96 bg-white rounded-lg shadow-lg;
+  @apply flex items-center justify-center h-96 rounded-lg shadow-lg;
   background-color: var(--settings-card-bg);
 }
 
@@ -873,7 +890,7 @@ onMounted(() => {
 }
 
 .modal-dialog {
-  @apply bg-white rounded-lg shadow-xl w-full max-w-md mx-4;
+  @apply rounded-lg shadow-xl w-full max-w-md mx-4;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
 }
@@ -895,8 +912,15 @@ onMounted(() => {
 }
 
 .import-textarea {
-  @apply w-full h-32 p-3 border border-gray-300 rounded-md resize-none;
+  @apply w-full h-32 p-3 border rounded-md resize-none;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.import-textarea:focus {
+  border-color: var(--settings-accent);
 }
 
 .form-group {
@@ -904,7 +928,8 @@ onMounted(() => {
 }
 
 .form-label {
-  @apply block mb-2 font-medium text-gray-700;
+  @apply block mb-2 font-medium;
+  color: var(--settings-text-primary);
 }
 
 .form-input,
