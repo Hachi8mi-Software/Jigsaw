@@ -41,21 +41,23 @@
           class="control-btn"
           :class="{ 'paused': isPaused }"
         >
-          <span v-if="isPaused">▶️</span>
-          <span v-else>⏸️</span>
-          {{ isPaused ? '继续' : '暂停' }}
+          <span class="control-icon">{{ isPaused ? '▶️' : '⏸️' }}</span>
+          <span class="control-text">{{ isPaused ? '继续' : '暂停' }}</span>
         </button>
         
         <button @click="resetGame" class="control-btn">
-          🔄 重置
+          <span class="control-icon">🔄</span>
+          <span class="control-text">重置</span>
         </button>
         
         <button @click="showSettings" class="control-btn">
-          ⚙️ 设置
+          <span class="control-icon">⚙️</span>
+          <span class="control-text">设置</span>
         </button>
         
         <button @click="returnToLibrary" class="control-btn">
-          📚 返回素材库
+          <span class="control-icon">📚</span>
+          <span class="control-text">返回素材库</span>
         </button>
       </div>
     </div>
@@ -177,8 +179,11 @@ const emit = defineEmits<{
 }
 
 .stat-item {
-  @apply flex flex-col items-center px-3 py-2 rounded-lg min-w-[80px];
+  @apply flex flex-col items-center px-4 py-3 rounded-lg;
   background-color: var(--settings-hover);
+  min-width: 100px;
+  height: 80px;
+  justify-content: center;
 }
 
 .stat-label {
@@ -205,9 +210,16 @@ const emit = defineEmits<{
 }
 
 .control-btn {
-  @apply px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm;
+  @apply px-4 py-3 rounded-lg transition-colors duration-200 font-medium text-sm;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
+  min-width: 100px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .control-btn:hover {
@@ -221,6 +233,14 @@ const emit = defineEmits<{
 
 .control-btn.paused:hover {
   background-color: var(--settings-accent-hover);
+}
+
+.control-icon {
+  @apply text-lg;
+}
+
+.control-text {
+  @apply text-xs;
 }
 
 
