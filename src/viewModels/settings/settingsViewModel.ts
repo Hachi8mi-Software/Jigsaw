@@ -22,10 +22,6 @@ export class SettingsViewModel {
     get: () => this.settingsStore.settings.performance,
     set: (value) => { this.settingsStore.settings.performance = value }
   })
-  public dataSettings = computed({
-    get: () => this.settingsStore.settings.data,
-    set: (value) => { this.settingsStore.settings.data = value }
-  })
 
   // 当前主题计算属性
   public currentTheme = computed(() => {

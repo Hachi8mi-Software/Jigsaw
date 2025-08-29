@@ -42,6 +42,43 @@ const navigateTo = (path: string) => {
   router.push(path)
 }
 
+// 主题切换方法
+const toggleTheme = () => {
+  const currentTheme = settingsStore.settings.ui.theme
+  if (currentTheme === 'auto') {
+    settingsStore.settings.ui.theme = 'light'
+  } else if (currentTheme === 'light') {
+    settingsStore.settings.ui.theme = 'dark'
+  } else {
+    settingsStore.settings.ui.theme = 'auto'
+  }
+  settingsStore.saveSettings()
+}
+
+// 获取主题图标
+const getThemeIcon = () => {
+  const theme = settingsStore.settings.ui.theme
+  if (theme === 'auto') return '🖥️'
+  if (theme === 'light') return '☀️'
+  return '🌙'
+}
+
+// 获取主题文本
+const getThemeText = () => {
+  const theme = settingsStore.settings.ui.theme
+  if (theme === 'auto') return '自动'
+  if (theme === 'light') return '浅色'
+  return '深色'
+}
+
+// 获取主题提示
+const getThemeTooltip = () => {
+  const theme = settingsStore.settings.ui.theme
+  if (theme === 'auto') return '当前：跟随系统 (点击切换到浅色)'
+  if (theme === 'light') return '当前：浅色主题 (点击切换到深色)'
+  return '当前：深色主题 (点击切换到自动)'
+}
+
 // 应用主题
 const applyTheme = () => {
   const theme = currentTheme.value
@@ -111,6 +148,18 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
       </ul>
       
       <div class="sidebar-footer">
+        <!-- 主题切换按钮 -->
+        <div class="theme-toggle-container">
+          <button 
+            @click="toggleTheme"
+            class="theme-toggle-btn"
+            :title="getThemeTooltip()"
+          >
+            <span class="theme-icon">{{ getThemeIcon() }}</span>
+            <span class="theme-text">{{ getThemeText() }}</span>
+          </button>
+        </div>
+        
         <div class="version-info">
           <span class="version-text">v1.0.0</span>
         </div>
@@ -192,6 +241,38 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
 .sidebar-footer {
   @apply p-4;
   border-top: 1px solid var(--border-color);
+}
+
+/* 主题切换按钮样式 */
+.theme-toggle-container {
+  @apply mb-4;
+}
+
+.theme-toggle-btn {
+  @apply w-full flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-200;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--text-accent);
+  color: #ffffff;
+  border-color: var(--text-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.theme-icon {
+  @apply text-lg mr-2;
+}
+
+.theme-text {
+  @apply font-medium text-sm;
 }
 
 .version-info {
