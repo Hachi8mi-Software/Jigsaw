@@ -43,8 +43,12 @@ export class GameController {
     
     if (existingState && !forceNew && !existingState.isCompleted) {
       // 恢复现有游戏
-      console.log('恢复游戏状态，puzzleData:', puzzleData)
-      console.log('puzzleData.imageUrl:', puzzleData.imageUrl)
+      console.log('🎮 恢复游戏状态，puzzleData:', puzzleData)
+      console.log('存储的状态:', {
+        totalPauseTime: existingState.totalPauseTime,
+        pauseStartTime: existingState.pauseStartTime,
+        isPaused: existingState.isPaused
+      })
       
       this.gameStore.restoreGameState({
         puzzleData,
@@ -54,16 +58,20 @@ export class GameController {
         isCompleted: existingState.isCompleted,
         isPaused: existingState.isPaused,
         isAutoPaused: existingState.isAutoPaused || false,
-        gameSessionId: existingState.sessionId
+        gameSessionId: existingState.sessionId,
+        // 恢复暂停相关的时间数据
+        totalPauseTime: existingState.totalPauseTime || 0,
+        pauseStartTime: existingState.pauseStartTime ? new Date(existingState.pauseStartTime) : null
       })
       
-      this.gameStore.resetPauseTime()
+      // 不要重置暂停时间，因为我们刚刚恢复了它们
+      // this.gameStore.resetPauseTime()
       
       if (!existingState.isPaused) {
         this.startRealTimeTimer()
       }
       
-      console.log('恢复现有游戏状态')
+      console.log('✅ 恢复现有游戏状态')
       console.log('恢复后的currentPuzzle:', this.gameStore.currentPuzzle)
       console.log('恢复后的currentPuzzle.imageUrl:', this.gameStore.currentPuzzle?.imageUrl)
     } else {

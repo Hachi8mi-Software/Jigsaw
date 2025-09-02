@@ -73,9 +73,9 @@ export const useGameStore = defineStore('game', () => {
 
   // 计算属性
   const elapsedTime = computed(() => {
-    if (!startTime.value || !currentTime.value) return 0
-    const elapsed = currentTime.value.getTime() - startTime.value.getTime()
-    return Math.floor(elapsed / 1000)
+    if (!startTime.value) return 0
+    // 使用包含暂停逻辑处理的计算方法，现在calculateElapsedTime内部已经依赖currentTime
+    return calculateElapsedTime(startTime.value)
   })
 
   const completionPercentage = computed(() => {
@@ -112,8 +112,30 @@ export const useGameStore = defineStore('game', () => {
   })
 
   const updateCurrentTime = () => {
-    if (!isCompleted.value) {
+    if (!isCompleted.value && !isPaused.value) {
+      const oldTime = currentTime.value
       currentTime.value = new Date()
+      
+      // 每次更新都记录currentTime变化（但简化输出）
+      if (startTime.value && Math.floor(elapsedTime.value) % 5 === 0 && Math.floor(elapsedTime.value) !== Math.floor((elapsedTime.value - 1))) {
+        logTimeVariableChange('currentTime', oldTime, currentTime.value, '定时更新(每5秒)')
+      }
+      
+      // 每10秒输出一次详细日志，避免日志过多
+      if (startTime.value && Math.floor(elapsedTime.value / 10) !== Math.floor((elapsedTime.value - 1) / 10)) {
+        console.log('⏰ 时间状态监控 (每10秒):', {
+          startTime: startTime.value?.toISOString(),
+          endTime: endTime.value?.toISOString(),
+          currentTime: currentTime.value.toISOString(),
+          pauseStartTime: pauseStartTime.value?.toISOString(),
+          totalPauseTime: `${Math.floor(totalPauseTime.value / 1000)}秒`,
+          elapsedTime: `${elapsedTime.value}秒`,
+          isPaused: isPaused.value,
+          isGameActive: isGameActive.value
+        })
+      }
+    } else if (isPaused.value) {
+      console.log('⏸️ 游戏暂停中，跳过时间更新')
     }
   }
 
@@ -146,7 +168,17 @@ export const useGameStore = defineStore('game', () => {
     isPaused: boolean
     isAutoPaused: boolean
     gameSessionId: string
+    totalPauseTime?: number
+    pauseStartTime?: Date | null
   }) => {
+    console.log('🔄 恢复游戏状态:', {
+      puzzleId: data.puzzleData.id,
+      startTime: data.startTime.toISOString(),
+      isPaused: data.isPaused,
+      totalPauseTime: data.totalPauseTime,
+      pauseStartTime: data.pauseStartTime?.toISOString()
+    })
+    
     currentPuzzle.value = data.puzzleData
     // 直接使用 PieceStatus[]
     pieces.value = data.pieces
@@ -159,6 +191,16 @@ export const useGameStore = defineStore('game', () => {
     isAutoPaused.value = data.isAutoPaused
     isGameActive.value = !data.isPaused
     gameSessionId.value = data.gameSessionId
+    
+    // 恢复暂停相关的时间数据
+    totalPauseTime.value = data.totalPauseTime || 0
+    pauseStartTime.value = data.pauseStartTime || null
+    
+    console.log('✅ 游戏状态恢复完成:', {
+      totalPauseTime: `${Math.floor(totalPauseTime.value / 1000)}秒`,
+      pauseStartTime: pauseStartTime.value?.toISOString(),
+      currentElapsedTime: `${elapsedTime.value}秒`
+    })
   }
 
   const pauseGameState = (autoPause: boolean = false) => {
@@ -374,17 +416,34 @@ export const useGameStore = defineStore('game', () => {
    */
   const calculateElapsedTime = (startTime: Date, endTime?: Date): number => {
     let end: Date
+    let endSource = ''
     if (endTime) {
       end = endTime
+      endSource = '指定结束时间'
     } else if (pauseStartTime.value) {
       // 如果游戏暂停中，使用暂停开始时间作为结束时间
       end = pauseStartTime.value
+      endSource = '暂停开始时间'
     } else {
-      end = new Date()
+      // 使用响应式的currentTime而不是new Date()来触发更新
+      end = currentTime.value
+      endSource = '当前时间'
     }
     const actualElapsed = end.getTime() - startTime.getTime()
     const adjustedElapsed = actualElapsed - totalPauseTime.value
-    return Math.floor(adjustedElapsed / 1000)
+    const result = Math.floor(adjustedElapsed / 1000)
+    
+    console.log('⏱️ 计算游戏时长:', {
+      startTime: startTime.toISOString(),
+      endTime: end.toISOString(),
+      endSource,
+      actualElapsed: `${Math.floor(actualElapsed / 1000)}秒`,
+      totalPauseTime: `${Math.floor(totalPauseTime.value / 1000)}秒`,
+      adjustedElapsed: `${result}秒`,
+      isPaused: !!pauseStartTime.value
+    })
+    
+    return result
   }
 
   const generateInitialPieces = (puzzleData: PuzzleData): PieceStatus[] => {
@@ -486,8 +545,18 @@ export const useGameStore = defineStore('game', () => {
       isCompleted: isCompleted.value,
       isPaused: isPaused.value,
       isAutoPaused: isAutoPaused.value,
+      // 保存暂停相关的时间数据
+      totalPauseTime: totalPauseTime.value,
+      pauseStartTime: pauseStartTime.value?.toISOString(),
       savedAt: new Date().toISOString()
     }
+    
+    console.log('💾 保存游戏状态:', {
+      puzzleId: puzzleData.id,
+      totalPauseTime: `${Math.floor(totalPauseTime.value / 1000)}秒`,
+      pauseStartTime: pauseStartTime.value?.toISOString(),
+      isPaused: isPaused.value
+    })
     
     localStorage.setItem(`puzzle_game_${puzzleData.id}`, JSON.stringify(stateToSave))
   }
