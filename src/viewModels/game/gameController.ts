@@ -162,8 +162,8 @@ export class GameController {
   /**
    * 放置拼图块
    */
-  placePiece(pieceId: string, isPlaced: boolean): void {
-    this.gameStore.updatePiecePlacement(pieceId, isPlaced)
+  placePiece(pieceId: string, isPlaced: boolean, isCorrect?: boolean): void {
+    this.gameStore.updatePiecePlacement(pieceId, isPlaced, isCorrect)
     this.saveGameState()
     
     // 检查游戏是否完成

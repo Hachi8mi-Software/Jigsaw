@@ -237,10 +237,13 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  const updatePiecePlacement = (pieceId: string, isPlaced: boolean) => {
+  const updatePiecePlacement = (pieceId: string, isPlaced: boolean, isCorrect?: boolean) => {
     const piece = pieces.value.find(p => p.id === pieceId)
     if (piece) {
       piece.isPlaced = isPlaced
+      if (isCorrect !== undefined) {
+        piece.isCorrect = isCorrect
+      }
       checkGameCompletion()
     } else {
       console.log("updatePiecePlacement 找不到拼图块:", pieceId)
@@ -337,8 +340,12 @@ export const useGameStore = defineStore('game', () => {
     if (totalPieces > 0) {
       const placedPieces = pieces.value.filter(piece => piece.isPlaced)
       if (placedPieces.length === totalPieces) {
-        isCompleted.value = true
-        return true
+        // 检查是否所有已放置的拼图块都在正确位置
+        const correctPieces = pieces.value.filter(piece => piece.isPlaced && piece.isCorrect)
+        if (correctPieces.length === totalPieces) {
+          isCompleted.value = true
+          return true
+        }
       }
     }
 
