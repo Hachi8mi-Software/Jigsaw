@@ -6,6 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { PuzzleData, PiecePosition, UserStats, PieceStatus } from '../types'
+import { getGridPos } from '@/utils/gridUtils'
 
 export const useGameStore = defineStore('game', () => {
   // 基础游戏状态
@@ -277,7 +278,15 @@ export const useGameStore = defineStore('game', () => {
     if (piece) {
       piece.isPlaced = isPlaced
       piece.gridPosition = gridPosition
-      piece.isCorrect = isCorrect
+      
+      // 如果isCorrect未提供，根据originalIndex和gridPosition计算
+      if (isCorrect !== undefined) {
+        piece.isCorrect = isCorrect
+      } else if (gridPosition !== undefined) {
+        piece.isCorrect = piece.originalIndex === gridPosition
+      } else {
+        piece.isCorrect = undefined
+      }
 
       // 检查游戏是否完成
       if (isPuzzleBoardGameCompleted()) {
@@ -294,11 +303,62 @@ export const useGameStore = defineStore('game', () => {
     return pieces.value.some(piece => piece.isPlaced && piece.gridPosition === slotIndex)
   }
 
+  // 获取占用指定格子的拼图块索引
+  const getPieceAtSlot = (slotIndex: number): number => {
+    return pieces.value.findIndex(piece => piece.isPlaced && piece.gridPosition === slotIndex)
+  }
+
+  // 对换两个拼图块的位置
+  const swapPuzzleBoardPieces = (pieceIndex1: number, pieceIndex2: number): void => {
+    const piece1 = pieces.value[pieceIndex1]
+    const piece2 = pieces.value[pieceIndex2]
+    
+    if (!piece1 || !piece2 || !currentPuzzle.value) return
+    
+    // 交换位置信息
+    const tempGridPosition = piece1.gridPosition
+    
+    // 更新第一个拼图块
+    piece1.gridPosition = piece2.gridPosition
+    piece1.isCorrect = piece1.originalIndex === piece1.gridPosition
+    
+    // 更新第二个拼图块
+    piece2.gridPosition = tempGridPosition
+    piece2.isCorrect = piece2.originalIndex === piece2.gridPosition
+    
+    // 更新坐标位置
+    if (piece1.isPlaced && piece2.isPlaced) {
+      const pieceSize = {
+        width: currentPuzzle.value.gridConfig.pieceWidth,
+        height: currentPuzzle.value.gridConfig.pieceHeight
+      }
+      const gridCols = currentPuzzle.value.gridConfig.cols
+      
+      // 计算新的坐标位置
+      const pos1 = getGridPos(piece1.gridPosition!, pieceSize, gridCols)
+      const pos2 = getGridPos(piece2.gridPosition!, pieceSize, gridCols)
+      
+      piece1.x = pos1.x
+      piece1.y = pos1.y
+      piece2.x = pos2.x
+      piece2.y = pos2.y
+    }
+  }
+
   const resetAllPuzzleBoardPieceStates = () => {
     pieces.value.forEach(piece => {
       piece.isPlaced = false
       piece.isCorrect = undefined
       piece.gridPosition = undefined
+    })
+  }
+
+  // 重新计算所有拼图块的isCorrect状态（用于调试和修复）
+  const recalculateAllCorrectness = () => {
+    pieces.value.forEach(piece => {
+      if (piece.isPlaced && piece.gridPosition !== undefined) {
+        piece.isCorrect = piece.originalIndex === piece.gridPosition
+      }
     })
   }
 
@@ -638,7 +698,10 @@ export const useGameStore = defineStore('game', () => {
     setPuzzleBoardPiecePlaced,
     getPuzzleBoardPiece,
     isPuzzleBoardSlotOccupied,
+    getPieceAtSlot,
+    swapPuzzleBoardPieces,
     resetAllPuzzleBoardPieceStates,
+    recalculateAllCorrectness,
     clearPuzzleBoardPieces,
     setDraggingPiece,
     clearDragging,

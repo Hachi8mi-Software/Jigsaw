@@ -226,9 +226,15 @@ export class PuzzleBoardViewModel {
       this.gridCols
     )
     
-    // 处理无效网格放置
-    if (gridIndex >= 0 && gridIndex < this.totalPieces && !this.isSlotOccupied(gridIndex)) {
-      this.snapToGrid(gridIndex)
+    // 处理网格放置
+    if (gridIndex >= 0 && gridIndex < this.totalPieces) {
+      if (!this.isSlotOccupied(gridIndex)) {
+        // 空格子，直接放置
+        this.snapToGrid(gridIndex)
+      } else {
+        // 格子被占用，执行对换
+        this.swapWithOccupiedSlot(gridIndex)
+      }
     } else {
       this.handleInvalidGridDrop()
     }
@@ -275,10 +281,60 @@ export class PuzzleBoardViewModel {
     // 增加步数
     this.gameStore.incrementMoveCount()
     
+    // 重新计算所有拼图块的正确性状态
+    this.gameStore.recalculateAllCorrectness()
+    
     // 检查游戏完成
     this.checkGameCompletion()
     
     console.log(isCorrect ? '正确放置！' : '位置不正确')
+  }
+
+  // 与占用格子的拼图块对换
+  private swapWithOccupiedSlot(targetGridIndex: number) {
+    const draggingPiece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
+    if (!draggingPiece) return
+
+    // 获取占用目标格子的拼图块索引
+    const occupiedPieceIndex = this.gameStore.getPieceAtSlot(targetGridIndex)
+    if (occupiedPieceIndex === -1) return
+
+    const occupiedPiece = this.gameStore.getPuzzleBoardPiece(occupiedPieceIndex)
+    if (!occupiedPiece) return
+
+    // 如果拖拽的拼图块还没有放置，先将其放置到目标位置
+    if (!draggingPiece.isPlaced) {
+      const { x: newX, y: newY } = getGridPos(targetGridIndex, this.getPieceSize(), this.gridCols)
+      const isCorrect = draggingPiece.originalIndex === targetGridIndex
+      
+      this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
+      this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, targetGridIndex, isCorrect)
+      
+      // 将原来占用该位置的拼图块移出网格
+      this.gameStore.setPuzzleBoardPiecePlaced(occupiedPieceIndex, false, undefined, undefined)
+      
+      // 将原拼图块移动到拼图区域
+      const pieceSize = this.getPieceSize()
+      const randomPos = generateRandomPosition(800, 600, pieceSize.width, pieceSize.height, 10)
+      this.gameStore.updatePiecePosition(occupiedPieceIndex, randomPos.x, randomPos.y)
+    } else {
+      // 如果拖拽的拼图块已经放置，执行对换
+      this.gameStore.swapPuzzleBoardPieces(this.draggingPieceIndex, occupiedPieceIndex)
+    }
+
+    // 播放拼图块放置音效
+    audioUtils.playPiecePlaced()
+    
+    // 增加步数
+    this.gameStore.incrementMoveCount()
+    
+    // 重新计算所有拼图块的正确性状态
+    this.gameStore.recalculateAllCorrectness()
+    
+    // 检查游戏完成
+    this.checkGameCompletion()
+    
+    console.log('拼图块对换完成')
   }
 
   // 重置已放置拼图块位置
