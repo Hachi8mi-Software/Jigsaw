@@ -54,14 +54,12 @@ export class GameController {
         puzzleData,
         pieces: existingState.pieces,
         startTime: new Date(existingState.startTime),
+        endTime: existingState.endTime ? new Date(existingState.endTime) : undefined,
         moveCount: existingState.moveCount,
-        isCompleted: existingState.isCompleted,
-        isPaused: existingState.isPaused,
-        isAutoPaused: existingState.isAutoPaused || false,
-        gameSessionId: existingState.sessionId,
-        // 恢复暂停相关的时间数据
+        sessionId: existingState.sessionId,
         totalPauseTime: existingState.totalPauseTime || 0,
-        pauseStartTime: existingState.pauseStartTime ? new Date(existingState.pauseStartTime) : null
+        pauseStartTime: existingState.pauseStartTime ? new Date(existingState.pauseStartTime) : null,
+        isPaused: existingState.isPaused || false
       })
       
       // 不要重置暂停时间，因为我们刚刚恢复了它们
@@ -77,14 +75,13 @@ export class GameController {
     } else {
       // 开始新游戏
       const initialPieces = this.gameStore.generateInitialPieces(puzzleData)
-      const startTime = this.gameStore.startTimer()
       const sessionId = this.gameStore.generateSessionId()
       
       this.gameStore.initializeNewGame({
         puzzleData,
         pieces: initialPieces,
-        startTime,
-        gameSessionId: sessionId
+        startTime: new Date(),
+        sessionId
       })
       
       this.startRealTimeTimer()
@@ -92,7 +89,7 @@ export class GameController {
       console.log('开始新游戏')
     }
 
-    this.gameStore.isRestarting = false;
+    this.gameStore.setRestarting(false)
     
     // 设置页面可见性监听
     this.setupVisibilityListener()
@@ -107,7 +104,6 @@ export class GameController {
   pauseGame(autoPause: boolean = false): void {
     if (this.gameStore.isGameActive && !this.gameStore.isCompleted) {
       this.gameStore.pauseGameState(autoPause)
-      this.gameStore.pauseTimer()
       this.stopRealTimeTimer()
       this.saveGameState()
       console.log(autoPause ? '游戏已自动暂停' : '游戏已暂停')
@@ -120,7 +116,6 @@ export class GameController {
   resumeGame(): void {
     if (this.gameStore.isPaused && !this.gameStore.isCompleted) {
       this.gameStore.resumeGameState()
-      this.gameStore.resumeTimer()
       this.startRealTimeTimer()
       this.saveGameState()
       console.log('游戏已恢复')
@@ -132,9 +127,10 @@ export class GameController {
    */
   restartGame(): void {
     if (this.gameStore.currentPuzzle) {
+      const currentPuzzle = this.gameStore.currentPuzzle
       // 重置游戏状态
       this.gameStore.resetGameState()
-      this.startNewGame(this.gameStore.currentPuzzle, true)
+      this.startNewGame(currentPuzzle, true)
       console.log('游戏已重新开始')
     }
   }
@@ -168,7 +164,18 @@ export class GameController {
     
     // 检查游戏是否完成
     if (this.gameStore.checkGameCompletion()) {
-      this.completeGame()
+      // checkGameCompletion 已经处理了游戏完成逻辑，不需要再次调用 completeGame
+      this.stopRealTimeTimer()
+      
+      // 更新用户统计
+      if (this.gameStore.startTime && this.gameStore.currentPuzzle) {
+        const gameTime = this.gameStore.calculateElapsedTime(this.gameStore.startTime, new Date())
+        this.updateUserStats(this.gameStore.currentPuzzle, gameTime)
+      }
+      
+      this.saveGameState()
+      
+      console.log('游戏完成！')
     }
   }
 
@@ -236,7 +243,7 @@ export class GameController {
     if (this.timerInterval) return
     
     this.timerInterval = window.setInterval(() => {
-      this.gameStore.updateCurrentTime()
+      // 时间更新现在由 GameTimer 自动管理
     }, 1000)
   }
 
@@ -294,10 +301,6 @@ export class GameController {
     
     // 重置游戏状态
     this.gameStore.resetGameState()
-    
-    // 清空拼图数据
-    this.gameStore.currentPuzzle = null
-    this.gameStore.pieces = []
   }
 
   // Getter方法，提供对store状态的访问
@@ -339,5 +342,13 @@ export class GameController {
 
   get moveCount() {
     return this.gameStore.moveCount
+  }
+
+  get placedPieces() {
+    return this.gameStore.placedPieces
+  }
+
+  get totalPieces() {
+    return this.gameStore.totalPieces
   }
 }
