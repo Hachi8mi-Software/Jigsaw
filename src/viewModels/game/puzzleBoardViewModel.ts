@@ -274,6 +274,7 @@ export class PuzzleBoardViewModel {
 
     const { x: newX, y: newY } = getGridPos(gridIndex, this.getPieceSize(), this.gridCols)
     const isCorrect = piece.originalIndex === gridIndex
+    console.log("x: ", newX, "y: ", newY)
     
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
     this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, isCorrect)
@@ -350,8 +351,8 @@ export class PuzzleBoardViewModel {
     const row = Math.floor(originalGridIndex / this.gridCols)
     const col = originalGridIndex % this.gridCols
     
-    const originalX = 8 + col * (pieceSize.width + 2)
-    const originalY = 8 + row * (pieceSize.height + 2)
+    const originalX = 6 + col * (pieceSize.width + 2)
+    const originalY = 6 + row * (pieceSize.height + 2)
     
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, originalX, originalY)
   }

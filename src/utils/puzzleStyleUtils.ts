@@ -4,6 +4,7 @@
 
 import type { StyleValue } from 'vue'
 import type { PieceStatus, PuzzleData } from '../types'
+import { getGridPos } from './gridUtils'
 
 /**
  * 计算网格样式
@@ -106,8 +107,6 @@ export function createPlacedPieceStyle(
   isDragging: boolean = false
 ): StyleValue {
   const gridIndex = piece.gridPosition || 0
-  const row = Math.floor(gridIndex / gridCols)
-  const col = gridIndex % gridCols
   
   // 如果正在拖拽，使用拖拽位置
   if (isDragging) {
@@ -128,11 +127,14 @@ export function createPlacedPieceStyle(
     }
   }
   
+  // 使用 gridUtils 计算网格位置
+  const { x, y } = getGridPos(gridIndex, { width: pieceWidth, height: pieceHeight }, gridCols)
+  
   // 正常放置位置
   return {
     position: 'absolute' as const,
-    left: `${8 + col * (pieceWidth + 2)}px`,
-    top: `${8 + row * (pieceHeight + 2)}px`,
+    left: `${x}px`,
+    top: `${y}px`,
     width: `${pieceWidth}px`,
     height: `${pieceHeight}px`,
     border: piece.isCorrect ? '2px solid #27ae60' : '2px solid #e74c3c',

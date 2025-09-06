@@ -170,8 +170,8 @@ export function calculateGridCoordinates(
   const relativeX = clientX - gridRect.left
   const relativeY = clientY - gridRect.top
   
-  const gridCol = Math.floor((relativeX - 8) / (pieceWidth + 2))
-  const gridRow = Math.floor((relativeY - 8) / (pieceHeight + 2))
+  const gridCol = Math.floor((relativeX - 6) / (pieceWidth + 2))
+  const gridRow = Math.floor((relativeY - 6) / (pieceHeight + 2))
   const gridIndex = gridRow * gridCols + gridCol
   
   return { gridCol, gridRow, gridIndex }
