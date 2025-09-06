@@ -231,9 +231,13 @@ export class PieceManager {
       width: this.puzzleData.gridConfig.pieceWidth,
       height: this.puzzleData.gridConfig.pieceHeight
     }
+    
+    // 使用与shufflePieces相同的区域大小
+    const piecesAreaWidth = 320
+    const piecesAreaHeight = 420
 
     this.pieces.value.forEach((piece, index) => {
-      const randomPos = generateRandomPosition(800, 600, pieceSize.width, pieceSize.height, 10)
+      const randomPos = generateRandomPosition(piecesAreaWidth, piecesAreaHeight, pieceSize.width, pieceSize.height, 10)
       piece.x = randomPos.x
       piece.y = randomPos.y
       piece.originalIndex = index
