@@ -11,7 +11,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue } from '../types'
+import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue, GridConfig } from '../types'
 import { BUILTIN_PUZZLES, ACHIEVEMENTS } from '../data'
 
 
@@ -142,20 +142,63 @@ class LibraryViewModel {
 
   /**
    * 生成缩略图
+   * 提高画质：增大最大尺寸，提高压缩质量
+   * 支持按拼图比例中心裁剪
    */
-  async generateThumbnail(file: File, maxWidth: number = 300): Promise<string> {
+  async generateThumbnail(file: File, maxWidth: number = 800, gridConfig?: GridConfig): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image()
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
 
       img.onload = () => {
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
-        canvas.width = img.width * ratio
-        canvas.height = img.height * ratio
+        let sourceX = 0
+        let sourceY = 0
+        let sourceWidth = img.width
+        let sourceHeight = img.height
 
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
-        resolve(canvas.toDataURL('image/jpeg', 0.8))
+        // 如果提供了 gridConfig，按拼图比例进行中心裁剪
+        if (gridConfig) {
+          const puzzleRatio = gridConfig.cols / gridConfig.rows // 拼图的宽高比
+          const imageRatio = img.width / img.height // 原图的宽高比
+
+          if (imageRatio > puzzleRatio) {
+            // 原图比拼图更宽，需要裁剪宽度
+            sourceWidth = img.height * puzzleRatio
+            sourceX = (img.width - sourceWidth) / 2
+          } else if (imageRatio < puzzleRatio) {
+            // 原图比拼图更高，需要裁剪高度
+            sourceHeight = img.width / puzzleRatio
+            sourceY = (img.height - sourceHeight) / 2
+          }
+          // 如果比例相同，不需要裁剪
+        }
+
+        // 计算目标尺寸
+        let targetWidth = sourceWidth
+        let targetHeight = sourceHeight
+
+        // 如果裁剪后的图片仍然大于最大尺寸，则进行缩放
+        if (sourceWidth > maxWidth || sourceHeight > maxWidth) {
+          const ratio = Math.min(maxWidth / sourceWidth, maxWidth / sourceHeight)
+          targetWidth = sourceWidth * ratio
+          targetHeight = sourceHeight * ratio
+        }
+
+        // 设置画布尺寸
+        canvas.width = targetWidth
+        canvas.height = targetHeight
+
+        // 绘制裁剪后的图片
+        ctx?.drawImage(
+          img,
+          sourceX, sourceY, sourceWidth, sourceHeight, // 源图片的裁剪区域
+          0, 0, targetWidth, targetHeight // 目标画布的绘制区域
+        )
+
+        // 提高压缩质量从 0.8 到 0.95，保持原始格式
+        const originalFormat = file.type.includes('png') ? 'image/png' : 'image/jpeg'
+        resolve(canvas.toDataURL(originalFormat, 0.95))
       }
 
       img.onerror = reject
@@ -260,7 +303,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = false
   }
 
-  const addLibraryItem = async (file: File, name: string, category: string, tags: string[]) => {
+  const addLibraryItem = async (file: File, name: string, category: string, tags: string[], gridConfig?: GridConfig) => {
     if (!libraryViewModel.validateImageFile(file)) {
       throw new Error('无效的图片文件')
     }
@@ -268,8 +311,8 @@ export const useLibraryStore = defineStore('library', () => {
     try {
       isLoading.value = true
       
-      // 生成缩略图
-      const thumbnail = await libraryViewModel.generateThumbnail(file)
+      // 生成缩略图，传入 gridConfig 进行中心裁剪
+      const thumbnail = await libraryViewModel.generateThumbnail(file, 800, gridConfig)
       
       // 创建新的库项目
       const newItem: LibraryItem = {

@@ -592,12 +592,13 @@ const handleAddToLibrary = async () => {
       difficulty: Math.ceil(Math.random() * 5) // 随机难度，实际应根据复杂度计算
     }
     
-    // 添加到素材库，并传递自定义拼图数据
+    // 添加到素材库，并传递自定义拼图数据和 gridConfig 进行中心裁剪
     const newItem = await libraryStore.addLibraryItem(
       editorStore.originalImageFile,
       libraryItemName.value.trim(),
       libraryItemCategory.value,
-      tags
+      tags,
+      puzzleData.gridConfig
     )
     
     // 更新库项目，添加puzzleData

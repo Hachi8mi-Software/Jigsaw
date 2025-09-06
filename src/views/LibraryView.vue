@@ -424,12 +424,13 @@ const handleUpload = async () => {
       difficulty: Math.ceil(Math.random() * 5) // 随机难度
     }
 
-    // 添加到素材库
+    // 添加到素材库，传入 gridConfig 进行中心裁剪
     const newItem = await libraryStore.addLibraryItem(
       uploadFile.value,
       uploadForm.name,
       uploadForm.category,
-      tags
+      tags,
+      puzzleData.gridConfig
     )
 
     // 更新库项目，添加puzzleData
