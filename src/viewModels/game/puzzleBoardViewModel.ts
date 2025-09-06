@@ -149,6 +149,9 @@ export class PuzzleBoardViewModel {
       this.gameStore.setPuzzleBoardPiecePlaced(index, true, piece.originalIndex, true)
       console.log(`Piece ${index} snapped to grid position:`, correctPos)
     })
+    
+    // 检查游戏是否完成并触发完成事件
+    this.checkGameCompletion()
   }
 
   // 检查插槽是否被占用
