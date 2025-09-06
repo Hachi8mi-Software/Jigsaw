@@ -58,24 +58,35 @@ export class GameViewModel {
     // 从素材库查找拼图
     const libraryItem = this.libraryStore.items.find(item => item.id === puzzleId)
     if (libraryItem) {
+      // 检查是否有自定义的gridConfig
+      let customGridConfig = null;
+      try {
+        // 尝试从libraryItem中获取自定义网格配置
+        if (libraryItem.puzzleData && libraryItem.puzzleData.gridConfig) {
+          customGridConfig = libraryItem.puzzleData.gridConfig;
+        }
+      } catch (error) {
+        console.error('获取自定义网格配置失败:', error);
+      }
+      
       // 创建拼图数据
       const puzzleData: PuzzleData = {
         id: libraryItem.id,
         name: libraryItem.name,
         imageUrl: libraryItem.imageUrl,
-        gridConfig: {
+        gridConfig: customGridConfig || {
           rows: 3,
           cols: 4,
           pieceWidth: 150,
           pieceHeight: 100
         },
-        boundaries: [], // 简单的边界数据
+        boundaries: libraryItem.puzzleData?.boundaries || [], // 使用自定义边界数据或默认空数组
         createdAt: new Date(),
         difficulty: libraryItem.difficulty
       }
       
       // 开始新游戏，允许恢复现有游戏状态
-      console.debug("[startNewGame]", puzzleData.id, puzzleData.name)
+      console.debug("[startNewGame]", puzzleData.id, puzzleData.name, puzzleData.gridConfig)
       this.gameController.startNewGame(puzzleData, false)
     }
   }

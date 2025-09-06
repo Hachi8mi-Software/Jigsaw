@@ -365,7 +365,7 @@ import { computed, ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useEditorStore } from '../stores/editor'
 import { useLibraryStore } from '../stores/library'
-import { BoundaryState } from '../types'
+import { BoundaryState, PuzzleData } from '../types'
 import SvgBoundary from '../components/SvgBoundary.vue'
 import { SvgPathGenerator } from '../utils/svgUtils'
 
@@ -581,13 +581,32 @@ const handleAddToLibrary = async () => {
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0)
     
-    // 添加到素材库
-    await libraryStore.addLibraryItem(
+    // 创建拼图数据对象
+    const puzzleData: PuzzleData = {
+      id: `custom_${Date.now()}`,
+      name: libraryItemName.value.trim(),
+      imageUrl: currentImage.value,
+      gridConfig: editorStore.gridConfig,
+      boundaries: editorStore.boundaries,
+      createdAt: new Date(),
+      difficulty: Math.ceil(Math.random() * 5) // 随机难度，实际应根据复杂度计算
+    }
+    
+    // 添加到素材库，并传递自定义拼图数据
+    const newItem = await libraryStore.addLibraryItem(
       editorStore.originalImageFile,
       libraryItemName.value.trim(),
       libraryItemCategory.value,
       tags
     )
+    
+    // 更新库项目，添加puzzleData
+    if (newItem) {
+      libraryStore.updateLibraryItem(newItem.id, {
+        ...newItem,
+        puzzleData: puzzleData
+      })
+    }
     
     alert('成功添加到素材库！')
     closeAddToLibraryDialog()

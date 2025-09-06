@@ -256,7 +256,7 @@
 import { computed, ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLibraryStore } from '../stores/library'
-import type { LibraryItem } from '../types'
+import type { LibraryItem, PuzzleData } from '../types'
 
 // Store和路由
 const libraryStore = useLibraryStore()
@@ -408,12 +408,37 @@ const handleUpload = async () => {
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0)
 
-    await libraryStore.addLibraryItem(
+    // 创建拼图数据对象
+    const puzzleData: PuzzleData = {
+      id: `custom_${Date.now()}`,
+      name: uploadForm.name,
+      imageUrl: uploadPreview.value || '',
+      gridConfig: {
+        rows: 3,
+        cols: 4,
+        pieceWidth: 150,
+        pieceHeight: 100
+      },
+      boundaries: [], // 简单的边界数据
+      createdAt: new Date(),
+      difficulty: Math.ceil(Math.random() * 5) // 随机难度
+    }
+
+    // 添加到素材库
+    const newItem = await libraryStore.addLibraryItem(
       uploadFile.value,
       uploadForm.name,
       uploadForm.category,
       tags
     )
+
+    // 更新库项目，添加puzzleData
+    if (newItem) {
+      libraryStore.updateLibraryItem(newItem.id, {
+        ...newItem,
+        puzzleData: puzzleData
+      })
+    }
 
     closeUploadModal()
     alert('拼图添加成功！')

@@ -104,6 +104,7 @@ export interface LibraryItem {
   tags: string[]
   difficulty: number
   isBuiltIn: boolean
+  puzzleData?: PuzzleData // 添加可选的puzzleData字段，用于存储自定义拼图数据
 }
 
 export type DateValue = number
