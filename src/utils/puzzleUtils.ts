@@ -6,14 +6,35 @@ import type { PieceStatus } from '../types'
 
 /**
  * 计算拼图块尺寸
+ * 根据拼图比例动态调整尺寸
  */
-export function calculatePieceSize(gridCols: number, gridRows: number) {
+export function calculatePieceSize(gridCols: number, gridRows: number, baseSize: number = 300) {
   if (gridCols === 0 || gridRows === 0) {
     return { width: 100, height: 75 }
   }
   
-  const availableWidth = 400 - 16 - (gridCols - 1) * 2
-  const availableHeight = 300 - 16 - (gridRows - 1) * 2
+  // 计算拼图比例
+  const aspectRatio = gridCols / gridRows
+  
+  let gridWidth: number
+  let gridHeight: number
+  
+  if (aspectRatio >= 1) {
+    // 宽图：以高度为基准
+    gridHeight = baseSize
+    gridWidth = baseSize * aspectRatio
+  } else {
+    // 高图：以宽度为基准
+    gridWidth = baseSize
+    gridHeight = baseSize / aspectRatio
+  }
+  
+  // 减去padding和gap
+  const padding = 16 // 8px * 2
+  const gap = (gridCols - 1) * 2 + (gridRows - 1) * 2 // 2px gap between pieces
+  
+  const availableWidth = gridWidth - padding
+  const availableHeight = gridHeight - padding
   
   return {
     width: Math.floor(availableWidth / gridCols),

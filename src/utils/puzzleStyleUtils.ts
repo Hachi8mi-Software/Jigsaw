@@ -7,15 +7,32 @@ import type { PieceStatus, PuzzleData } from '../types'
 
 /**
  * 计算网格样式
+ * 根据拼图比例动态调整尺寸
  */
-export function createGridStyle(gridCols: number, gridRows: number): StyleValue {
+export function createGridStyle(gridCols: number, gridRows: number, baseSize: number = 300): StyleValue {
+  // 计算拼图比例
+  const aspectRatio = gridCols / gridRows
+  
+  let width: number
+  let height: number
+  
+  if (aspectRatio >= 1) {
+    // 宽图：以高度为基准
+    height = baseSize
+    width = baseSize * aspectRatio
+  } else {
+    // 高图：以宽度为基准
+    width = baseSize
+    height = baseSize / aspectRatio
+  }
+  
   return {
     display: 'grid',
     gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
     gridTemplateRows: `repeat(${gridRows}, 1fr)`,
     gap: '2px',
-    width: '400px',
-    height: '300px',
+    width: `${width}px`,
+    height: `${height}px`,
     border: `2px dashed var(--settings-border, #ccc)`,
     borderRadius: '8px',
     padding: '8px',

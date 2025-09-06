@@ -62,12 +62,12 @@ export class PuzzleBoardViewModel {
 
   // 计算网格样式
   getGridStyle(): StyleValue {
-    return createGridStyle(this.gridCols, this.gridRows)
+    return createGridStyle(this.gridCols, this.gridRows, 300)
   }
 
   // 计算拼图块尺寸
   getPieceSize() {
-    return calculatePieceSize(this.gridCols, this.gridRows)
+    return calculatePieceSize(this.gridCols, this.gridRows, 300)
   }
 
   // 获取拼图块图像样式
