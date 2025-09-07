@@ -33,22 +33,25 @@
         >
           {{ isPreviewMode ? '退出预览' : '预览模式' }}
         </button>
-        <button @click="openImportDialog" class="toolbar-btn">
-          导入
-        </button>
-        <button 
-          @click="addToLibrary" 
-          class="toolbar-btn success"
-          :disabled="!canExport"
+        <button
+          @click="openImportDialog"
+          class="toolbar-btn"
         >
-          添加到素材库
+          导入拼图数据
         </button>
         <button 
           @click="exportPuzzle" 
+          class="toolbar-btn"
+          :disabled="!canExport"
+        >
+          导出拼图数据
+        </button>
+        <button 
+          @click="addToLibrary" 
           class="toolbar-btn primary"
           :disabled="!canExport"
         >
-          导出拼图
+          添加到素材库
         </button>
       </div>
     </div>
@@ -285,18 +288,35 @@
           <button @click="closeImportDialog" class="close-btn">×</button>
         </div>
         <div class="modal-body">
-          <textarea
-            v-model="importData"
-            placeholder="粘贴拼图JSON数据..."
-            class="import-textarea"
-          ></textarea>
+          <div 
+            class="import-drop-zone"
+            @drop.prevent="handleImportDrop"
+            @dragover.prevent="handleDragOver"
+            @dragenter.prevent="handleDragEnter"
+            @dragleave.prevent="handleDragLeave"
+            :class="{ 'drag-over': isDragOver }"
+          >
+            <div class="drop-zone-content">
+              <div class="drop-icon">📁</div>
+              <h4>拖拽文件到此处</h4>
+              <p class="drop-hint">或者</p>
+              <button @click="triggerFileSelect" class="file-select-btn">
+                选择文件
+              </button>
+              <p>支持 .json 和 .puzzle 格式文件</p>
+            </div>
+          </div>
+          <input 
+            ref="importFileInput"
+            type="file"
+            accept=".json,.puzzle"
+            @change="handleFileSelect"
+            style="display: none;"
+          />
         </div>
         <div class="modal-footer">
           <button @click="closeImportDialog" class="modal-btn">
             取消
-          </button>
-          <button @click="handleImport" class="modal-btn primary">
-            导入
           </button>
         </div>
       </div>
@@ -377,6 +397,7 @@ const router = useRouter()
 // 模板引用
 const canvasRef = ref<HTMLElement>()
 const imageInput = ref<HTMLInputElement>()
+const importFileInput = ref<HTMLInputElement>()
 
 // 本地状态
 const localGridConfig = reactive({
@@ -387,12 +408,12 @@ const localGridConfig = reactive({
 })
 
 const showImportDialog = ref(false)
-const importData = ref('')
 const showAddToLibraryDialog = ref(false)
 const libraryItemName = ref('')
 const libraryItemCategory = ref('自定义')
 const libraryItemTags = ref('')
 const isAddingToLibrary = ref(false)
+const isDragOver = ref(false)
 
 // 计算属性
 const currentImage = computed(() => editorStore.currentImage)
@@ -626,19 +647,67 @@ const openImportDialog = () => {
 
 const closeImportDialog = () => {
   showImportDialog.value = false
-  importData.value = ''
+  isDragOver.value = false
 }
 
-const handleImport = () => {
-  if (importData.value.trim()) {
-    const success = editorStore.importPuzzle(importData.value)
-    if (success) {
-      closeImportDialog()
-      // 同步本地网格配置
-      Object.assign(localGridConfig, gridConfig.value)
-    } else {
-      alert('导入失败，请检查数据格式')
+const triggerFileSelect = () => {
+  importFileInput.value?.click()
+}
+
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file) {
+    processImportFile(file)
+  }
+}
+
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
+}
+
+const handleDragEnter = (event: DragEvent) => {
+  event.preventDefault()
+  isDragOver.value = true
+}
+
+const handleDragLeave = (event: DragEvent) => {
+  event.preventDefault()
+  isDragOver.value = false
+}
+
+const handleImportDrop = (event: DragEvent) => {
+  event.preventDefault()
+  isDragOver.value = false
+  
+  const files = event.dataTransfer?.files
+  if (files && files.length > 0) {
+    const file = files[0]
+    processImportFile(file)
+  }
+}
+
+const processImportFile = (file: File) => {
+  // 检查文件类型
+  if (file.type === 'application/json' || file.name.endsWith('.json') || file.name.endsWith('.puzzle')) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+      if (content) {
+        const success = editorStore.importPuzzle(content)
+        if (success) {
+          // 同步本地网格配置
+          Object.assign(localGridConfig, gridConfig.value)
+          closeImportDialog()
+          alert('拼图数据导入成功！')
+        } else {
+          alert('导入失败，请检查文件格式是否正确')
+        }
+      }
     }
+    reader.readAsText(file)
+  } else {
+    alert('请选择 .json 或 .puzzle 格式的文件')
   }
 }
 
@@ -983,5 +1052,61 @@ onMounted(() => {
 
 .modal-btn:disabled {
   @apply opacity-60 cursor-not-allowed;
+}
+
+.import-drop-zone {
+  @apply w-full h-64 border-2 border-dashed rounded-lg;
+  @apply flex items-center justify-center cursor-pointer;
+  @apply transition-all duration-200;
+  border-color: var(--settings-border);
+  background-color: var(--settings-card-bg);
+}
+
+.import-drop-zone:hover {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-hover);
+}
+
+.import-drop-zone.drag-over {
+  @apply border-blue-500 bg-blue-50;
+  border-color: var(--settings-accent);
+  background-color: var(--settings-accent);
+  opacity: 0.1;
+}
+
+.drop-zone-content {
+  @apply text-center space-y-3;
+}
+
+.drop-icon {
+  @apply text-5xl mb-4;
+}
+
+.drop-zone-content h4 {
+  @apply text-xl font-semibold mb-3;
+  color: var(--settings-text-primary);
+}
+
+.drop-zone-content p {
+  @apply text-sm;
+  color: var(--settings-text-secondary);
+}
+
+.drop-hint {
+  @apply text-sm font-medium my-4;
+  color: var(--settings-text-secondary);
+}
+
+.file-select-btn {
+  @apply px-6 py-3 text-base font-medium rounded-lg;
+  @apply bg-blue-500 text-white hover:bg-blue-600;
+  @apply transition-colors duration-200 shadow-sm;
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.file-select-btn:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
+  @apply shadow-md;
 }
 </style>
