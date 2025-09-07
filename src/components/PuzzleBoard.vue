@@ -17,23 +17,24 @@
         <div class="pieces-area">
           <h4>拼图块</h4>
           <div class="scattered-pieces">
-            <div
+            <!-- 使用Canvas渲染的拼图块 -->
+            <PuzzlePieceCanvas
               v-for="(piece, index) in pieces"
               :key="`piece-${index}`"
               v-show="!piece.isPlaced"
-              class="puzzle-piece"
-              :class="{ 'dragging': draggingPieceIndex === index }"
-              :style="getPieceStyle(piece)"
-              @mousedown="startDrag(index, $event)"
-              @touchstart="startDrag(index, $event)"
-            >
-              <div 
-                class="piece-image"
-                :style="getPieceImageStyle(piece)"
-              >
-                <span class="piece-number">{{ piece.originalIndex + 1 }}</span>
-              </div>
-            </div>
+              :piece="piece"
+              :puzzle-data="puzzleData!"
+              :grid-cols="gridCols"
+              :grid-rows="gridRows"
+              :piece-width="viewModel.pieceWidth"
+              :piece-height="viewModel.pieceHeight"
+              :is-dragging="draggingPieceIndex === index"
+              :is-placed="false"
+              :show-number="true"
+              :number-display-mode="'minimal'"
+              @mousedown="(event) => startDrag(index, event)"
+              @touchstart="(event) => startDrag(index, event)"
+            />
           </div>
         </div>
 
@@ -52,27 +53,24 @@
             </div>
             
             <!-- 已放置的拼图块 -->
-            <div
+            <!-- 使用Canvas渲染的已放置拼图块 -->
+            <PuzzlePieceCanvas
               v-for="(piece, index) in pieces"
               :key="`placed-${index}`"
               v-show="piece.isPlaced"
-              class="puzzle-piece placed"
-              :class="{ 
-                'correct': piece.isCorrect,
-                'incorrect': piece.isCorrect === false,
-                'dragging': draggingPieceIndex === index
-              }"
-              :style="getPlacedPieceStyle(piece)"
-              @mousedown="startDrag(index, $event)"
-              @touchstart="startDrag(index, $event)"
-            >
-              <div 
-                class="piece-image"
-                :style="getPieceImageStyle(piece)"
-              >
-                <span class="piece-number">{{ piece.originalIndex + 1 }}</span>
-              </div>
-            </div>
+              :piece="piece"
+              :puzzle-data="puzzleData!"
+              :grid-cols="gridCols"
+              :grid-rows="gridRows"
+              :piece-width="viewModel.pieceWidth"
+              :piece-height="viewModel.pieceHeight"
+              :is-dragging="draggingPieceIndex === index"
+              :is-placed="true"
+              :show-number="true"
+              :number-display-mode="'minimal'"
+              @mousedown="(event) => startDrag(index, event)"
+              @touchstart="(event) => startDrag(index, event)"
+            />
           </div>
         </div>
       </div>
@@ -103,6 +101,7 @@ import { useGameStore } from '../stores/game'
 import { PuzzleBoardViewModel } from '../viewModels/game/puzzleBoardViewModel'
 import type { PieceStatus, PuzzleData } from '../types'
 import { GameController } from '@/viewModels/game/gameController'
+import PuzzlePieceCanvas from './PuzzlePieceCanvas.vue'
 
 interface Props {
   controller: GameController,
@@ -292,6 +291,7 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   @apply inline-block p-4 rounded-lg;
   background-color: var(--settings-card-bg);
   border: 2px dashed var(--settings-border);
+  box-sizing: border-box; /* 确保border和padding包含在尺寸内 */
 }
 
 .pieces-area h4 {
@@ -368,6 +368,7 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   @apply transition-colors duration-200;
   background-color: var(--settings-card-bg);
   border-color: var(--settings-border);
+  box-sizing: border-box; /* 确保border包含在尺寸内 */
 }
 
 .grid-slot:hover {

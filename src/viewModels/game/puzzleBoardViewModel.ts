@@ -70,6 +70,16 @@ export class PuzzleBoardViewModel {
     return calculatePieceSize(this.gridCols, this.gridRows, 300)
   }
 
+  // 获取拼图块宽度
+  get pieceWidth() {
+    return this.getPieceSize().width
+  }
+
+  // 获取拼图块高度
+  get pieceHeight() {
+    return this.getPieceSize().height
+  }
+
   // 获取拼图块图像样式
   getPieceImageStyle(piece: PieceStatus): StyleValue {
     if (!this.puzzleData) return {}

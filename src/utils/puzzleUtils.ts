@@ -29,16 +29,21 @@ export function calculatePieceSize(gridCols: number, gridRows: number, baseSize:
     gridHeight = baseSize / aspectRatio
   }
   
-  // 减去padding和gap
-  const padding = 16 // 8px * 2
-  const gap = (gridCols - 1) * 2 + (gridRows - 1) * 2 // 2px gap between pieces
+  // 减去padding和gap，与createGridStyle保持一致
+  const padding = 16 // 8px * 2 (来自createGridStyle的padding)
+  const gapWidth = (gridCols - 1) * 2  // 列之间的2px gap
+  const gapHeight = (gridRows - 1) * 2 // 行之间的2px gap
   
-  const availableWidth = gridWidth - padding
-  const availableHeight = gridHeight - padding
+  const availableWidth = gridWidth - padding - gapWidth
+  const availableHeight = gridHeight - padding - gapHeight
+  
+  // 减去Canvas边框的占用空间 (2px * 2 = 4px per piece)
+  const canvasBorderWidth = 4 // 2px border * 2 sides
+  const canvasBorderHeight = 4 // 2px border * 2 sides
   
   return {
-    width: Math.floor(availableWidth / gridCols),
-    height: Math.floor(availableHeight / gridRows)
+    width: Math.floor(availableWidth / gridCols) - canvasBorderWidth,
+    height: Math.floor(availableHeight / gridRows) - canvasBorderHeight
   }
 }
 
