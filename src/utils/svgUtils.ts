@@ -56,55 +56,73 @@ export class SvgPathGenerator {
   }
 
   /**
-   * 生成水平方向的连接器
+   * 生成水平方向的连接器 - 完全水平直线加圆形凹凸
    */
   private static generateHorizontalConnector(
     startX: number, startY: number, endX: number, endY: number,
     midX: number, midY: number, connectorSize: number, type: BoundaryState
   ): string {
-    const direction = type === BoundaryState.CONVEX ? -1 : 1
-    const controlOffset = connectorSize * this.CURVE_INTENSITY
-    
-    const cp1X = midX - connectorSize / 2
-    const cp1Y = midY
-    const cp2X = midX - connectorSize / 4
-    const cp2Y = midY + direction * connectorSize
-    const cp3X = midX + connectorSize / 4
-    const cp3Y = midY + direction * connectorSize
-    const cp4X = midX + connectorSize / 2
-    const cp4Y = midY
+    if (type === BoundaryState.FLAT) {
+      return `L ${endX} ${endY}`
+    }
 
-    return `L ${cp1X} ${cp1Y} ` +
-           `Q ${cp2X - controlOffset} ${cp2Y} ${cp2X} ${cp2Y} ` +
-           `Q ${midX} ${midY + direction * connectorSize * 1.2} ${cp3X} ${cp3Y} ` +
-           `Q ${cp4X + controlOffset} ${cp4Y} ${cp4X} ${cp4Y} ` +
-           `L ${endX} ${endY}`
+    const direction = type === BoundaryState.CONVEX ? -1 : 1
+    const radius = connectorSize
+    
+    // 水平边界：整条线都必须是水平的
+    const lineY = startY // 使用起始Y坐标确保水平
+    
+    // 计算圆弧的起始和结束点
+    const arcStartX = midX - radius
+    const arcEndX = midX + radius
+    
+    // 圆弧的Y坐标：在水平线上方或下方
+    const arcY = lineY
+    
+    // 使用SVG的A命令绘制半圆弧
+    // 对于水平边界，圆弧应该是从左侧到右侧的半圆
+    const largeArcFlag = 0 // 小弧（半圆）
+    const sweepFlag = direction === 1 ? 0 : 1 // 根据方向决定顺时针或逆时针
+    
+    // 路径：直线到圆弧起点 -> 圆弧 -> 直线到终点
+    return `L ${arcStartX} ${lineY} ` +
+           `A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${arcEndX} ${arcY} ` +
+           `L ${endX} ${lineY}`
   }
 
   /**
-   * 生成垂直方向的连接器
+   * 生成垂直方向的连接器 - 完全垂直直线加圆形凹凸
    */
   private static generateVerticalConnector(
     startX: number, startY: number, endX: number, endY: number,
     midX: number, midY: number, connectorSize: number, type: BoundaryState
   ): string {
-    const direction = type === BoundaryState.CONVEX ? -1 : 1
-    const controlOffset = connectorSize * this.CURVE_INTENSITY
-    
-    const cp1X = midX
-    const cp1Y = midY - connectorSize / 2
-    const cp2X = midX + direction * connectorSize
-    const cp2Y = midY - connectorSize / 4
-    const cp3X = midX + direction * connectorSize
-    const cp3Y = midY + connectorSize / 4
-    const cp4X = midX
-    const cp4Y = midY + connectorSize / 2
+    if (type === BoundaryState.FLAT) {
+      return `L ${endX} ${endY}`
+    }
 
-    return `L ${cp1X} ${cp1Y} ` +
-           `Q ${cp2X} ${cp2Y - controlOffset} ${cp2X} ${cp2Y} ` +
-           `Q ${midX + direction * connectorSize * 1.2} ${midY} ${cp3X} ${cp3Y} ` +
-           `Q ${cp4X} ${cp4Y + controlOffset} ${cp4X} ${cp4Y} ` +
-           `L ${endX} ${endY}`
+    const direction = type === BoundaryState.CONVEX ? -1 : 1
+    const radius = connectorSize
+    
+    // 垂直边界：整条线都必须是垂直的
+    const lineX = startX // 使用起始X坐标确保垂直
+    
+    // 计算圆弧的起始和结束点
+    const arcStartY = midY - radius
+    const arcEndY = midY + radius
+    
+    // 圆弧的X坐标：在垂直线左侧或右侧
+    const arcX = lineX
+    
+    // 使用SVG的A命令绘制半圆弧
+    // 对于垂直边界，圆弧应该是从上到下或从下到上的半圆
+    const largeArcFlag = 0 // 小弧（半圆）
+    const sweepFlag = direction === 1 ? 1 : 0 // 根据方向决定顺时针或逆时针
+    
+    // 路径：直线到圆弧起点 -> 圆弧 -> 直线到终点
+    return `L ${lineX} ${arcStartY} ` +
+           `A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${arcX} ${arcEndY} ` +
+           `L ${lineX} ${endY}`
   }
 
   /**
