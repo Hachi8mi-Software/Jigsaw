@@ -26,13 +26,6 @@
       </div>
       
       <div class="toolbar-right">
-        <button 
-          @click="togglePreviewMode" 
-          class="toolbar-btn"
-          :class="{ 'active': isPreviewMode }"
-        >
-          {{ isPreviewMode ? '退出预览' : '预览模式' }}
-        </button>
         <button
           @click="openImportDialog"
           class="toolbar-btn"
@@ -249,23 +242,11 @@
                   :key="boundary.id"
                   :boundary="boundary"
                   :is-selected="selectedBoundary === boundary.id"
-                  :is-preview-mode="isPreviewMode"
                   @click="selectBoundary"
                   @hover="hoverBoundary"
                 />
               </g>
 
-              <!-- 预览模式下的拼图块轮廓 -->
-              <g v-if="isPreviewMode" class="puzzle-pieces-preview">
-                <path
-                  v-for="(piece, index) in previewPieces"
-                  :key="`preview-${index}`"
-                  :d="piece.path"
-                  fill="rgba(255, 255, 255, 0.1)"
-                  :stroke="piece.color"
-                  stroke-width="2"
-                />
-              </g>
             </svg>
           </div>
           
@@ -387,7 +368,6 @@ import { useEditorStore } from '../stores/editor'
 import { useLibraryStore } from '../stores/library'
 import { BoundaryState, PuzzleData } from '../types'
 import SvgBoundary from '../components/SvgBoundary.vue'
-import { SvgPathGenerator } from '../utils/svgUtils'
 
 // Store和路由
 const editorStore = useEditorStore()
@@ -419,7 +399,6 @@ const isDragOver = ref(false)
 const currentImage = computed(() => editorStore.currentImage)
 const gridConfig = computed(() => editorStore.gridConfig)
 const boundaries = computed(() => editorStore.boundaries)
-const isPreviewMode = computed(() => editorStore.isPreviewMode)
 const selectedBoundary = computed(() => editorStore.selectedBoundary)
 const puzzleName = computed({
   get: () => editorStore.puzzleName,
@@ -450,26 +429,6 @@ const backgroundImageStyle = computed(() => ({
   objectFit: 'cover' as const
 }))
 
-const previewPieces = computed(() => {
-  if (!isPreviewMode.value || !currentImage.value) return []
-  
-  const pieces = []
-  for (let row = 0; row < gridConfig.value.rows; row++) {
-    for (let col = 0; col < gridConfig.value.cols; col++) {
-      const path = SvgPathGenerator.generatePiecePath(
-        row,
-        col,
-        gridConfig.value,
-        boundaries.value
-      )
-      pieces.push({
-        path,
-        color: `hsl(${(row * gridConfig.value.cols + col) * 137.5 % 360}, 50%, 50%)`
-      })
-    }
-  }
-  return pieces
-})
 
 // 边界状态选项
 const boundaryStates = [
@@ -543,9 +502,6 @@ const setBoundaryState = (state: BoundaryState) => {
   }
 }
 
-const togglePreviewMode = () => {
-  editorStore.togglePreviewMode()
-}
 
 const exportPuzzle = () => {
   const puzzleJson = editorStore.exportPuzzle()
@@ -952,7 +908,7 @@ onMounted(() => {
 }
 
 .empty-canvas {
-  @apply flex items-center justify-center h-96 rounded-lg shadow-lg;
+  @apply flex items-center justify-center h-96 rounded-lg shadow-lg min-w-[500px];
   background-color: var(--settings-card-bg);
 }
 
