@@ -44,16 +44,22 @@ export function calculatePieceSize(gridCols: number, gridRows: number, baseSize:
 
 /**
  * 检查两个拼图块是否重叠
+ * @param piece1 第一个拼图块位置
+ * @param piece2 第二个拼图块位置
+ * @param pieceWidth 拼图块宽度
+ * @param pieceHeight 拼图块高度
+ * @param buffer 额外的缓冲区域，默认为20像素
  */
 export function isPieceOverlapping(
   piece1: { x: number; y: number },
   piece2: { x: number; y: number },
   pieceWidth: number,
-  pieceHeight: number
+  pieceHeight: number,
+  buffer: number = 20
 ): boolean {
   const dx = Math.abs(piece1.x - piece2.x)
   const dy = Math.abs(piece1.y - piece2.y)
-  return dx < pieceWidth && dy < pieceHeight
+  return dx < pieceWidth + buffer && dy < pieceHeight + buffer
 }
 
 /**

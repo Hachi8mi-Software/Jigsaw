@@ -23,22 +23,26 @@ export function scatterPieces(
   updatePiecePosition: (index: number, x: number, y: number) => void
 ) {
   const margin = 5
+  // 记录已经打乱过的拼图块
+  const scatteredPieces: PieceStatus[] = []
   
   piecesToScatter.forEach(piece => {
     let attempts = 0
     let validPosition = false
     
-    while (!validPosition && attempts < 50) {
+    while (!validPosition && attempts < 100) {
       const randomPos = generateRandomPosition(areaWidth, areaHeight, pieceWidth, pieceHeight, margin)
       
-      // 检查是否与其他拼图块重叠
-      const hasOverlap = piecesToScatter.some(otherPiece => {
-        if (otherPiece === piece || !otherPiece.x) return false
-        return isPieceOverlapping(randomPos, otherPiece, pieceWidth, pieceHeight)
+      // 只检查是否与本轮已经打乱过的拼图块重叠
+      const hasOverlap = scatteredPieces.some(scatteredPiece => {
+        return isPieceOverlapping(randomPos, scatteredPiece, pieceWidth, pieceHeight)
       })
       
       if (!hasOverlap) {
         updatePiecePosition(piece.originalIndex, randomPos.x, randomPos.y)
+        // 更新拼图块位置并添加到已打乱列表
+        const updatedPiece = { ...piece, x: randomPos.x, y: randomPos.y }
+        scatteredPieces.push(updatedPiece)
         validPosition = true
       }
       
@@ -48,6 +52,9 @@ export function scatterPieces(
     if (!validPosition) {
       const fallbackPos = generateRandomPosition(areaWidth, areaHeight, pieceWidth, pieceHeight, margin)
       updatePiecePosition(piece.originalIndex, fallbackPos.x, fallbackPos.y)
+      // 即使是fallback位置也要添加到已打乱列表
+      const updatedPiece = { ...piece, x: fallbackPos.x, y: fallbackPos.y }
+      scatteredPieces.push(updatedPiece)
     }
   })
 }
