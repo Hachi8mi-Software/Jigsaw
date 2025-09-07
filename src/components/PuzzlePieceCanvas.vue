@@ -71,23 +71,31 @@ const getActualGridCellSize = () => {
 
 // 获取实际的Canvas尺寸
 const actualCanvasSize = computed(() => {
+  // 计算凸出部分所需的额外空间
+  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.25
+  const extraSpace = tabSize * 1.2 // 为凸出部分预留足够空间
+  
   if (props.isPlaced) {
-    // 对于已放置的拼图块，使用网格单元格的实际尺寸
+    // 对于已放置的拼图块，使用网格单元格的实际尺寸，并增加额外空间
     const actualSize = getActualGridCellSize()
     return {
-      width: actualSize.width,
-      height: actualSize.height
+      width: actualSize.width + extraSpace * 2, // 左右两侧各增加空间
+      height: actualSize.height + extraSpace * 2 // 上下两侧各增加空间
     }
   }
-  // 对于未放置的拼图块，使用props传入的尺寸
+  // 对于未放置的拼图块，使用props传入的尺寸，并增加额外空间
   return {
-    width: props.pieceWidth,
-    height: props.pieceHeight
+    width: props.pieceWidth + extraSpace * 2,
+    height: props.pieceHeight + extraSpace * 2
   }
 })
 
 // Canvas样式
 const canvasStyle = computed(() => {
+  // 计算凸出部分所需的额外空间
+  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.25
+  const extraSpace = tabSize * 1.2 // 为凸出部分预留足够空间
+  
   let left = props.piece.x
   let top = props.piece.y
   
@@ -121,17 +129,17 @@ const canvasStyle = computed(() => {
     }
   }
 
+  // 调整位置，使拼图块在视觉上居中（考虑到Canvas尺寸增大了）
+  left -= extraSpace
+  top -= extraSpace
+
   const baseStyle = {
     position: 'absolute' as const,
     left: `${left}px`,
     top: `${top}px`,
-    width: `${actualSize.width}px`,
-    height: `${actualSize.height}px`,
+    width: `${actualCanvasSize.value.width}px`,
+    height: `${actualCanvasSize.value.height}px`,
     cursor: props.isDragging ? 'grabbing' : 'grab',
-    border: props.isPlaced 
-      ? (props.piece.isCorrect ? '2px solid #27ae60' : '2px solid #e74c3c')
-      : '2px solid #666',
-    borderRadius: '4px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
     zIndex: props.isDragging ? 1000 : (props.isPlaced ? 5 : 10),
     transform: props.isDragging ? 'scale(1.05)' : 'scale(1)',
@@ -140,6 +148,82 @@ const canvasStyle = computed(() => {
 
   return baseStyle
 })
+
+/**
+ * 创建拼图块路径（带凹凸效果）
+ */
+const createPuzzlePiecePath = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  // 拼图块凸起/凹陷的大小（占边长的比例）- 增大尺寸使效果更明显
+  const tabSize = Math.min(width, height) * 0.25
+  
+  // 确定每个边的凹凸状态（随机但基于拼图块索引，保持一致性）
+  // 使用原始索引作为随机种子，确保相同的拼图块总是有相同的形状
+  const seed = props.piece.originalIndex
+  const row = Math.floor(props.piece.originalIndex / props.gridCols)
+  const col = props.piece.originalIndex % props.gridCols
+  
+  // 确定每个边的状态：上、右、下、左
+  // 0: 平边（边缘），1: 凸出，-1: 凹入
+  const topEdge = row === 0 ? 0 : ((seed * 11) % 2 === 0 ? 1 : -1)
+  const rightEdge = col === props.gridCols - 1 ? 0 : ((seed * 7) % 2 === 0 ? 1 : -1)
+  const bottomEdge = row === props.gridRows - 1 ? 0 : ((seed * 13) % 2 === 0 ? 1 : -1)
+  const leftEdge = col === 0 ? 0 : ((seed * 5) % 2 === 0 ? 1 : -1)
+  
+  // 开始创建路径
+  ctx.beginPath()
+  
+  // 上边
+  ctx.moveTo(0, 0) // 左上角
+  if (topEdge !== 0) {
+    ctx.lineTo(width * 0.3, 0) // 上边左部分
+    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
+    ctx.bezierCurveTo(
+      width * 0.35, topEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, // 控制点1 - 增强曲线效果
+      width * 0.65, topEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, // 控制点2 - 增强曲线效果
+      width * 0.7, 0 // 终点
+    )
+  }
+  ctx.lineTo(width, 0) // 右上角
+  
+  // 右边
+  if (rightEdge !== 0) {
+    ctx.lineTo(width, height * 0.3) // 右边上部分
+    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
+    ctx.bezierCurveTo(
+      width + (rightEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), height * 0.35, // 控制点1 - 增强曲线效果
+      width + (rightEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), height * 0.65, // 控制点2 - 增强曲线效果
+      width, height * 0.7 // 终点
+    )
+  }
+  ctx.lineTo(width, height) // 右下角
+  
+  // 下边
+  if (bottomEdge !== 0) {
+    ctx.lineTo(width * 0.7, height) // 下边右部分
+    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
+    ctx.bezierCurveTo(
+      width * 0.65, height + (bottomEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), // 控制点1 - 增强曲线效果
+      width * 0.35, height + (bottomEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), // 控制点2 - 增强曲线效果
+      width * 0.3, height // 终点
+    )
+  }
+  ctx.lineTo(0, height) // 左下角
+  
+  // 左边
+  if (leftEdge !== 0) {
+    ctx.lineTo(0, height * 0.7) // 左边下部分
+    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
+    ctx.bezierCurveTo(
+      leftEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, height * 0.65, // 控制点1 - 增强曲线效果
+      leftEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, height * 0.35, // 控制点2 - 增强曲线效果
+      0, height * 0.3 // 终点
+    )
+  }
+  ctx.lineTo(0, 0) // 回到起点
+  
+  // 闭合路径
+  ctx.closePath()
+}
 
 /**
  * 渲染拼图块到Canvas
@@ -169,19 +253,70 @@ const renderPiece = async () => {
 
     // 清除画布
     ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
-
-    // 绘制拼图块图片
+    
+    // 计算拼图块的实际尺寸（不含凸出部分）
+    const actualPieceWidth = props.isPlaced ? getActualGridCellSize().width : props.pieceWidth
+    const actualPieceHeight = props.isPlaced ? getActualGridCellSize().height : props.pieceHeight
+    
+    // 计算居中偏移量
+    const offsetX = (canvasSize.width - actualPieceWidth) / 2
+    const offsetY = (canvasSize.height - actualPieceHeight) / 2
+    
+    // 保存当前状态并移动坐标系到居中位置
+    ctx.save()
+    ctx.translate(offsetX, offsetY)
+    
+    // 创建拼图块路径（带凹凸效果）
+    createPuzzlePiecePath(ctx, actualPieceWidth, actualPieceHeight)
+    
+    // 设置裁剪区域为拼图块形状
+    ctx.clip()
+    
+    // 绘制拼图块图片 - 扩展目标区域以覆盖凸出部分
+    const tabSize = actualPieceWidth * 0.25 // 与createPuzzlePiecePath中相同的tabSize
+    
+    // 扩展绘制区域，使图片覆盖凸出部分
     ctx.drawImage(
       img,
       sourceX, sourceY, sourceWidth, sourceHeight, // 源区域
-      0, 0, canvasSize.width, canvasSize.height      // 目标区域
+      -tabSize, -tabSize, actualPieceWidth + tabSize * 2, actualPieceHeight + tabSize * 2 // 目标区域扩大以覆盖凸出部分
     )
+    
+    // 恢复上下文状态（保留坐标系偏移）
+    ctx.restore()
+    
+    // 重新保存状态并设置偏移，用于绘制边框
+    ctx.save()
+    ctx.translate(offsetX, offsetY)
+    
+    // 绘制拼图块边框 - 增强边框效果
+    ctx.strokeStyle = props.isPlaced 
+      ? (props.piece.isCorrect ? '#27ae60' : '#e74c3c')
+      : '#333'
+    ctx.lineWidth = 2.5
+    createPuzzlePiecePath(ctx, actualPieceWidth, actualPieceHeight)
+    ctx.stroke()
+    
+    // 添加内部阴影效果增强立体感
+    ctx.globalCompositeOperation = 'source-atop'
+    createPuzzlePiecePath(ctx, actualPieceWidth, actualPieceHeight)
+    // 创建径向渐变
+    const gradient = ctx.createRadialGradient(
+      actualPieceWidth/2, actualPieceHeight/2, 0,
+      actualPieceWidth/2, actualPieceHeight/2, actualPieceWidth/1.5
+    )
+    gradient.addColorStop(0, 'rgba(255,255,255,0.15)')
+    gradient.addColorStop(1, 'rgba(0,0,0,0.25)')
+    ctx.fillStyle = gradient
+    ctx.fill()
+    ctx.restore() // 恢复上下文状态
 
     // 根据显示模式决定是否显示编号
     const shouldShowNumber = props.showNumber && props.numberDisplayMode !== 'never'
     
     if (shouldShowNumber) {
       const text = (props.piece.originalIndex + 1).toString()
+      // 使用Canvas中心点作为文字位置，确保文字显示在拼图块中心
       const centerX = canvasSize.width / 2
       const centerY = canvasSize.height / 2
 
@@ -303,10 +438,10 @@ watch(() => [props.pieceWidth, props.pieceHeight, actualCanvasSize.value], () =>
 <style scoped>
 .puzzle-piece-canvas {
   display: block;
-  background-color: white;
+  background-color: transparent;
   user-select: none;
   -webkit-user-drag: none;
-  box-sizing: border-box; /* 确保border包含在尺寸内 */
+  box-sizing: border-box;
 }
 
 .piece-overlay {

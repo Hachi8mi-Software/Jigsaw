@@ -1,5 +1,6 @@
-import { LibraryItem } from '../types'
+import { LibraryItem, BoundaryState } from '../types'
 import { getImagePath } from '../utils/imageUtils'
+import { BoundaryManager } from '../utils/svgUtils'
 
 /**
  * 内置拼图库数据
@@ -32,6 +33,29 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
     tags: ['猫', '宠物', '可爱'],
     difficulty: 2,
     isBuiltIn: true
+  },
+  {
+    id: 'builtin_4',
+    name: '凹凸拼图实验',
+    imageUrl: getImagePath('sunset.svg'),
+    category: '实验',
+    tags: ['实验', '凹凸', '特殊形状'],
+    difficulty: 3,
+    isBuiltIn: true,
+    puzzleData: {
+      id: 'builtin_4',
+      name: '凹凸拼图实验',
+      imageUrl: getImagePath('sunset.svg'),
+      gridConfig: {
+        rows: 3,
+        cols: 3,
+        pieceWidth: 150,
+        pieceHeight: 100
+      },
+      boundaries: createCustomBoundaries(),
+      createdAt: new Date(),
+      difficulty: 3
+    }
   }
 ]
 
@@ -54,4 +78,42 @@ export function getBuiltinPuzzlesByCategory(category: string): LibraryItem[] {
  */
 export function getBuiltinPuzzlesByDifficulty(difficulty: number): LibraryItem[] {
   return BUILTIN_PUZZLES.filter(puzzle => puzzle.difficulty === difficulty)
+}
+
+/**
+ * 创建自定义边界数组，用于凹凸拼图实验
+ * 特别设置了某两个相邻拼图块的连接形状为凹凸
+ */
+function createCustomBoundaries() {
+  // 创建一个3x3的网格配置
+  const gridConfig = {
+    rows: 3,
+    cols: 3,
+    pieceWidth: 150,
+    pieceHeight: 100
+  }
+  
+  // 生成初始边界
+  const boundaries = BoundaryManager.generateInitialBoundaries(gridConfig)
+  
+  // 找到中间位置的水平边界（第1行第1列的底边，连接第1行第1列和第2行第1列的拼图块）
+  const horizontalBoundaryIndex = boundaries.findIndex(b => 
+    b.row === 1 && b.col === 1 && b.direction === 'horizontal'
+  )
+  
+  // 找到中间位置的垂直边界（第1行第1列的右边，连接第1行第1列和第1行第2列的拼图块）
+  const verticalBoundaryIndex = boundaries.findIndex(b => 
+    b.row === 1 && b.col === 1 && b.direction === 'vertical'
+  )
+  
+  // 修改这两个边界的状态为凹凸
+  if (horizontalBoundaryIndex !== -1) {
+    boundaries[horizontalBoundaryIndex].state = BoundaryState.CONVEX
+  }
+  
+  if (verticalBoundaryIndex !== -1) {
+    boundaries[verticalBoundaryIndex].state = BoundaryState.CONCAVE
+  }
+  
+  return boundaries
 }
