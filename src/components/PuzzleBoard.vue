@@ -86,6 +86,25 @@
         <button @click="autoSolve" class="control-btn">
           ✨ 自动完成
         </button>
+        <button @click="toggleHint" class="control-btn hint-btn">
+          💡 提示
+        </button>
+      </div>
+      
+      <!-- 提示原图弹窗 -->
+      <div v-if="showHint" class="hint-modal" @click="closeHint">
+        <div class="hint-content" @click.stop>
+          <div class="hint-header">
+            <h3>拼图原图</h3>
+            <button @click="closeHint" class="close-btn">×</button>
+          </div>
+          <div class="hint-image-container">
+            <img :src="puzzleData.imageUrl" :alt="puzzleData.name" class="hint-image" />
+          </div>
+          <div class="hint-footer">
+            <button @click="closeHint" class="confirm-btn">确认</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -117,6 +136,7 @@ const gameStore = useGameStore()
 // 视图状态
 const viewModel = ref<PuzzleBoardViewModel>(new PuzzleBoardViewModel(props.puzzleData))
 const isInitializing = ref(false) // 防护标记，避免初始化时触发循环
+const showHint = ref(false) // 控制提示原图显示状态
 
 // 计算属性 - 从ViewModel获取
 const totalPieces = computed(() => viewModel.value.totalPieces)
@@ -139,6 +159,15 @@ const resetPuzzle = () => {
   props.controller.restartGame()
 }
 const autoSolve = () => viewModel.value.autoSolve()
+
+// 提示功能相关方法
+const toggleHint = () => {
+  showHint.value = !showHint.value
+}
+
+const closeHint = () => {
+  showHint.value = false
+}
 
 // 拖拽处理方法
 const startDrag = (index: number, event: MouseEvent | TouchEvent) => {
@@ -398,6 +427,70 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 }
 
 .control-btn:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
+}
+
+.hint-btn {
+  background-color: var(--settings-accent, #3b82f6);
+}
+
+.hint-btn:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
+}
+
+.hint-modal {
+  @apply fixed inset-0 flex items-center justify-center z-50;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.hint-content {
+  @apply bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col;
+  background-color: var(--settings-card-bg);
+  border: 1px solid var(--settings-border);
+}
+
+.hint-header {
+  @apply flex justify-between items-center p-4 border-b;
+  border-color: var(--settings-border);
+}
+
+.hint-header h3 {
+  @apply text-xl font-bold;
+  color: var(--settings-text-primary);
+}
+
+.close-btn {
+  @apply text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full;
+  color: var(--settings-text-secondary);
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: var(--settings-hover-bg);
+}
+
+.hint-image-container {
+  @apply p-4 overflow-auto flex-grow;
+}
+
+.hint-image {
+  @apply max-w-full max-h-[70vh] object-contain mx-auto;
+}
+
+.hint-footer {
+  @apply p-4 border-t flex justify-center;
+  border-color: var(--settings-border);
+}
+
+.confirm-btn {
+  @apply px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
+  @apply transition-colors duration-200 font-medium;
+  background-color: var(--settings-accent, #3b82f6);
+  color: white;
+}
+
+.confirm-btn:hover {
   background-color: var(--settings-accent-hover, #2563eb);
 }
 
