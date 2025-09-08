@@ -14,7 +14,26 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
     category: '自然风光',
     tags: ['日落', '天空', '美景'],
     difficulty: 3,
-    isBuiltIn: true
+    isBuiltIn: true,
+    puzzleData: {
+      id: 'builtin_1',
+      name: '美丽的日落',
+      imageUrl: getImagePath('sunset.svg'),
+      gridConfig: {
+        rows: 3,
+        cols: 4,
+        pieceWidth: 150,
+        pieceHeight: 100
+      },
+      boundaries: BoundaryManager.generateInitialBoundaries({
+        rows: 3,
+        cols: 4,
+        pieceWidth: 150,
+        pieceHeight: 100
+      }),
+      createdAt: new Date(),
+      difficulty: 3
+    }
   },
   {
     id: 'builtin_2',
@@ -23,7 +42,26 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
     category: '城市建筑',
     tags: ['城市', '夜景', '灯光'],
     difficulty: 4,
-    isBuiltIn: true
+    isBuiltIn: true,
+    puzzleData: {
+      id: 'builtin_2',
+      name: '城市夜景',
+      imageUrl: getImagePath('city-night.svg'),
+      gridConfig: {
+        rows: 3,
+        cols: 4,
+        pieceWidth: 150,
+        pieceHeight: 100
+      },
+      boundaries: BoundaryManager.generateInitialBoundaries({
+        rows: 3,
+        cols: 4,
+        pieceWidth: 150,
+        pieceHeight: 100
+      }),
+      createdAt: new Date(),
+      difficulty: 4
+    }
   },
   {
     id: 'builtin_3',
@@ -32,7 +70,26 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
     category: '可爱动物',
     tags: ['猫', '宠物', '可爱'],
     difficulty: 2,
-    isBuiltIn: true
+    isBuiltIn: true,
+    puzzleData: {
+      id: 'builtin_3',
+      name: '可爱的猫咪',
+      imageUrl: getImagePath('cat.svg'),
+      gridConfig: {
+        rows: 3,
+        cols: 4,
+        pieceWidth: 150,
+        pieceHeight: 100
+      },
+      boundaries: BoundaryManager.generateInitialBoundaries({
+        rows: 3,
+        cols: 4,
+        pieceWidth: 150,
+        pieceHeight: 100
+      }),
+      createdAt: new Date(),
+      difficulty: 2
+    }
   },
   {
     id: 'builtin_4',

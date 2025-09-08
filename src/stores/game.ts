@@ -11,6 +11,7 @@ import { PieceManager } from '../services/PieceManager'
 import { GameStateManager } from '../services/GameStateManager'
 import { GameCompletionChecker } from '../services/GameCompletionChecker'
 import { GamePersistence } from '../services/GamePersistence'
+import { calculatePuzzleDifficulty } from '../utils/difficultyUtils'
 
 export const useGameStore = defineStore('game', () => {
   // 服务类实例
@@ -24,7 +25,13 @@ export const useGameStore = defineStore('game', () => {
   const totalPieces = computed(() => pieceManager.totalPieces)
   const elapsedTime = computed(() => gameTimer.elapsedTime)
   const completionPercentage = computed(() => gameCompletionChecker.getCompletionPercentage())
-  const currentDifficulty = computed(() => gameStateManager.currentPuzzleValue?.difficulty || 1)
+  const currentDifficulty = computed(() => {
+    const puzzle = gameStateManager.currentPuzzleValue
+    if (puzzle) {
+      return calculatePuzzleDifficulty(puzzle)
+    }
+    return 1
+  })
   const unplacedPieces = computed(() => gameCompletionChecker.getUnplacedPieces())
   const placedPieces = computed(() => gameCompletionChecker.getPlacedPieces())
   const correctlyPlacedPieces = computed(() => gameCompletionChecker.getCorrectlyPlacedPieces())

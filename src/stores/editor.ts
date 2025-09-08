@@ -31,12 +31,9 @@ class EditorViewModel {
    * 计算拼图难度
    */
   calculateDifficulty(gridConfig: GridConfig, boundaries: Boundary[]): number {
-    const totalPieces = gridConfig.rows * gridConfig.cols
-    const complexBoundaries = boundaries.filter(b => b.state !== 'flat').length
-    const complexityRatio = complexBoundaries / boundaries.length
-    
-    // 基础难度 = 拼图块数量 / 100，复杂度加成
-    return Math.round((totalPieces / 100) * (1 + complexityRatio) * 10) / 10
+    // 使用统一的难度计算函数
+    const { calculateDifficultyFromConfig } = require('../utils/difficultyUtils')
+    return calculateDifficultyFromConfig(gridConfig, boundaries)
   }
 
   /**

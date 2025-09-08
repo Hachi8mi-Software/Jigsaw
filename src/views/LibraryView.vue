@@ -112,7 +112,10 @@
                   v-for="star in 5" 
                   :key="star"
                   class="difficulty-star"
-                  :class="{ 'filled': star <= item.difficulty }"
+                  :class="{ 
+                    'filled': star <= getItemDifficulty(item),
+                    [`difficulty-${getItemDifficulty(item)}`]: star <= getItemDifficulty(item)
+                  }"
                 >
                   ⭐
                 </span>
@@ -164,6 +167,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLibraryStore } from '../stores/library'
+import { calculatePuzzleDifficulty, calculateBasicDifficulty } from '../utils/difficultyUtils'
 import type { LibraryItem } from '../types'
 
 // Store和路由
@@ -228,6 +232,23 @@ const closeDeleteModal = () => {
 
 const setSortBy = (field: 'name' | 'difficulty' | 'date') => {
   libraryStore.setSortBy(field)
+}
+
+const getItemDifficulty = (item: LibraryItem) => {
+  // 如果有puzzleData，使用完整的难度计算
+  if (item.puzzleData) {
+    return calculatePuzzleDifficulty(item.puzzleData)
+  }
+  
+  // 如果没有puzzleData，使用基础难度计算（假设为3x3网格）
+  const defaultGridConfig = {
+    rows: 3,
+    cols: 3,
+    pieceWidth: 100,
+    pieceHeight: 100
+  }
+  
+  return calculateBasicDifficulty(defaultGridConfig)
 }
 
 // 生命周期
@@ -520,10 +541,34 @@ onMounted(() => {
 
 .difficulty-star {
   @apply text-xs;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+  color: #d1d5db; /* 默认灰色 */
 }
 
 .difficulty-star.filled {
-  @apply text-yellow-400;
+  opacity: 1;
+}
+
+/* 不同难度的颜色 */
+.difficulty-star.difficulty-1.filled {
+  color: #10b981; /* 绿色 - 简单 */
+}
+
+.difficulty-star.difficulty-2.filled {
+  color: #84cc16; /* 浅绿色 - 容易 */
+}
+
+.difficulty-star.difficulty-3.filled {
+  color: #f59e0b; /* 黄色 - 中等 */
+}
+
+.difficulty-star.difficulty-4.filled {
+  color: #f97316; /* 橙色 - 困难 */
+}
+
+.difficulty-star.difficulty-5.filled {
+  color: #ef4444; /* 红色 - 极难 */
 }
 
 .difficulty-star:not(.filled) {
