@@ -20,12 +20,7 @@
       </div>
       
       <div class="header-right">
-        <button @click="showUploadModal = true" class="action-btn primary">
-          ➕ 添加拼图
-        </button>
-        <button @click="goToEditor" class="action-btn">
-          ✏️ 创建拼图
-        </button>
+        <!-- 按钮已移除 -->
       </div>
     </div>
 
@@ -80,11 +75,8 @@
           尝试调整搜索条件或筛选器
         </p>
         <p v-else>
-          素材库为空，请添加一些拼图素材
+          素材库为空
         </p>
-        <button @click="showUploadModal = true" class="empty-action-btn">
-          添加第一个拼图
-        </button>
       </div>
       
       <div v-else class="puzzle-grid">
@@ -143,90 +135,6 @@
       </div>
     </div>
 
-    <!-- 上传拼图对话框 -->
-    <div v-if="showUploadModal" class="modal-overlay" @click="closeUploadModal">
-      <div class="modal-dialog upload-modal" @click.stop>
-        <div class="modal-header">
-          <h3>添加新拼图</h3>
-          <button @click="closeUploadModal" class="close-btn">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="upload-form">
-            <!-- 图片上传 -->
-            <div class="form-group">
-              <label class="form-label">选择图片</label>
-              <div 
-                class="upload-area"
-                @click="triggerFileInput"
-                @drop.prevent="handleFileDrop"
-                @dragover.prevent
-                @dragenter.prevent
-              >
-                <div v-if="!uploadPreview" class="upload-placeholder">
-                  <div class="upload-icon">📷</div>
-                  <p>点击或拖拽上传图片</p>
-                  <p class="upload-hint">支持 JPG, PNG, BMP 格式，最大 10MB</p>
-                </div>
-                <div v-else class="upload-preview">
-                  <img :src="uploadPreview" alt="预览" />
-                  <button @click.stop="removeUploadImage" class="remove-preview-btn">×</button>
-                </div>
-              </div>
-              <input 
-                ref="fileInput"
-                type="file"
-                accept="image/jpeg,image/png,image/bmp"
-                @change="handleFileSelect"
-                style="display: none;"
-              />
-            </div>
-
-            <!-- 拼图信息 -->
-            <div class="form-group">
-              <label class="form-label">拼图名称</label>
-              <input 
-                v-model="uploadForm.name"
-                type="text"
-                class="form-input"
-                placeholder="给你的拼图起个名字"
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">分类</label>
-              <select v-model="uploadForm.category" class="form-select">
-                <option value="">选择分类</option>
-                <option v-for="category in categories.slice(1)" :key="category" :value="category">
-                  {{ category }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">标签 (用逗号分隔)</label>
-              <input 
-                v-model="uploadForm.tagsString"
-                type="text"
-                class="form-input"
-                placeholder="例如: 风景, 美丽, 自然"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button @click="closeUploadModal" class="modal-btn">
-            取消
-          </button>
-          <button 
-            @click="handleUpload" 
-            class="modal-btn primary"
-            :disabled="!canUpload"
-          >
-            添加拼图
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- 删除确认对话框 -->
     <div v-if="showDeleteModal" class="modal-overlay" @click="closeDeleteModal">
@@ -253,31 +161,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLibraryStore } from '../stores/library'
-import type { LibraryItem, PuzzleData } from '../types'
+import type { LibraryItem } from '../types'
 
 // Store和路由
 const libraryStore = useLibraryStore()
 const router = useRouter()
 
-// 模板引用
-const fileInput = ref<HTMLInputElement>()
-
 // 响应式状态
-const showUploadModal = ref(false)
 const showDeleteModal = ref(false)
-const uploadPreview = ref<string | null>(null)
-const uploadFile = ref<File | null>(null)
 const itemToDelete = ref<LibraryItem | null>(null)
-
-// 上传表单
-const uploadForm = reactive({
-  name: '',
-  category: '',
-  tagsString: ''
-})
 
 // 计算属性
 const filteredItems = computed(() => libraryStore.filteredItems)
@@ -298,16 +193,7 @@ const selectedCategory = computed({
   set: (value) => libraryStore.setSelectedCategory(value)
 })
 
-const canUpload = computed(() => {
-  return uploadFile.value && 
-         uploadForm.name.trim() && 
-         uploadForm.category
-})
-
 // 方法
-const goToEditor = () => {
-  router.push('/editor')
-}
 
 const selectPuzzle = (item: LibraryItem) => {
   // 可以显示拼图详情或直接开始游戏
@@ -342,122 +228,6 @@ const closeDeleteModal = () => {
 
 const setSortBy = (field: 'name' | 'difficulty' | 'date') => {
   libraryStore.setSortBy(field)
-}
-
-// 上传相关方法
-const triggerFileInput = () => {
-  fileInput.value?.click()
-}
-
-const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (file) {
-    processFile(file)
-  }
-}
-
-const handleFileDrop = (event: DragEvent) => {
-  const files = event.dataTransfer?.files
-  if (files && files.length > 0) {
-    processFile(files[0])
-  }
-}
-
-const processFile = (file: File) => {
-  // 验证文件
-  const validTypes = ['image/jpeg', 'image/png', 'image/bmp']
-  const maxSize = 10 * 1024 * 1024 // 10MB
-
-  if (!validTypes.includes(file.type)) {
-    alert('请选择有效的图片格式 (JPG, PNG, BMP)')
-    return
-  }
-
-  if (file.size > maxSize) {
-    alert('文件大小不能超过 10MB')
-    return
-  }
-
-  uploadFile.value = file
-  
-  // 生成预览
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    uploadPreview.value = e.target?.result as string
-  }
-  reader.readAsDataURL(file)
-
-  // 自动填充文件名（去掉扩展名）
-  if (!uploadForm.name) {
-    uploadForm.name = file.name.replace(/\.[^/.]+$/, '')
-  }
-}
-
-const removeUploadImage = () => {
-  uploadFile.value = null
-  uploadPreview.value = null
-}
-
-const handleUpload = async () => {
-  if (!uploadFile.value || !canUpload.value) return
-
-  try {
-    const tags = uploadForm.tagsString
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0)
-
-    // 创建拼图数据对象
-    const puzzleData: PuzzleData = {
-      id: `custom_${Date.now()}`,
-      name: uploadForm.name,
-      imageUrl: uploadPreview.value || '',
-      gridConfig: {
-        rows: 3,
-        cols: 4,
-        pieceWidth: 150,
-        pieceHeight: 100
-      },
-      boundaries: [], // 简单的边界数据
-      createdAt: new Date(),
-      difficulty: Math.ceil(Math.random() * 5) // 随机难度
-    }
-
-    // 添加到素材库，传入 gridConfig 进行中心裁剪
-    const newItem = await libraryStore.addLibraryItem(
-      uploadFile.value,
-      uploadForm.name,
-      uploadForm.category,
-      tags,
-      puzzleData.gridConfig
-    )
-
-    // 更新库项目，添加puzzleData
-    if (newItem) {
-      libraryStore.updateLibraryItem(newItem.id, {
-        ...newItem,
-        puzzleData: puzzleData
-      })
-    }
-
-    closeUploadModal()
-    alert('拼图添加成功！')
-  } catch (error) {
-    console.error('上传失败:', error)
-    alert('上传失败，请重试')
-  }
-}
-
-const closeUploadModal = () => {
-  showUploadModal.value = false
-  uploadPreview.value = null
-  uploadFile.value = null
-  Object.assign(uploadForm, {
-    name: '',
-    category: '',
-    tagsString: ''
-  })
 }
 
 // 生命周期
@@ -644,10 +414,6 @@ onMounted(() => {
   color: var(--settings-text-secondary);
 }
 
-.empty-action-btn {
-  @apply px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
-  @apply transition-colors duration-200;
-}
 
 .puzzle-grid {
   @apply grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6;
@@ -794,10 +560,6 @@ onMounted(() => {
   color: var(--settings-text-primary);
 }
 
-.upload-modal {
-  @apply w-full max-w-md;
-}
-
 .delete-modal {
   @apply w-full max-w-sm;
 }
@@ -816,60 +578,6 @@ onMounted(() => {
 
 .modal-body {
   @apply p-4;
-}
-
-.upload-form {
-  @apply space-y-4;
-}
-
-.form-group {
-  @apply flex flex-col;
-}
-
-.form-label {
-  @apply text-sm font-medium text-gray-700 mb-1;
-}
-
-.upload-area {
-  @apply border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer;
-  @apply hover:border-blue-400 hover:bg-blue-50 transition-colors duration-200;
-}
-
-.upload-placeholder {
-  @apply text-center;
-}
-
-.upload-icon {
-  @apply text-4xl mb-2;
-}
-
-.upload-hint {
-  @apply text-xs text-gray-500 mt-1;
-}
-
-.upload-preview {
-  @apply relative;
-}
-
-.upload-preview img {
-  @apply w-full h-32 object-cover rounded;
-}
-
-.remove-preview-btn {
-  @apply absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full;
-  @apply flex items-center justify-center text-sm hover:bg-red-600;
-}
-
-.form-input, .form-select {
-  @apply w-full px-3 py-2 border rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-  background-color: var(--settings-card-bg);
-  color: var(--settings-text-primary);
-  border-color: var(--settings-border);
-}
-
-.form-input:focus, .form-select:focus {
-  border-color: var(--settings-accent);
 }
 
 .modal-footer {
