@@ -43,12 +43,15 @@
     <!-- 状态文本 -->
     <text
       v-if="showStateText && isHovered"
-      :x="midX"
-      :y="midY - 15"
-      text-anchor="middle"
+      :x="textX"
+      :y="textY"
+      :text-anchor="textAnchor"
       :fill="strokeColor"
+      :stroke="textStrokeColor"
+      stroke-width="1"
       font-size="12"
-      font-weight="bold"
+      font-weight="regular"
+      class="boundary-state-text"
     >
       {{ stateText }}
     </text>
@@ -57,7 +60,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { Boundary, BoundaryState } from '../types'
+import type { Boundary } from '../types'
+import { BoundaryState } from '../types'
 import { SvgPathGenerator } from '../utils/svgUtils'
 
 interface Props {
@@ -71,6 +75,7 @@ interface Props {
 interface Emits {
   (e: 'click', boundaryId: string): void
   (e: 'hover', boundaryId: string | null): void
+  (e: 'stateChange', boundaryId: string, newState: BoundaryState): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -155,6 +160,39 @@ const stateText = computed(() => {
   }
 })
 
+const textStrokeColor = computed(() => {
+  // 使用白色描边来提高文字可读性
+  return '#ffffff'
+})
+
+// 根据边界方向调整文字位置
+const textX = computed(() => {
+  if (props.boundary.direction === 'vertical') {
+    // 竖边界：文字放在边界右侧
+    return midX.value + 20
+  }
+  // 横边界：文字放在边界上方
+  return midX.value
+})
+
+const textY = computed(() => {
+  if (props.boundary.direction === 'vertical') {
+    // 竖边界：文字垂直居中
+    return midY.value + 4
+  }
+  // 横边界：文字在边界上方
+  return midY.value - 15
+})
+
+const textAnchor = computed(() => {
+  if (props.boundary.direction === 'vertical') {
+    // 竖边界：左对齐
+    return 'start'
+  }
+  // 横边界：居中对齐
+  return 'middle'
+})
+
 const boundaryClasses = computed(() => {
   return [
     'svg-boundary',
@@ -182,8 +220,25 @@ const handleMouseLeave = () => {
   }
 }
 
+// 边界状态循环切换逻辑
+const getNextBoundaryState = (currentState: BoundaryState): BoundaryState => {
+  switch (currentState) {
+    case BoundaryState.FLAT:
+      return BoundaryState.CONVEX
+    case BoundaryState.CONVEX:
+      return BoundaryState.CONCAVE
+    case BoundaryState.CONCAVE:
+      return BoundaryState.FLAT
+    default:
+      return BoundaryState.FLAT
+  }
+}
+
 const handleClick = () => {
   if (!props.isPreviewMode) {
+    // 循环切换到下一个边界状态
+    const nextState = getNextBoundaryState(props.boundary.state)
+    emit('stateChange', props.boundary.id, nextState)
     emit('click', props.boundary.id)
   }
 }
@@ -208,5 +263,10 @@ const handleClick = () => {
 
 .svg-boundary--preview {
   pointer-events: none;
+}
+
+.boundary-state-text {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
 }
 </style>

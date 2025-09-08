@@ -244,6 +244,7 @@
                   :is-selected="selectedBoundary === boundary.id"
                   @click="selectBoundary"
                   @hover="hoverBoundary"
+                  @stateChange="handleBoundaryStateChange"
                 />
               </g>
 
@@ -488,6 +489,10 @@ const selectBoundary = (boundaryId: string) => {
 
 const hoverBoundary = (boundaryId: string | null) => {
   // 处理边界悬停状态
+}
+
+const handleBoundaryStateChange = (boundaryId: string, newState: BoundaryState) => {
+  editorStore.updateBoundaryState(boundaryId, newState)
 }
 
 const getCurrentBoundaryState = () => {
