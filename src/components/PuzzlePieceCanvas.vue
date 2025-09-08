@@ -60,6 +60,9 @@ const emit = defineEmits<{
 
 const canvasRef = ref<HTMLCanvasElement>()
 
+// 常量定义
+const EXPANSION_RATIO = 2.5 // 拼图块扩展比例，用于确保凸起部分也能填充图片
+
 // 获取实际的网格单元格尺寸
 const getActualGridCellSize = () => {
   const gridContainer = document.querySelector('.puzzle-grid') as HTMLElement
@@ -309,15 +312,15 @@ const renderPiece = async () => {
     
     // 计算扩展的源区域，确保目标区域扩大时源区域也相应扩大
     // 进一步增加扩展比例，确保凸起部分也能填充图片
-    const sourceTabSizeX = (tabSize * 2.5 / actualPieceWidth) * sourceWidth
-    const sourceTabSizeY = (tabSize * 2.5 / actualPieceHeight) * sourceHeight
+    const sourceTabSizeX = (tabSize * EXPANSION_RATIO / actualPieceWidth) * sourceWidth
+    const sourceTabSizeY = (tabSize * EXPANSION_RATIO / actualPieceHeight) * sourceHeight
     
     // 绘制图片，源区域和目标区域都相应扩展
     ctx.drawImage(
       img,
       sourceX - sourceTabSizeX, sourceY - sourceTabSizeY, 
       sourceWidth + sourceTabSizeX * 2, sourceHeight + sourceTabSizeY * 2, // 扩展的源区域
-      -tabSize * 2.5, -tabSize * 2.5, 
+      -tabSize * EXPANSION_RATIO, -tabSize * EXPANSION_RATIO, 
       actualPieceWidth + tabSize * 5, actualPieceHeight + tabSize * 5 // 扩展的目标区域
     )
     

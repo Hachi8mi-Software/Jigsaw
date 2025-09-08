@@ -2,7 +2,7 @@
  * 拼图相关工具函数
  */
 
-import type { PieceStatus } from '../types'
+import type { PieceStatus, Boundary, BoundaryState } from '../types'
 
 /**
  * 计算拼图块尺寸
@@ -187,8 +187,6 @@ export function calculateGridCoordinates(
   
   return { gridCol, gridRow, gridIndex }
 }
-
-import type { Boundary, BoundaryState } from '../types'
 
 /**
  * 从边界数据确定拼图块的边界状态
