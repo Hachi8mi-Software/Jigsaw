@@ -196,12 +196,13 @@ const createPuzzlePiecePath = (ctx: CanvasRenderingContext2D, width: number, hei
   // 拼图块凸起/凹陷的大小（占边长的比例）- 调整为更合理的尺寸
   const tabSize = Math.min(width, height) * 0.12
   
-  // 确定每个边的凹凸状态（随机但基于拼图块索引，保持一致性）
-  // 使用原始索引作为随机种子，确保相同的拼图块总是有相同的形状
+  // 确定每个边的凹凸状态
+  // 优先使用编辑器定义的边界数据，如果没有则使用随机生成
   const { topEdge, rightEdge, bottomEdge, leftEdge } = determinePieceEdges(
     props.piece.originalIndex,
     props.gridCols,
-    props.gridRows
+    props.gridRows,
+    props.puzzleData.boundaries
   )
   
   // 开始创建路径

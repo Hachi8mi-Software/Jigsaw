@@ -188,15 +188,128 @@ export function calculateGridCoordinates(
   return { gridCol, gridRow, gridIndex }
 }
 
+import type { Boundary, BoundaryState } from '../types'
+
 /**
- * 确定拼图块的边界状态
+ * 从边界数据确定拼图块的边界状态
  * @param originalIndex 拼图块的原始索引
  * @param gridCols 网格列数
  * @param gridRows 网格行数
+ * @param boundaries 边界数组（可选，如果提供则使用编辑器数据）
  * @returns 返回四个边的状态：{ topEdge, rightEdge, bottomEdge, leftEdge }
  *         0: 平边（边缘），1: 凸出，-1: 凹入
  */
 export function determinePieceEdges(
+  originalIndex: number,
+  gridCols: number,
+  gridRows: number,
+  boundaries?: Boundary[]
+): { topEdge: number; rightEdge: number; bottomEdge: number; leftEdge: number } {
+  const row = Math.floor(originalIndex / gridCols)
+  const col = originalIndex % gridCols
+  
+  // 如果提供了边界数据，使用编辑器定义的边界状态
+  if (boundaries && boundaries.length > 0) {
+    return determinePieceEdgesFromBoundaries(originalIndex, gridCols, gridRows, boundaries)
+  }
+  
+  // 否则使用随机生成（向后兼容）
+  return determinePieceEdgesRandom(originalIndex, gridCols, gridRows)
+}
+
+/**
+ * 从边界数据确定拼图块的边界状态（使用编辑器数据）
+ * 确保相邻拼图块的边界状态互补（一个凸，另一个凹）
+ */
+function determinePieceEdgesFromBoundaries(
+  originalIndex: number,
+  gridCols: number,
+  gridRows: number,
+  boundaries: Boundary[]
+): { topEdge: number; rightEdge: number; bottomEdge: number; leftEdge: number } {
+  const row = Math.floor(originalIndex / gridCols)
+  const col = originalIndex % gridCols
+  
+  // 查找相关的边界
+  const topBoundary = boundaries.find(b => 
+    b.direction === 'horizontal' && 
+    b.row === row - 1 && 
+    b.col === col
+  )
+  
+  const rightBoundary = boundaries.find(b => 
+    b.direction === 'vertical' && 
+    b.row === row && 
+    b.col === col
+  )
+  
+  const bottomBoundary = boundaries.find(b => 
+    b.direction === 'horizontal' && 
+    b.row === row && 
+    b.col === col
+  )
+  
+  const leftBoundary = boundaries.find(b => 
+    b.direction === 'vertical' && 
+    b.row === row && 
+    b.col === col - 1
+  )
+  
+  // 转换边界状态为边状态，考虑拼图块的位置来决定互补性
+  const topEdge = topBoundary ? getComplementaryEdgeState(topBoundary.state, 'top', row, col) : 0
+  const rightEdge = rightBoundary ? getComplementaryEdgeState(rightBoundary.state, 'right', row, col) : 0
+  const bottomEdge = bottomBoundary ? getComplementaryEdgeState(bottomBoundary.state, 'bottom', row, col) : 0
+  const leftEdge = leftBoundary ? getComplementaryEdgeState(leftBoundary.state, 'left', row, col) : 0
+  
+  return { topEdge, rightEdge, bottomEdge, leftEdge }
+}
+
+/**
+ * 获取互补的边状态
+ * 确保相邻拼图块在同一个边界上有互补的凹凸状态
+ * @param boundaryState 边界状态
+ * @param edgeDirection 边方向
+ * @param row 拼图块行
+ * @param col 拼图块列
+ * @returns 互补的边状态
+ */
+function getComplementaryEdgeState(
+  boundaryState: BoundaryState, 
+  edgeDirection: 'top' | 'right' | 'bottom' | 'left',
+  row: number,
+  col: number
+): number {
+  // 对于平直边界，返回0
+  if (boundaryState === 'flat') {
+    return 0
+  }
+  
+  // 对于凹凸边界，根据拼图块位置和边方向决定互补性
+  // 使用拼图块的行列坐标作为种子，确保相同位置的拼图块总是有相同的边状态
+  const seed = row * 1000 + col
+  
+  switch (edgeDirection) {
+    case 'top':
+      // 上边：如果边界是凸的，当前拼图块应该是凹的（从上方看）
+      return boundaryState === 'convex' ? 1 : -1
+    case 'right':
+      // 右边：如果边界是凸的，当前拼图块应该是凸的（从右侧看）
+      return boundaryState === 'convex' ? -1 : 1
+    case 'bottom':
+      // 下边：如果边界是凸的，当前拼图块应该是凸的（从下方看）
+      return boundaryState === 'convex' ? -1 : 1
+    case 'left':
+      // 左边：如果边界是凸的，当前拼图块应该是凹的（从左侧看）
+      return boundaryState === 'convex' ? 1 : -1
+    default:
+      return 0
+  }
+}
+
+/**
+ * 随机确定拼图块的边界状态（向后兼容）
+ */
+function determinePieceEdgesRandom(
   originalIndex: number,
   gridCols: number,
   gridRows: number
@@ -213,4 +326,22 @@ export function determinePieceEdges(
   const leftEdge = col === 0 ? 0 : ((seed * 5) % 2 === 0 ? 1 : -1)
   
   return { topEdge, rightEdge, bottomEdge, leftEdge }
+}
+
+/**
+ * 将边界状态转换为边状态
+ * @param boundaryState 边界状态
+ * @returns 边状态：0=平边，1=凸出，-1=凹入
+ */
+function boundaryStateToEdgeState(boundaryState: BoundaryState): number {
+  switch (boundaryState) {
+    case 'flat':
+      return 0
+    case 'convex':
+      return 1
+    case 'concave':
+      return -1
+    default:
+      return 0
+  }
 }
