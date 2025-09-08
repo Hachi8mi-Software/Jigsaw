@@ -62,6 +62,7 @@ const canvasRef = ref<HTMLCanvasElement>()
 
 // 常量定义
 const EXPANSION_RATIO = 2.5 // 拼图块扩展比例，用于确保凸起部分也能填充图片
+const TAB_SIZE_RATIO = 0.12 // 拼图块凸起/凹陷的大小占边长的比例
 
 // 获取实际的网格单元格尺寸
 const getActualGridCellSize = () => {
@@ -82,7 +83,7 @@ const getActualGridCellSize = () => {
 // 获取实际的Canvas尺寸
 const actualCanvasSize = computed(() => {
   // 计算凸出部分所需的额外空间
-  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.12
+  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * TAB_SIZE_RATIO
   const extraSpace = tabSize * 3 // 为凸出部分预留足够空间，进一步增加扩展比例
   
   if (props.isPlaced) {
@@ -103,7 +104,7 @@ const actualCanvasSize = computed(() => {
 // 容器样式
 const containerStyle = computed(() => {
   // 计算凸出部分所需的额外空间
-  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.12
+  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * TAB_SIZE_RATIO
   const extraSpace = tabSize * 3 // 为凸出部分预留足够空间，进一步增加扩展比例
   
   let left = props.piece.x
@@ -193,7 +194,7 @@ const dragMaskStyle = computed(() => {
  */
 const createPuzzlePiecePath = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
   // 拼图块凸起/凹陷的大小（占边长的比例）- 调整为更合理的尺寸
-  const tabSize = Math.min(width, height) * 0.12
+  const tabSize = Math.min(width, height) * TAB_SIZE_RATIO
   
   // 确定每个边的凹凸状态
   // 优先使用编辑器定义的边界数据，如果没有则使用随机生成
@@ -308,7 +309,7 @@ const renderPiece = async () => {
     ctx.clip()
     
     // 绘制拼图块图片 - 确保主体部分显示正确的原图区域
-    const tabSize = Math.min(actualPieceWidth, actualPieceHeight) * 0.12 // 与createPuzzlePiecePath中相同的tabSize
+    const tabSize = Math.min(actualPieceWidth, actualPieceHeight) * TAB_SIZE_RATIO // 与createPuzzlePiecePath中相同的tabSize
     
     // 计算扩展的源区域，确保目标区域扩大时源区域也相应扩大
     // 进一步增加扩展比例，确保凸起部分也能填充图片
