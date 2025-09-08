@@ -474,9 +474,24 @@ onMounted(() => {
 }
 
 .library-header {
-  @apply flex items-center justify-between px-6 py-4 shadow-sm border-b;
+  @apply flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shadow-sm border-b;
   background-color: var(--settings-card-bg);
   border-bottom-color: var(--settings-border);
+}
+
+/* 移动端头部优化 */
+@media (max-width: 640px) {
+  .library-header {
+    @apply flex-col space-y-3;
+  }
+  
+  .header-left {
+    @apply w-full justify-between;
+  }
+  
+  .header-right {
+    @apply w-full justify-center;
+  }
 }
 
 .header-left {
@@ -522,9 +537,24 @@ onMounted(() => {
 }
 
 .filter-bar {
-  @apply flex items-center justify-between px-6 py-4 border-b;
+  @apply flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b;
   background-color: var(--settings-card-bg);
   border-bottom-color: var(--settings-border);
+}
+
+/* 移动端筛选栏优化 */
+@media (max-width: 640px) {
+  .filter-bar {
+    @apply flex-col space-y-3;
+  }
+  
+  .search-box {
+    @apply w-full max-w-none;
+  }
+  
+  .filter-controls {
+    @apply w-full justify-between;
+  }
 }
 
 .search-box {
@@ -585,7 +615,7 @@ onMounted(() => {
 }
 
 .library-content {
-  @apply flex-1 overflow-auto p-6;
+  @apply flex-1 overflow-auto p-3 sm:p-4 md:p-6;
 }
 
 .loading-state {
@@ -620,7 +650,7 @@ onMounted(() => {
 }
 
 .puzzle-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6;
+  @apply grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6;
 }
 
 .puzzle-card {
@@ -628,6 +658,17 @@ onMounted(() => {
   @apply transform transition-all duration-200 hover:scale-105 hover:shadow-lg;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
+}
+
+/* 移动端卡片优化 */
+@media (max-width: 640px) {
+  .puzzle-card {
+    @apply shadow-sm;
+  }
+  
+  .puzzle-card:hover {
+    @apply scale-100;
+  }
 }
 
 .card-image {
@@ -661,15 +702,37 @@ onMounted(() => {
 }
 
 .card-content {
-  @apply p-4;
+  @apply p-3 sm:p-4;
+}
+
+/* 移动端卡片内容优化 */
+@media (max-width: 640px) {
+  .card-content {
+    @apply p-2;
+  }
 }
 
 .card-title {
-  @apply font-semibold text-gray-800 mb-2 truncate;
+  @apply font-semibold text-gray-800 mb-1 sm:mb-2 truncate;
+  font-size: 0.875rem;
+}
+
+/* 移动端标题优化 */
+@media (min-width: 640px) {
+  .card-title {
+    font-size: 1rem;
+  }
 }
 
 .card-meta {
-  @apply flex items-center justify-between mb-2;
+  @apply flex items-center justify-between mb-1 sm:mb-2;
+}
+
+/* 移动端元信息优化 */
+@media (max-width: 640px) {
+  .card-meta {
+    @apply flex-col items-start space-y-1;
+  }
 }
 
 .card-category {
@@ -696,6 +759,17 @@ onMounted(() => {
 
 .card-tags {
   @apply flex flex-wrap gap-1;
+}
+
+/* 移动端标签优化 */
+@media (max-width: 640px) {
+  .card-tags {
+    @apply gap-0.5;
+  }
+  
+  .card-tags .tag {
+    @apply text-xs px-1.5 py-0.5;
+  }
 }
 
 .tag {
@@ -823,3 +897,4 @@ onMounted(() => {
   @apply text-sm text-red-600 mt-2;
 }
 </style>
+
