@@ -146,27 +146,29 @@
               class="config-input"
             />
           </div>
-          <div class="config-group">
-            <label>块宽度</label>
-            <input 
-              v-model.number="localGridConfig.pieceWidth"
-              type="number"
-              min="50"
-              max="200"
-              @change="updateGrid"
-              class="config-input"
-            />
-          </div>
-          <div class="config-group">
-            <label>块高度</label>
-            <input 
-              v-model.number="localGridConfig.pieceHeight"
-              type="number"
-              min="50"
-              max="200"
-              @change="updateGrid"
-              class="config-input"
-            />
+          <div class="config-group aspect-ratio-group">
+            <label>高宽比(高:宽)</label>
+            <div class="aspect-ratio-inputs">
+              <input 
+                v-model.number="aspectRatioConfig.height"
+                type="number"
+                min="1"
+                max="10"
+                step="0.1"
+                @change="updateAspectRatio"
+                class="config-input aspect-input"
+              />
+              <span class="ratio-separator">:</span>
+              <input 
+                v-model.number="aspectRatioConfig.width"
+                type="number"
+                min="1"
+                max="10"
+                step="0.1"
+                @change="updateAspectRatio"
+                class="config-input aspect-input"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -321,6 +323,12 @@ const localGridConfig = reactive({
   pieceHeight: 100
 })
 
+// 高宽比设置
+const aspectRatioConfig = reactive({
+  width: 1,
+  height: 1
+})
+
 const showImportDialog = ref(false)
 const showAddToLibraryDialog = ref(false)
 const libraryItemName = ref('')
@@ -360,7 +368,7 @@ const imageContainerStyle = computed(() => ({
 const backgroundImageStyle = computed(() => ({
   width: '100%',
   height: '100%',
-  objectFit: 'cover' as const
+  objectFit: 'contain' as const
 }))
 
 
@@ -395,6 +403,59 @@ const processImageFile = (file: File) => {
   const reader = new FileReader()
   reader.onload = (e) => {
     const imageUrl = e.target?.result as string
+    
+    // 创建图片对象来获取原始尺寸
+    const img = new Image()
+    img.onload = () => {
+      // 计算图片宽高比
+      const aspectRatio = img.naturalWidth / img.naturalHeight
+      
+      // 根据宽高比自动设置合适的行列数
+      let suggestedCols, suggestedRows
+      
+      if (aspectRatio > 1.5) {
+        // 宽图：更多列
+        suggestedCols = 6
+        suggestedRows = Math.round(6 / aspectRatio)
+      } else if (aspectRatio < 0.75) {
+        // 高图：更多行
+        suggestedRows = 6
+        suggestedCols = Math.round(6 * aspectRatio)
+      } else {
+        // 接近正方形：平衡的行列数
+        suggestedCols = 4
+        suggestedRows = Math.round(4 / aspectRatio)
+      }
+      
+      // 确保最小值为2，最大值为12
+      suggestedCols = Math.max(2, Math.min(12, suggestedCols))
+      suggestedRows = Math.max(2, Math.min(12, suggestedRows))
+      
+      // 计算建议的高宽比
+      const suggestedRatio = aspectRatio
+      aspectRatioConfig.width = suggestedRatio >= 1 ? suggestedRatio : 1
+      aspectRatioConfig.height = suggestedRatio >= 1 ? 1 : (1 / suggestedRatio)
+      
+      // 根据高宽比计算pieceWidth和pieceHeight
+      const baseSize = 100
+      const pieceWidth = suggestedRatio >= 1 ? baseSize : Math.round(baseSize * suggestedRatio)
+      const pieceHeight = suggestedRatio >= 1 ? Math.round(baseSize / suggestedRatio) : baseSize
+      
+      // 更新本地网格配置
+      Object.assign(localGridConfig, {
+        rows: suggestedRows,
+        cols: suggestedCols,
+        pieceWidth: Math.max(50, pieceWidth),
+        pieceHeight: Math.max(50, pieceHeight)
+      })
+      
+      // 更新store中的网格配置
+      editorStore.updateGridConfig(localGridConfig)
+      
+      console.log(`图片尺寸: ${img.naturalWidth}x${img.naturalHeight}, 宽高比: ${aspectRatio.toFixed(2)}, 建议网格: ${suggestedRows}x${suggestedCols}`)
+    }
+    
+    img.src = imageUrl
     editorStore.setImage(imageUrl, file)
   }
   reader.readAsDataURL(file)
@@ -409,6 +470,13 @@ const clearAll = () => {
     editorStore.setImage('')
     editorStore.setPuzzleName('')
     editorStore.resetBoundaries()
+    
+    // 重置高宽比配置
+    Object.assign(aspectRatioConfig, {
+      width: 1,
+      height: 1
+    })
+    
     // 重置本地网格配置
     Object.assign(localGridConfig, {
       rows: 4,
@@ -421,6 +489,28 @@ const clearAll = () => {
 }
 
 const updateGrid = () => {
+  editorStore.updateGridConfig(localGridConfig)
+}
+
+const updateAspectRatio = () => {
+  // 根据高宽比计算pieceWidth和pieceHeight
+  const baseSize = 100 // 基础尺寸
+  const ratio = aspectRatioConfig.width / aspectRatioConfig.height
+  
+  if (ratio >= 1) {
+    // 宽度大于等于高度
+    localGridConfig.pieceWidth = baseSize
+    localGridConfig.pieceHeight = Math.round(baseSize / ratio)
+  } else {
+    // 高度大于宽度
+    localGridConfig.pieceHeight = baseSize
+    localGridConfig.pieceWidth = Math.round(baseSize * ratio)
+  }
+  
+  // 确保最小尺寸
+  localGridConfig.pieceWidth = Math.max(50, localGridConfig.pieceWidth)
+  localGridConfig.pieceHeight = Math.max(50, localGridConfig.pieceHeight)
+  
   editorStore.updateGridConfig(localGridConfig)
 }
 
@@ -492,6 +582,53 @@ const closeAddToLibraryDialog = () => {
   isAddingToLibrary.value = false
 }
 
+// 检查图片比例和网格比例是否匹配
+const checkImageGridRatio = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (!currentImage.value) {
+      resolve(true)
+      return
+    }
+    
+    const img = new Image()
+    img.onload = () => {
+      const imageAspectRatio = img.naturalWidth / img.naturalHeight
+      const gridAspectRatio = (gridConfig.value.cols * gridConfig.value.pieceWidth) / (gridConfig.value.rows * gridConfig.value.pieceHeight)
+      
+      // 计算比例差异（允许10%的误差）
+      const ratioDifference = Math.abs(imageAspectRatio - gridAspectRatio) / imageAspectRatio
+      
+      if (ratioDifference > 0.1) {
+        // 比例不匹配，弹出警告
+        const imageRatioText = imageAspectRatio > 1 ? `${imageAspectRatio.toFixed(2)}:1 (横向)` : `1:${(1/imageAspectRatio).toFixed(2)} (纵向)`
+        const gridRatioText = gridAspectRatio > 1 ? `${gridAspectRatio.toFixed(2)}:1 (横向)` : `1:${(1/gridAspectRatio).toFixed(2)} (纵向)`
+        
+        const message = `⚠️ 比例不匹配警告\n\n` +
+          `图片原始比例: ${imageRatioText}\n` +
+          `当前网格比例: ${gridRatioText}\n\n` +
+          `比例不匹配可能导致图片在游戏中被裁剪或变形。\n\n` +
+          `建议调整网格设置：\n` +
+          `• 行数: ${gridConfig.value.rows} → ${Math.round(gridConfig.value.cols / imageAspectRatio)}\n` +
+          `• 列数: ${gridConfig.value.cols}\n\n` +
+          `是否仍要继续添加到素材库？`
+        
+        const userConfirmed = confirm(message)
+        resolve(userConfirmed)
+      } else {
+        // 比例匹配，直接继续
+        resolve(true)
+      }
+    }
+    
+    img.onerror = () => {
+      console.error('无法加载图片进行比例检查')
+      resolve(true) // 出错时允许继续
+    }
+    
+    img.src = currentImage.value
+  })
+}
+
 const handleAddToLibrary = async () => {
   if (!libraryItemName.value.trim()) {
     alert('请输入拼图名称')
@@ -501,6 +638,12 @@ const handleAddToLibrary = async () => {
   if (!currentImage.value || !editorStore.originalImageFile) {
     alert('没有找到原始图片文件')
     return
+  }
+  
+  // 检查图片比例和网格比例是否匹配
+  const shouldCheckRatio = await checkImageGridRatio()
+  if (!shouldCheckRatio) {
+    return // 用户取消了操作
   }
   
   try {
@@ -625,6 +768,16 @@ const processImportFile = (file: File) => {
 onMounted(() => {
   // 同步网格配置
   Object.assign(localGridConfig, gridConfig.value)
+  
+  // 根据当前网格配置计算高宽比
+  const currentRatio = localGridConfig.pieceWidth / localGridConfig.pieceHeight
+  if (currentRatio >= 1) {
+    aspectRatioConfig.width = currentRatio
+    aspectRatioConfig.height = 1
+  } else {
+    aspectRatioConfig.width = 1
+    aspectRatioConfig.height = 1 / currentRatio
+  }
   
   // 尝试加载草稿
   editorStore.loadDraft()
@@ -905,6 +1058,26 @@ onMounted(() => {
 
 .config-input:focus {
   border-color: var(--settings-accent);
+}
+
+/* 高宽比输入框样式 */
+.aspect-ratio-group {
+  @apply col-span-2;
+}
+
+.aspect-ratio-inputs {
+  @apply flex items-center space-x-2;
+}
+
+.aspect-input {
+  @apply flex-1;
+}
+
+.ratio-separator {
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
+  min-width: 12px;
+  text-align: center;
 }
 
 /* 底部操作栏样式 */
