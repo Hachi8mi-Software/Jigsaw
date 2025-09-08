@@ -197,7 +197,8 @@ import type { Boundary, BoundaryState } from '../types'
  * @param gridRows 网格行数
  * @param boundaries 边界数组（可选，如果提供则使用编辑器数据）
  * @returns 返回四个边的状态：{ topEdge, rightEdge, bottomEdge, leftEdge }
- *         0: 平边（边缘），1: 凸出，-1: 凹入
+ *         0: 平边，1: 凸出，-1: 凹入
+ *         如果没有边界数据，所有边都返回0（平边）
  */
 export function determinePieceEdges(
   originalIndex: number,
@@ -213,8 +214,8 @@ export function determinePieceEdges(
     return determinePieceEdgesFromBoundaries(originalIndex, gridCols, gridRows, boundaries)
   }
   
-  // 否则使用随机生成（向后兼容）
-  return determinePieceEdgesRandom(originalIndex, gridCols, gridRows)
+  // 否则所有边都设置为平边
+  return determinePieceEdgesDefault(originalIndex, gridCols, gridRows)
 }
 
 /**
@@ -307,25 +308,20 @@ function getComplementaryEdgeState(
 }
 
 /**
- * 随机确定拼图块的边界状态（向后兼容）
+ * 确定拼图块的边界状态（全部为平边）
  */
-function determinePieceEdgesRandom(
+function determinePieceEdgesDefault(
   originalIndex: number,
   gridCols: number,
   gridRows: number
 ): { topEdge: number; rightEdge: number; bottomEdge: number; leftEdge: number } {
-  const seed = originalIndex
-  const row = Math.floor(originalIndex / gridCols)
-  const col = originalIndex % gridCols
-  
-  // 确定每个边的状态：上、右、下、左
-  // 0: 平边（边缘），1: 凸出，-1: 凹入
-  const topEdge = row === 0 ? 0 : ((seed * 11) % 2 === 0 ? 1 : -1)
-  const rightEdge = col === gridCols - 1 ? 0 : ((seed * 7) % 2 === 0 ? 1 : -1)
-  const bottomEdge = row === gridRows - 1 ? 0 : ((seed * 13) % 2 === 0 ? 1 : -1)
-  const leftEdge = col === 0 ? 0 : ((seed * 5) % 2 === 0 ? 1 : -1)
-  
-  return { topEdge, rightEdge, bottomEdge, leftEdge }
+  // 所有边都设置为平边（0）
+  return { 
+    topEdge: 0, 
+    rightEdge: 0, 
+    bottomEdge: 0, 
+    leftEdge: 0 
+  }
 }
 
 /**
