@@ -79,8 +79,8 @@ const getActualGridCellSize = () => {
 // 获取实际的Canvas尺寸
 const actualCanvasSize = computed(() => {
   // 计算凸出部分所需的额外空间
-  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.25
-  const extraSpace = tabSize * 1.2 // 为凸出部分预留足够空间
+  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.12
+  const extraSpace = tabSize * 3 // 为凸出部分预留足够空间，进一步增加扩展比例
   
   if (props.isPlaced) {
     // 对于已放置的拼图块，使用网格单元格的实际尺寸，并增加额外空间
@@ -100,8 +100,8 @@ const actualCanvasSize = computed(() => {
 // 容器样式
 const containerStyle = computed(() => {
   // 计算凸出部分所需的额外空间
-  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.25
-  const extraSpace = tabSize * 1.2 // 为凸出部分预留足够空间
+  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.12
+  const extraSpace = tabSize * 3 // 为凸出部分预留足够空间，进一步增加扩展比例
   
   let left = props.piece.x
   let top = props.piece.y
@@ -307,14 +307,21 @@ const renderPiece = async () => {
     // 设置裁剪区域为拼图块形状
     ctx.clip()
     
-    // 绘制拼图块图片 - 扩展目标区域以覆盖凸出部分
-    const tabSize = actualPieceWidth * 0.25 // 与createPuzzlePiecePath中相同的tabSize
+    // 绘制拼图块图片 - 确保主体部分显示正确的原图区域
+    const tabSize = Math.min(actualPieceWidth, actualPieceHeight) * 0.12 // 与createPuzzlePiecePath中相同的tabSize
     
-    // 扩展绘制区域，使图片覆盖凸出部分
+    // 计算扩展的源区域，确保目标区域扩大时源区域也相应扩大
+    // 进一步增加扩展比例，确保凸起部分也能填充图片
+    const sourceTabSizeX = (tabSize * 2.5 / actualPieceWidth) * sourceWidth
+    const sourceTabSizeY = (tabSize * 2.5 / actualPieceHeight) * sourceHeight
+    
+    // 绘制图片，源区域和目标区域都相应扩展
     ctx.drawImage(
       img,
-      sourceX, sourceY, sourceWidth, sourceHeight, // 源区域
-      -tabSize, -tabSize, actualPieceWidth + tabSize * 2, actualPieceHeight + tabSize * 2 // 目标区域扩大以覆盖凸出部分
+      sourceX - sourceTabSizeX, sourceY - sourceTabSizeY, 
+      sourceWidth + sourceTabSizeX * 2, sourceHeight + sourceTabSizeY * 2, // 扩展的源区域
+      -tabSize * 2.5, -tabSize * 2.5, 
+      actualPieceWidth + tabSize * 5, actualPieceHeight + tabSize * 5 // 扩展的目标区域
     )
     
     // 恢复上下文状态（保留坐标系偏移）
