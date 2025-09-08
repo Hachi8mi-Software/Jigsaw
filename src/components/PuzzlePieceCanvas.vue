@@ -4,20 +4,26 @@
 -->
 
 <template>
-  <canvas 
-    ref="canvasRef"
-    :width="actualCanvasSize.width"
-    :height="actualCanvasSize.height"
-    class="puzzle-piece-canvas"
-    :style="canvasStyle"
-    @mousedown="handleMouseDown"
-    @touchstart="handleTouchStart"
-  >
-    <!-- 显示拼图块编号的覆盖层 -->
-    <div class="piece-overlay" v-if="showNumber">
-      <span class="piece-number">{{ piece.originalIndex + 1 }}</span>
+  <div class="puzzle-piece-container" :style="containerStyle">
+    <canvas 
+      ref="canvasRef"
+      :width="actualCanvasSize.width"
+      :height="actualCanvasSize.height"
+      class="puzzle-piece-canvas"
+      :style="canvasStyle"
+      @mousedown="handleMouseDown"
+      @touchstart="handleTouchStart"
+    >
+    </canvas>
+    <!-- 拖拽区域遮罩 -->
+    <div 
+      class="drag-mask"
+      :style="dragMaskStyle"
+      @mousedown="handleMouseDown"
+      @touchstart="handleTouchStart"
+    >
     </div>
-  </canvas>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -90,8 +96,8 @@ const actualCanvasSize = computed(() => {
   }
 })
 
-// Canvas样式
-const canvasStyle = computed(() => {
+// 容器样式
+const containerStyle = computed(() => {
   // 计算凸出部分所需的额外空间
   const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.25
   const extraSpace = tabSize * 1.2 // 为凸出部分预留足够空间
@@ -133,20 +139,53 @@ const canvasStyle = computed(() => {
   left -= extraSpace
   top -= extraSpace
 
-  const baseStyle = {
+  return {
     position: 'absolute' as const,
     left: `${left}px`,
     top: `${top}px`,
     width: `${actualCanvasSize.value.width}px`,
     height: `${actualCanvasSize.value.height}px`,
-    cursor: props.isDragging ? 'grabbing' : 'grab',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
     zIndex: props.isDragging ? 1000 : (props.isPlaced ? 5 : 10),
     transform: props.isDragging ? 'scale(1.05)' : 'scale(1)',
     transition: props.isDragging ? 'none' : 'transform 0.2s ease'
   }
+})
 
-  return baseStyle
+// Canvas样式
+const canvasStyle = computed(() => {
+  return {
+    position: 'absolute' as const,
+    left: '0px',
+    top: '0px',
+    width: `${actualCanvasSize.value.width}px`,
+    height: `${actualCanvasSize.value.height}px`,
+    pointerEvents: 'none' as const // Canvas不接收鼠标事件
+  }
+})
+
+// 拖拽遮罩样式
+const dragMaskStyle = computed(() => {
+  // 计算凸出部分所需的额外空间
+  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.25
+  const extraSpace = tabSize * 1.2
+  
+  // 计算拼图块的实际尺寸（不含凸出部分）
+  const actualPieceWidth = props.isPlaced ? getActualGridCellSize().width : props.pieceWidth
+  const actualPieceHeight = props.isPlaced ? getActualGridCellSize().height : props.pieceHeight
+  
+  // 计算居中偏移量
+  const offsetX = (actualCanvasSize.value.width - actualPieceWidth) / 2
+  const offsetY = (actualCanvasSize.value.height - actualPieceHeight) / 2
+  
+  return {
+    position: 'absolute' as const,
+    left: `${offsetX}px`,
+    top: `${offsetY}px`,
+    width: `${actualPieceWidth}px`,
+    height: `${actualPieceHeight}px`,
+    cursor: props.isDragging ? 'grabbing' : 'grab',
+    pointerEvents: 'auto' as const
+  }
 })
 
 /**
@@ -289,26 +328,27 @@ const renderPiece = async () => {
     ctx.save()
     ctx.translate(offsetX, offsetY)
     
-    // 绘制拼图块边框 - 增强边框效果
+    // 绘制拼图块边框 - 恢复明显的边框效果
     ctx.strokeStyle = props.isPlaced 
       ? (props.piece.isCorrect ? '#27ae60' : '#e74c3c')
-      : '#333'
+      : '#666'
     ctx.lineWidth = 2.5
     createPuzzlePiecePath(ctx, actualPieceWidth, actualPieceHeight)
     ctx.stroke()
     
-    // 添加内部阴影效果增强立体感
+    // 添加内部光效增强立体感
     ctx.globalCompositeOperation = 'source-atop'
     createPuzzlePiecePath(ctx, actualPieceWidth, actualPieceHeight)
-    // 创建径向渐变
+    // 创建径向渐变光效
     const gradient = ctx.createRadialGradient(
       actualPieceWidth/2, actualPieceHeight/2, 0,
       actualPieceWidth/2, actualPieceHeight/2, actualPieceWidth/1.5
     )
-    gradient.addColorStop(0, 'rgba(255,255,255,0.15)')
-    gradient.addColorStop(1, 'rgba(0,0,0,0.25)')
+    gradient.addColorStop(0, 'rgba(255,255,255,0.2)')
+    gradient.addColorStop(1, 'rgba(0,0,0,0.1)')
     ctx.fillStyle = gradient
     ctx.fill()
+    
     ctx.restore() // 恢复上下文状态
 
     // 根据显示模式决定是否显示编号
@@ -340,20 +380,7 @@ const renderPiece = async () => {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.98)'
         ctx.fillText(text, centerX, centerY)
       } else {
-        // 普通模式：显示文字背景
-        const textMetrics = ctx.measureText(text)
-        const textWidth = textMetrics.width
-        const textHeight = 16
-
-        const padding = 4
-        const bgX = centerX - textWidth / 2 - padding
-        const bgY = centerY - textHeight / 2 - padding
-        const bgWidth = textWidth + padding * 2
-        const bgHeight = textHeight + padding * 2
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-        ctx.fillRect(bgX, bgY, bgWidth, bgHeight)
-
+        // 普通模式：只显示文字轮廓，无背景
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)'
         ctx.lineWidth = 3
         ctx.strokeText(text, centerX, centerY)
@@ -436,6 +463,12 @@ watch(() => [props.pieceWidth, props.pieceHeight, actualCanvasSize.value], () =>
 </script>
 
 <style scoped>
+.puzzle-piece-container {
+  user-select: none;
+  -webkit-user-drag: none;
+  box-sizing: border-box;
+}
+
 .puzzle-piece-canvas {
   display: block;
   background-color: transparent;
@@ -444,34 +477,20 @@ watch(() => [props.pieceWidth, props.pieceHeight, actualCanvasSize.value], () =>
   box-sizing: border-box;
 }
 
-.piece-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0.5);
+.drag-mask {
+  background-color: transparent;
+  user-select: none;
+  -webkit-user-drag: none;
   box-sizing: border-box;
 }
 
-.piece-number {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: bold;
-  font-size: 14px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-}
-
 /* 鼠标悬停效果 */
-.puzzle-piece-canvas:hover {
+.puzzle-piece-container:hover .puzzle-piece-canvas {
   filter: brightness(1.1);
 }
 
 /* 拖拽时的效果 */
-.puzzle-piece-canvas[style*="scale(1.05)"] {
-  filter: brightness(1.1) drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+.puzzle-piece-container[style*="scale(1.05)"] .puzzle-piece-canvas {
+  filter: brightness(1.1);
 }
 </style>
