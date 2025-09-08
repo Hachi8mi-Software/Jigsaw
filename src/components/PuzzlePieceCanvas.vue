@@ -166,10 +166,6 @@ const canvasStyle = computed(() => {
 
 // 拖拽遮罩样式
 const dragMaskStyle = computed(() => {
-  // 计算凸出部分所需的额外空间
-  const tabSize = Math.min(props.pieceWidth, props.pieceHeight) * 0.25
-  const extraSpace = tabSize * 1.2
-  
   // 计算拼图块的实际尺寸（不含凸出部分）
   const actualPieceWidth = props.isPlaced ? getActualGridCellSize().width : props.pieceWidth
   const actualPieceHeight = props.isPlaced ? getActualGridCellSize().height : props.pieceHeight

@@ -286,8 +286,6 @@ function getComplementaryEdgeState(
   }
   
   // 对于凹凸边界，根据拼图块位置和边方向决定互补性
-  // 使用拼图块的行列坐标作为种子，确保相同位置的拼图块总是有相同的边状态
-  const seed = row * 1000 + col
   
   switch (edgeDirection) {
     case 'top':
@@ -324,20 +322,3 @@ function determinePieceEdgesDefault(
   }
 }
 
-/**
- * 将边界状态转换为边状态
- * @param boundaryState 边界状态
- * @returns 边状态：0=平边，1=凸出，-1=凹入
- */
-function boundaryStateToEdgeState(boundaryState: BoundaryState): number {
-  switch (boundaryState) {
-    case 'flat':
-      return 0
-    case 'convex':
-      return 1
-    case 'concave':
-      return -1
-    default:
-      return 0
-  }
-}
