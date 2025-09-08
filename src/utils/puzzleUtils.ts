@@ -187,3 +187,30 @@ export function calculateGridCoordinates(
   
   return { gridCol, gridRow, gridIndex }
 }
+
+/**
+ * 确定拼图块的边界状态
+ * @param originalIndex 拼图块的原始索引
+ * @param gridCols 网格列数
+ * @param gridRows 网格行数
+ * @returns 返回四个边的状态：{ topEdge, rightEdge, bottomEdge, leftEdge }
+ *         0: 平边（边缘），1: 凸出，-1: 凹入
+ */
+export function determinePieceEdges(
+  originalIndex: number,
+  gridCols: number,
+  gridRows: number
+): { topEdge: number; rightEdge: number; bottomEdge: number; leftEdge: number } {
+  const seed = originalIndex
+  const row = Math.floor(originalIndex / gridCols)
+  const col = originalIndex % gridCols
+  
+  // 确定每个边的状态：上、右、下、左
+  // 0: 平边（边缘），1: 凸出，-1: 凹入
+  const topEdge = row === 0 ? 0 : ((seed * 11) % 2 === 0 ? 1 : -1)
+  const rightEdge = col === gridCols - 1 ? 0 : ((seed * 7) % 2 === 0 ? 1 : -1)
+  const bottomEdge = row === gridRows - 1 ? 0 : ((seed * 13) % 2 === 0 ? 1 : -1)
+  const leftEdge = col === 0 ? 0 : ((seed * 5) % 2 === 0 ? 1 : -1)
+  
+  return { topEdge, rightEdge, bottomEdge, leftEdge }
+}

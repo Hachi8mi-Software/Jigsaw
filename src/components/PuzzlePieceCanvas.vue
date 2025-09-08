@@ -31,6 +31,7 @@ import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import type { PieceStatus, PuzzleData } from '../types'
 import { imageCache as imageCacheManager } from '../utils/imageCache'
 import { getGridPos } from '../utils/gridUtils'
+import { determinePieceEdges } from '../utils/puzzleUtils'
 
 interface Props {
   piece: PieceStatus
@@ -197,16 +198,11 @@ const createPuzzlePiecePath = (ctx: CanvasRenderingContext2D, width: number, hei
   
   // 确定每个边的凹凸状态（随机但基于拼图块索引，保持一致性）
   // 使用原始索引作为随机种子，确保相同的拼图块总是有相同的形状
-  const seed = props.piece.originalIndex
-  const row = Math.floor(props.piece.originalIndex / props.gridCols)
-  const col = props.piece.originalIndex % props.gridCols
-  
-  // 确定每个边的状态：上、右、下、左
-  // 0: 平边（边缘），1: 凸出，-1: 凹入
-  const topEdge = row === 0 ? 0 : ((seed * 11) % 2 === 0 ? 1 : -1)
-  const rightEdge = col === props.gridCols - 1 ? 0 : ((seed * 7) % 2 === 0 ? 1 : -1)
-  const bottomEdge = row === props.gridRows - 1 ? 0 : ((seed * 13) % 2 === 0 ? 1 : -1)
-  const leftEdge = col === 0 ? 0 : ((seed * 5) % 2 === 0 ? 1 : -1)
+  const { topEdge, rightEdge, bottomEdge, leftEdge } = determinePieceEdges(
+    props.piece.originalIndex,
+    props.gridCols,
+    props.gridRows
+  )
   
   // 开始创建路径
   ctx.beginPath()
