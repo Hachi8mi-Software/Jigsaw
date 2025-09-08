@@ -47,6 +47,13 @@ const goBack = () => {
   @apply min-h-screen bg-gray-50 flex items-center justify-center px-4;
 }
 
+/* 移动端适配：为固定头部栏预留空间 */
+@media (max-width: 767px) {
+  .not-found-view {
+    min-height: calc(100vh - 60px);
+  }
+}
+
 .not-found-content {
   @apply text-center max-w-md;
 }

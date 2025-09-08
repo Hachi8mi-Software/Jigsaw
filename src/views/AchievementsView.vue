@@ -100,6 +100,13 @@ onMounted(() => {
   transition: background-color 0.3s ease;
 }
 
+/* 移动端适配：为固定头部栏预留空间 */
+@media (max-width: 767px) {
+  .achievements-view {
+    min-height: calc(100vh - 60px);
+  }
+}
+
 .achievements-header {
   @apply mb-8;
 }

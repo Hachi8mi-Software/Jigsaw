@@ -309,6 +309,13 @@ const viewModel = new SettingsViewModel()
   transition: background-color 0.3s ease;
 }
 
+/* 移动端适配：为固定头部栏预留空间 */
+@media (max-width: 767px) {
+  .settings-view {
+    height: calc(100vh - 60px);
+  }
+}
+
 .settings-container {
   @apply max-w-4xl mx-auto px-6 h-full flex flex-col;
 }

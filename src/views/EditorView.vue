@@ -693,6 +693,13 @@ onMounted(() => {
   background-color: var(--settings-bg);
 }
 
+/* 移动端适配：为固定头部栏预留空间 */
+@media (max-width: 767px) {
+  .editor-view {
+    height: calc(100vh - 60px);
+  }
+}
+
 .editor-toolbar {
   @apply flex items-center justify-between px-6 py-4 shadow-sm border-b;
   background-color: var(--settings-card-bg);

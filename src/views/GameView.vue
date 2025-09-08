@@ -370,6 +370,13 @@ onUnmounted(() => {
   height: 100dvh; /* 动态视口高度，考虑移动端浏览器UI */
 }
 
+/* 移动端适配：为固定头部栏预留空间 */
+@media (max-width: 767px) {
+  .game-view {
+    height: calc(100vh - 60px);
+  }
+}
+
 .game-header {
   @apply flex items-center justify-between px-6 py-4 bg-white shadow-sm border-b;
 }
