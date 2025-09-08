@@ -1,6 +1,6 @@
 import { LibraryItem, BoundaryState } from '../types'
 import { getImagePath } from '../utils/imageUtils'
-import { BoundaryManager } from '../utils/svgUtils'
+import { BoundaryManager } from '../utils/boundaryUtils'
 
 /**
  * 内置拼图库数据

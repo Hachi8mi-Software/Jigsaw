@@ -13,7 +13,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { GridConfig, Boundary, PuzzleData } from '../types'
 import { BoundaryState } from '../types'
-import { BoundaryManager } from '../utils/svgUtils'
+import { BoundaryManager } from '../utils/boundaryUtils'
 
 /**
  * 编辑器管理器类

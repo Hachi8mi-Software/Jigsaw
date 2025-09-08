@@ -6,7 +6,7 @@
 import { ref } from 'vue'
 import type { PieceStatus, PuzzleData } from '../types'
 import { getGridPos } from '@/utils/gridUtils'
-import { generateRandomPosition } from '@/utils/puzzleUtils'
+import { generateRandomPosition } from '@/utils/positionUtils'
 
 export class PieceManager {
   private pieces = ref<PieceStatus[]>([])

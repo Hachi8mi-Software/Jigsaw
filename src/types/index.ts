@@ -10,6 +10,13 @@ export enum BoundaryState {
   CONCAVE = 'concave'  // 内凹
 }
 
+// 拼图块边状态枚举 - 统一替代数字表示
+export enum PieceEdgeState {
+  FLAT = 0,      // 平边
+  CONVEX = 1,    // 凸出
+  CONCAVE = -1   // 凹入
+}
+
 // 拼图块位置信息
 export interface PiecePosition {
   id: string
@@ -45,6 +52,14 @@ export interface Boundary {
   startY: number
   endX: number
   endY: number
+}
+
+// 拼图块边状态接口 - 使用枚举替代数字
+export interface PieceEdges {
+  topEdge: PieceEdgeState
+  rightEdge: PieceEdgeState
+  bottomEdge: PieceEdgeState
+  leftEdge: PieceEdgeState
 }
 
 // 网格配置接口

@@ -7,12 +7,17 @@ import type { PieceStatus, PuzzleData } from '../../types'
 import { nextTick, StyleValue } from 'vue'
 import { getGridPos } from '@/utils/gridUtils'
 import { 
-  calculatePieceSize, 
+  calculatePieceSize
+} from '@/utils/layoutUtils'
+import {
   generateRandomPosition,
   isPieceOverlapping,
   isPositionInBounds,
   constrainPosition,
   calculateGridCoordinates
+} from '@/utils/positionUtils'
+import {
+  reshufflePieces
 } from '@/utils/puzzleUtils'
 import {
   createGridStyle,
@@ -20,9 +25,6 @@ import {
   createPieceStyle,
   createPlacedPieceStyle
 } from '@/utils/puzzleStyleUtils'
-import {
-  reshufflePieces
-} from '@/utils/puzzleUtils'
 import { audioUtils } from '@/utils/audioUtils'
 import { useGameStore } from '@/stores/game'
 

@@ -31,6 +31,7 @@ import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import type { PieceStatus, PuzzleData } from '../types'
 import { imageCache as imageCacheManager } from '../utils/imageCache'
 import { getGridPos } from '../utils/gridUtils'
+import { PieceEdgeState } from '../types'
 import { determinePieceEdges } from '../utils/puzzleUtils'
 
 interface Props {
@@ -210,49 +211,49 @@ const createPuzzlePiecePath = (ctx: CanvasRenderingContext2D, width: number, hei
   
   // 上边
   ctx.moveTo(0, 0) // 左上角
-  if (topEdge !== 0) {
+  if (topEdge !== PieceEdgeState.FLAT) {
     ctx.lineTo(width * 0.4, 0) // 上边左部分
     // 绘制标准半圆凸起或凹陷
     const centerX = width * 0.5
-    const centerY = topEdge > 0 ? -tabSize : tabSize
+    const centerY = topEdge === PieceEdgeState.CONVEX ? -tabSize : tabSize
     const radius = tabSize
-    ctx.arc(centerX, centerY, radius, Math.PI, 0, topEdge < 0) // 半圆
+    ctx.arc(centerX, centerY, radius, Math.PI, 0, topEdge === PieceEdgeState.CONCAVE) // 半圆
     ctx.lineTo(width * 0.6, 0) // 上边右部分
   }
   ctx.lineTo(width, 0) // 右上角
   
   // 右边
-  if (rightEdge !== 0) {
+  if (rightEdge !== PieceEdgeState.FLAT) {
     ctx.lineTo(width, height * 0.4) // 右边上部分
     // 绘制标准半圆凸起或凹陷
-    const centerX = width + (rightEdge > 0 ? tabSize : -tabSize)
+    const centerX = width + (rightEdge === PieceEdgeState.CONVEX ? tabSize : -tabSize)
     const centerY = height * 0.5
     const radius = tabSize
-    ctx.arc(centerX, centerY, radius, Math.PI * 1.5, Math.PI * 0.5, rightEdge < 0) // 半圆
+    ctx.arc(centerX, centerY, radius, Math.PI * 1.5, Math.PI * 0.5, rightEdge === PieceEdgeState.CONCAVE) // 半圆
     ctx.lineTo(width, height * 0.6) // 右边下部分
   }
   ctx.lineTo(width, height) // 右下角
   
   // 下边
-  if (bottomEdge !== 0) {
+  if (bottomEdge !== PieceEdgeState.FLAT) {
     ctx.lineTo(width * 0.6, height) // 下边右部分
     // 绘制标准半圆凸起或凹陷
     const centerX = width * 0.5
-    const centerY = height + (bottomEdge > 0 ? tabSize : -tabSize)
+    const centerY = height + (bottomEdge === PieceEdgeState.CONVEX ? tabSize : -tabSize)
     const radius = tabSize
-    ctx.arc(centerX, centerY, radius, 0, Math.PI, bottomEdge < 0) // 半圆
+    ctx.arc(centerX, centerY, radius, 0, Math.PI, bottomEdge === PieceEdgeState.CONCAVE) // 半圆
     ctx.lineTo(width * 0.4, height) // 下边左部分
   }
   ctx.lineTo(0, height) // 左下角
   
   // 左边
-  if (leftEdge !== 0) {
+  if (leftEdge !== PieceEdgeState.FLAT) {
     ctx.lineTo(0, height * 0.6) // 左边下部分
     // 绘制标准半圆凸起或凹陷
-    const centerX = leftEdge > 0 ? -tabSize : tabSize
+    const centerX = leftEdge === PieceEdgeState.CONVEX ? -tabSize : tabSize
     const centerY = height * 0.5
     const radius = tabSize
-    ctx.arc(centerX, centerY, radius, Math.PI * 0.5, Math.PI * 1.5, leftEdge < 0) // 半圆
+    ctx.arc(centerX, centerY, radius, Math.PI * 0.5, Math.PI * 1.5, leftEdge === PieceEdgeState.CONCAVE) // 半圆
     ctx.lineTo(0, height * 0.4) // 左边上部分
   }
   ctx.lineTo(0, 0) // 回到起点
