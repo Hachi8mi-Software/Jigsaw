@@ -154,10 +154,35 @@ export class PuzzleBoardViewModel {
     if (!this.puzzleData) return
     
     this.pieces.forEach((piece: PieceStatus, index: number) => {
-      const correctPos = getGridPos(index, this.getPieceSize(), this.gridCols)
-      this.gameStore.updatePiecePosition(index, correctPos.x, correctPos.y)
+      // 获取实际的网格位置
+      let correctX = 0
+      let correctY = 0
+      
+      const gridContainer = document.querySelector('.puzzle-grid') as HTMLElement
+      if (gridContainer) {
+        const gridSlots = gridContainer.querySelectorAll('.grid-slot')
+        const targetSlot = gridSlots[piece.originalIndex] as HTMLElement
+        
+        if (targetSlot) {
+          // 使用DOM元素的实际位置
+          correctX = targetSlot.offsetLeft
+          correctY = targetSlot.offsetTop
+        } else {
+          // 降级到计算位置
+          const correctPos = getGridPos(piece.originalIndex, this.getPieceSize(), this.gridCols)
+          correctX = correctPos.x
+          correctY = correctPos.y
+        }
+      } else {
+        // 降级到计算位置
+        const correctPos = getGridPos(piece.originalIndex, this.getPieceSize(), this.gridCols)
+        correctX = correctPos.x
+        correctY = correctPos.y
+      }
+      
+      this.gameStore.updatePiecePosition(index, correctX, correctY)
       this.gameStore.setPuzzleBoardPiecePlaced(index, true, piece.originalIndex, true)
-      console.log(`Piece ${index} snapped to grid position:`, correctPos)
+      console.log(`Piece ${index} snapped to grid position:`, { x: correctX, y: correctY })
     })
     
     // 检查游戏是否完成并触发完成事件
@@ -174,21 +199,46 @@ export class PuzzleBoardViewModel {
     const piece = this.gameStore.getPuzzleBoardPiece(index)
     if (!piece) return
     
-    // 计算偏移量
-    if (piece.isPlaced) {
-      const pieceSize = this.getPieceSize()
-      const gridIndex = piece.gridPosition || 0
-      const row = Math.floor(gridIndex / this.gridCols)
-      const col = gridIndex % this.gridCols
-      const pieceXInGrid = col * (pieceSize.width + 2) + 8
-      const pieceYInGrid = row * (pieceSize.height + 2) + 8
+    // 获取拼图块的实际显示位置
+    let actualX = piece.x
+    let actualY = piece.y
+    
+    // 如果是已放置的拼图块，获取其在网格中的实际显示位置
+    if (piece.isPlaced && piece.gridPosition !== undefined) {
+      const gridContainer = document.querySelector('.puzzle-grid') as HTMLElement
+      if (gridContainer) {
+        const gridSlots = gridContainer.querySelectorAll('.grid-slot')
+        const targetSlot = gridSlots[piece.gridPosition] as HTMLElement
+        
+        if (targetSlot) {
+          // 使用DOM元素的实际位置
+          actualX = targetSlot.offsetLeft
+          actualY = targetSlot.offsetTop
+        } else {
+          // 降级到计算位置
+          const pieceSize = this.getPieceSize()
+          const row = Math.floor(piece.gridPosition / this.gridCols)
+          const col = piece.gridPosition % this.gridCols
+          actualX = col * (pieceSize.width + 2) + 8
+          actualY = row * (pieceSize.height + 2) + 8
+        }
+      } else {
+        // 降级到计算位置
+        const pieceSize = this.getPieceSize()
+        const row = Math.floor(piece.gridPosition / this.gridCols)
+        const col = piece.gridPosition % this.gridCols
+        actualX = col * (pieceSize.width + 2) + 8
+        actualY = row * (pieceSize.height + 2) + 8
+      }
       
-      this.gameStore.updatePiecePosition(index, pieceXInGrid, pieceYInGrid)
+      // 更新拼图块位置到拖拽起始位置
+      this.gameStore.updatePiecePosition(index, actualX, actualY)
     }
     
+    // 基于实际显示位置计算拖拽偏移量
     const dragOffset = {
-      x: clientX - piece.x,
-      y: clientY - piece.y
+      x: clientX - actualX,
+      y: clientY - actualY
     }
     
     this.gameStore.setDraggingPiece(index)
@@ -282,7 +332,32 @@ export class PuzzleBoardViewModel {
     const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece) return
 
-    const { x: newX, y: newY } = getGridPos(gridIndex, this.getPieceSize(), this.gridCols)
+    // 获取实际的网格位置
+    let newX = 0
+    let newY = 0
+    
+    const gridContainer = document.querySelector('.puzzle-grid') as HTMLElement
+    if (gridContainer) {
+      const gridSlots = gridContainer.querySelectorAll('.grid-slot')
+      const targetSlot = gridSlots[gridIndex] as HTMLElement
+      
+      if (targetSlot) {
+        // 使用DOM元素的实际位置
+        newX = targetSlot.offsetLeft
+        newY = targetSlot.offsetTop
+      } else {
+        // 降级到计算位置
+        const { x, y } = getGridPos(gridIndex, this.getPieceSize(), this.gridCols)
+        newX = x
+        newY = y
+      }
+    } else {
+      // 降级到计算位置
+      const { x, y } = getGridPos(gridIndex, this.getPieceSize(), this.gridCols)
+      newX = x
+      newY = y
+    }
+    
     const isCorrect = piece.originalIndex === gridIndex
     console.log("x: ", newX, "y: ", newY)
     
@@ -318,7 +393,32 @@ export class PuzzleBoardViewModel {
 
     // 如果拖拽的拼图块还没有放置，先将其放置到目标位置
     if (!draggingPiece.isPlaced) {
-      const { x: newX, y: newY } = getGridPos(targetGridIndex, this.getPieceSize(), this.gridCols)
+      // 获取实际的网格位置
+      let newX = 0
+      let newY = 0
+      
+      const gridContainer = document.querySelector('.puzzle-grid') as HTMLElement
+      if (gridContainer) {
+        const gridSlots = gridContainer.querySelectorAll('.grid-slot')
+        const targetSlot = gridSlots[targetGridIndex] as HTMLElement
+        
+        if (targetSlot) {
+          // 使用DOM元素的实际位置
+          newX = targetSlot.offsetLeft
+          newY = targetSlot.offsetTop
+        } else {
+          // 降级到计算位置
+          const { x, y } = getGridPos(targetGridIndex, this.getPieceSize(), this.gridCols)
+          newX = x
+          newY = y
+        }
+      } else {
+        // 降级到计算位置
+        const { x, y } = getGridPos(targetGridIndex, this.getPieceSize(), this.gridCols)
+        newX = x
+        newY = y
+      }
+      
       const isCorrect = draggingPiece.originalIndex === targetGridIndex
       
       this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)

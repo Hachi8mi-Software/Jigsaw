@@ -181,6 +181,39 @@ export function calculateGridCoordinates(
   const relativeX = clientX - gridRect.left
   const relativeY = clientY - gridRect.top
   
+  // 尝试通过DOM查询找到最接近的网格槽
+  const gridContainer = document.querySelector('.puzzle-grid') as HTMLElement
+  if (gridContainer) {
+    const gridSlots = gridContainer.querySelectorAll('.grid-slot')
+    let closestIndex = -1
+    let minDistance = Infinity
+    
+    gridSlots.forEach((slot, index) => {
+      const slotElement = slot as HTMLElement
+      const slotRect = slotElement.getBoundingClientRect()
+      
+      // 计算鼠标位置到网格槽中心的距离
+      const slotCenterX = slotRect.left + slotRect.width / 2
+      const slotCenterY = slotRect.top + slotRect.height / 2
+      const distance = Math.sqrt(
+        Math.pow(clientX - slotCenterX, 2) + 
+        Math.pow(clientY - slotCenterY, 2)
+      )
+      
+      if (distance < minDistance) {
+        minDistance = distance
+        closestIndex = index
+      }
+    })
+    
+    if (closestIndex >= 0) {
+      const gridRow = Math.floor(closestIndex / gridCols)
+      const gridCol = closestIndex % gridCols
+      return { gridCol, gridRow, gridIndex: closestIndex }
+    }
+  }
+  
+  // 降级到原来的计算方式
   const gridCol = Math.floor((relativeX - 6) / (pieceWidth + 2))
   const gridRow = Math.floor((relativeY - 6) / (pieceHeight + 2))
   const gridIndex = gridRow * gridCols + gridCol
