@@ -14,6 +14,7 @@ import { ref, computed } from 'vue'
 import type { GridConfig, Boundary, PuzzleData } from '../types'
 import { BoundaryState } from '../types'
 import { BoundaryManager } from '../utils/boundaryUtils'
+import { calculateDifficultyFromConfig } from '../utils/difficultyUtils'
 
 /**
  * 编辑器管理器类
@@ -32,7 +33,6 @@ class EditorViewModel {
    */
   calculateDifficulty(gridConfig: GridConfig, boundaries: Boundary[]): number {
     // 使用统一的难度计算函数
-    const { calculateDifficultyFromConfig } = require('../utils/difficultyUtils')
     return calculateDifficultyFromConfig(gridConfig, boundaries)
   }
 

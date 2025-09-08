@@ -174,8 +174,9 @@ onMounted(() => {
 }
 
 .achievements-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-6 pb-6;
+  @apply grid grid-cols-2 gap-4 md:gap-6 pb-6;
   /* 底部添加padding，确保最后一个元素不会被遮挡 */
+  /* 始终保持双排显示，移动端使用较小间距 */
 }
 
 .achievement-card {
@@ -272,7 +273,23 @@ onMounted(() => {
   }
   
   .achievements-grid {
-    @apply grid-cols-1;
+    @apply gap-3;
+  }
+  
+  .achievement-card {
+    @apply p-4 space-x-3;
+  }
+  
+  .achievement-icon {
+    @apply text-3xl;
+  }
+  
+  .achievement-name {
+    @apply text-base;
+  }
+  
+  .achievement-description {
+    @apply text-sm;
   }
 }
 

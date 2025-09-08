@@ -351,7 +351,11 @@ onMounted(() => {
   }
   
   .filter-controls {
-    @apply w-full justify-between;
+    @apply w-full justify-end;
+  }
+  
+  .category-select {
+    @apply mr-auto;
   }
 }
 
