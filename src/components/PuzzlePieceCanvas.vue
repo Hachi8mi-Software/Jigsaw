@@ -192,8 +192,8 @@ const dragMaskStyle = computed(() => {
  * 创建拼图块路径（带凹凸效果）
  */
 const createPuzzlePiecePath = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-  // 拼图块凸起/凹陷的大小（占边长的比例）- 增大尺寸使效果更明显
-  const tabSize = Math.min(width, height) * 0.25
+  // 拼图块凸起/凹陷的大小（占边长的比例）- 调整为更合理的尺寸
+  const tabSize = Math.min(width, height) * 0.12
   
   // 确定每个边的凹凸状态（随机但基于拼图块索引，保持一致性）
   // 使用原始索引作为随机种子，确保相同的拼图块总是有相同的形状
@@ -214,49 +214,49 @@ const createPuzzlePiecePath = (ctx: CanvasRenderingContext2D, width: number, hei
   // 上边
   ctx.moveTo(0, 0) // 左上角
   if (topEdge !== 0) {
-    ctx.lineTo(width * 0.3, 0) // 上边左部分
-    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
-    ctx.bezierCurveTo(
-      width * 0.35, topEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, // 控制点1 - 增强曲线效果
-      width * 0.65, topEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, // 控制点2 - 增强曲线效果
-      width * 0.7, 0 // 终点
-    )
+    ctx.lineTo(width * 0.4, 0) // 上边左部分
+    // 绘制标准半圆凸起或凹陷
+    const centerX = width * 0.5
+    const centerY = topEdge > 0 ? -tabSize : tabSize
+    const radius = tabSize
+    ctx.arc(centerX, centerY, radius, Math.PI, 0, topEdge < 0) // 半圆
+    ctx.lineTo(width * 0.6, 0) // 上边右部分
   }
   ctx.lineTo(width, 0) // 右上角
   
   // 右边
   if (rightEdge !== 0) {
-    ctx.lineTo(width, height * 0.3) // 右边上部分
-    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
-    ctx.bezierCurveTo(
-      width + (rightEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), height * 0.35, // 控制点1 - 增强曲线效果
-      width + (rightEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), height * 0.65, // 控制点2 - 增强曲线效果
-      width, height * 0.7 // 终点
-    )
+    ctx.lineTo(width, height * 0.4) // 右边上部分
+    // 绘制标准半圆凸起或凹陷
+    const centerX = width + (rightEdge > 0 ? tabSize : -tabSize)
+    const centerY = height * 0.5
+    const radius = tabSize
+    ctx.arc(centerX, centerY, radius, Math.PI * 1.5, Math.PI * 0.5, rightEdge < 0) // 半圆
+    ctx.lineTo(width, height * 0.6) // 右边下部分
   }
   ctx.lineTo(width, height) // 右下角
   
   // 下边
   if (bottomEdge !== 0) {
-    ctx.lineTo(width * 0.7, height) // 下边右部分
-    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
-    ctx.bezierCurveTo(
-      width * 0.65, height + (bottomEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), // 控制点1 - 增强曲线效果
-      width * 0.35, height + (bottomEdge > 0 ? tabSize * 1.2 : -tabSize * 0.8), // 控制点2 - 增强曲线效果
-      width * 0.3, height // 终点
-    )
+    ctx.lineTo(width * 0.6, height) // 下边右部分
+    // 绘制标准半圆凸起或凹陷
+    const centerX = width * 0.5
+    const centerY = height + (bottomEdge > 0 ? tabSize : -tabSize)
+    const radius = tabSize
+    ctx.arc(centerX, centerY, radius, 0, Math.PI, bottomEdge < 0) // 半圆
+    ctx.lineTo(width * 0.4, height) // 下边左部分
   }
   ctx.lineTo(0, height) // 左下角
   
   // 左边
   if (leftEdge !== 0) {
-    ctx.lineTo(0, height * 0.7) // 左边下部分
-    // 绘制凸起或凹陷 - 调整控制点使曲线更加明显
-    ctx.bezierCurveTo(
-      leftEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, height * 0.65, // 控制点1 - 增强曲线效果
-      leftEdge > 0 ? -tabSize * 1.2 : tabSize * 0.8, height * 0.35, // 控制点2 - 增强曲线效果
-      0, height * 0.3 // 终点
-    )
+    ctx.lineTo(0, height * 0.6) // 左边下部分
+    // 绘制标准半圆凸起或凹陷
+    const centerX = leftEdge > 0 ? -tabSize : tabSize
+    const centerY = height * 0.5
+    const radius = tabSize
+    ctx.arc(centerX, centerY, radius, Math.PI * 0.5, Math.PI * 1.5, leftEdge < 0) // 半圆
+    ctx.lineTo(0, height * 0.4) // 左边上部分
   }
   ctx.lineTo(0, 0) // 回到起点
   
