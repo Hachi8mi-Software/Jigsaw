@@ -3,18 +3,19 @@
  * 遵循面向对象设计原则
  */
 
-// 边界状态枚举
+// 边界状态枚举 - 统一用于边界和拼图块边状态
 export enum BoundaryState {
   FLAT = 'flat',       // 平直
   CONVEX = 'convex',   // 外凸
   CONCAVE = 'concave'  // 内凹
 }
 
-// 拼图块边状态枚举 - 统一替代数字表示
-export enum PieceEdgeState {
-  FLAT = 0,      // 平边
-  CONVEX = 1,    // 凸出
-  CONCAVE = -1   // 凹入
+// 拼图块边状态接口 - 使用统一的BoundaryState
+export interface PieceEdges {
+  topEdge: BoundaryState
+  rightEdge: BoundaryState
+  bottomEdge: BoundaryState
+  leftEdge: BoundaryState
 }
 
 // 拼图块位置信息
@@ -54,13 +55,6 @@ export interface Boundary {
   endY: number
 }
 
-// 拼图块边状态接口 - 使用枚举替代数字
-export interface PieceEdges {
-  topEdge: PieceEdgeState
-  rightEdge: PieceEdgeState
-  bottomEdge: PieceEdgeState
-  leftEdge: PieceEdgeState
-}
 
 // 网格配置接口
 export interface GridConfig {

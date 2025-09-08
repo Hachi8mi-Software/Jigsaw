@@ -3,43 +3,58 @@
  * 负责边界状态管理和转换
  */
 
-import { BoundaryState, PieceEdgeState, type Boundary, type GridConfig, type PieceEdges } from '../types'
+import { BoundaryState, type Boundary, type GridConfig, type PieceEdges } from '../types'
 
 /**
  * 边界状态转换器类 - 统一处理边界状态转换
  */
 export class BoundaryStateConverter {
   /**
-   * 将BoundaryState转换为PieceEdgeState
+   * 获取相反状态（用于相邻拼图块）
    * @param boundaryState 边界状态
-   * @param isOpposite 是否为相反状态（用于相邻拼图块）
-   * @returns 拼图块边状态
+   * @returns 相反的边界状态
    */
-  static boundaryToEdgeState(boundaryState: BoundaryState, isOpposite: boolean = false): PieceEdgeState {
+  static getOppositeState(boundaryState: BoundaryState): BoundaryState {
     switch (boundaryState) {
-      case BoundaryState.FLAT:
-        return PieceEdgeState.FLAT
       case BoundaryState.CONVEX:
-        return isOpposite ? PieceEdgeState.CONCAVE : PieceEdgeState.CONVEX
+        return BoundaryState.CONCAVE
       case BoundaryState.CONCAVE:
-        return isOpposite ? PieceEdgeState.CONVEX : PieceEdgeState.CONCAVE
+        return BoundaryState.CONVEX
       default:
-        return PieceEdgeState.FLAT
+        return BoundaryState.FLAT
     }
   }
 
   /**
-   * 将PieceEdgeState转换为BoundaryState
-   * @param edgeState 拼图块边状态
+   * 将BoundaryState转换为数字值（用于需要数字的场景）
+   * @param boundaryState 边界状态
+   * @returns 数字值：0=平直, 1=外凸, -1=内凹
+   */
+  static toNumericValue(boundaryState: BoundaryState): number {
+    switch (boundaryState) {
+      case BoundaryState.FLAT:
+        return 0
+      case BoundaryState.CONVEX:
+        return 1
+      case BoundaryState.CONCAVE:
+        return -1
+      default:
+        return 0
+    }
+  }
+
+  /**
+   * 从数字值转换为BoundaryState
+   * @param numericValue 数字值：0=平直, 1=外凸, -1=内凹
    * @returns 边界状态
    */
-  static edgeToBoundaryState(edgeState: PieceEdgeState): BoundaryState {
-    switch (edgeState) {
-      case PieceEdgeState.FLAT:
+  static fromNumericValue(numericValue: number): BoundaryState {
+    switch (numericValue) {
+      case 0:
         return BoundaryState.FLAT
-      case PieceEdgeState.CONVEX:
+      case 1:
         return BoundaryState.CONVEX
-      case PieceEdgeState.CONCAVE:
+      case -1:
         return BoundaryState.CONCAVE
       default:
         return BoundaryState.FLAT
@@ -89,20 +104,20 @@ export class BoundaryStateConverter {
 
     // 转换边界状态为边状态
     const topEdge = topBoundary 
-      ? this.boundaryToEdgeState(topBoundary.state, true) // 上边需要相反状态
-      : PieceEdgeState.FLAT
+      ? this.getOppositeState(topBoundary.state) // 上边需要相反状态
+      : BoundaryState.FLAT
     
     const rightEdge = rightBoundary 
-      ? this.boundaryToEdgeState(rightBoundary.state, false) // 右边保持原状态
-      : PieceEdgeState.FLAT
+      ? rightBoundary.state // 右边保持原状态
+      : BoundaryState.FLAT
     
     const bottomEdge = bottomBoundary 
-      ? this.boundaryToEdgeState(bottomBoundary.state, false) // 下边保持原状态
-      : PieceEdgeState.FLAT
+      ? bottomBoundary.state // 下边保持原状态
+      : BoundaryState.FLAT
     
     const leftEdge = leftBoundary 
-      ? this.boundaryToEdgeState(leftBoundary.state, true) // 左边需要相反状态
-      : PieceEdgeState.FLAT
+      ? this.getOppositeState(leftBoundary.state) // 左边需要相反状态
+      : BoundaryState.FLAT
 
     return { topEdge, rightEdge, bottomEdge, leftEdge }
   }

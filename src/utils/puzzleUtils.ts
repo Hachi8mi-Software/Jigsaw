@@ -7,7 +7,7 @@
  * 负责拼图块状态确定和散落算法
  */
 
-import { PieceStatus, Boundary, PieceEdgeState, PieceEdges } from '../types'
+import { PieceStatus, Boundary, PieceEdges, BoundaryState } from '../types'
 import { BoundaryStateConverter } from './boundaryUtils'
 import { isPieceOverlapping, generateRandomPosition } from './positionUtils'
 
@@ -17,7 +17,7 @@ import { isPieceOverlapping, generateRandomPosition } from './positionUtils'
  * @param gridCols 网格列数
  * @param gridRows 网格行数
  * @param boundaries 边界数组（可选，如果提供则使用编辑器数据）
- * @returns 返回四个边的状态，使用PieceEdgeState枚举
+ * @returns 返回四个边的状态，使用BoundaryState枚举
  *         如果没有边界数据，所有边都返回FLAT（平边）
  */
 export function determinePieceEdges(
@@ -37,10 +37,10 @@ export function determinePieceEdges(
   
   // 否则所有边都设置为平边
   return {
-    topEdge: PieceEdgeState.FLAT,
-    rightEdge: PieceEdgeState.FLAT,
-    bottomEdge: PieceEdgeState.FLAT,
-    leftEdge: PieceEdgeState.FLAT
+    topEdge: BoundaryState.FLAT,
+    rightEdge: BoundaryState.FLAT,
+    bottomEdge: BoundaryState.FLAT,
+    leftEdge: BoundaryState.FLAT
   }
 }
 
