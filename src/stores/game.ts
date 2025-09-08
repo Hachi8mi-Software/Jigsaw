@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import type { PuzzleData, PiecePosition, UserStats, PieceStatus } from '../types'
+import type { PuzzleData, PiecePosition, PieceStatus } from '../types'
 import { GameTimer } from '../services/GameTimer'
 import { PieceManager } from '../services/PieceManager'
 import { GameStateManager } from '../services/GameStateManager'

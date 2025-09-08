@@ -11,6 +11,32 @@ import { getGridPos } from './gridUtils'
  * 根据拼图比例动态调整尺寸
  */
 export function createGridStyle(gridCols: number, gridRows: number, baseSize: number = 300): StyleValue {
+  // 使用统一的尺寸计算逻辑
+  const { width, height } = calculateGridDimensions(gridCols, gridRows, baseSize)
+  
+  return {
+    display: 'grid',
+    gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+    gridTemplateRows: `repeat(${gridRows}, 1fr)`,
+    gap: '2px',
+    width: `${width}px`,
+    height: `${height}px`,
+    border: `2px dashed var(--settings-border, #ccc)`,
+    borderRadius: '8px',
+    padding: '8px',
+    backgroundColor: 'var(--settings-card-bg, #f9f9f9)',
+    position: 'relative' as const
+  }
+}
+
+/**
+ * 计算网格尺寸 - 统一的尺寸计算逻辑
+ */
+function calculateGridDimensions(gridCols: number, gridRows: number, baseSize: number = 300) {
+  if (gridCols === 0 || gridRows === 0) {
+    return { width: 300, height: 200 }
+  }
+  
   // 计算拼图比例
   const aspectRatio = gridCols / gridRows
   
@@ -27,19 +53,7 @@ export function createGridStyle(gridCols: number, gridRows: number, baseSize: nu
     height = baseSize / aspectRatio
   }
   
-  return {
-    display: 'grid',
-    gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
-    gridTemplateRows: `repeat(${gridRows}, 1fr)`,
-    gap: '2px',
-    width: `${width}px`,
-    height: `${height}px`,
-    border: `2px dashed var(--settings-border, #ccc)`,
-    borderRadius: '8px',
-    padding: '8px',
-    backgroundColor: 'var(--settings-card-bg, #f9f9f9)',
-    position: 'relative' as const
-  }
+  return { width, height }
 }
 
 /**

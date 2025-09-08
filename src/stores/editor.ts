@@ -11,7 +11,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { EditorState, GridConfig, Boundary, PuzzleData } from '../types'
+import type { GridConfig, Boundary, PuzzleData } from '../types'
 import { BoundaryState } from '../types'
 import { BoundaryManager } from '../utils/svgUtils'
 

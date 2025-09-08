@@ -14,6 +14,9 @@ export class GameStateManager {
   private isAutoPaused = ref(false)
   private isRestarting = ref(true)
   private gameSessionId = ref<string | null>(null)
+  private startTime = ref<Date | null>(null)
+  private endTime = ref<Date | null>(null)
+  private moveCount = ref(0)
   private userStats = ref<UserStats>({
     totalGamesPlayed: 0,
     totalTimeSpent: 0,
@@ -177,9 +180,4 @@ export class GameStateManager {
   get endTimeValue() {
     return this.endTime.value
   }
-
-  // 私有属性
-  private startTime = ref<Date | null>(null)
-  private endTime = ref<Date | null>(null)
-  private moveCount = ref(0)
 }

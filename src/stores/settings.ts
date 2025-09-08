@@ -25,9 +25,6 @@ export interface PerformanceSettings {
   maxPieces: number
 }
 
-export interface DataSettings {
-}
-
 export interface AppSettings {
   game: GameSettings
   ui: UiSettings

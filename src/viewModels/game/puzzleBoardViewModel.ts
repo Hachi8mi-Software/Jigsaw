@@ -22,7 +22,7 @@ import {
 } from '@/utils/puzzleStyleUtils'
 import {
   reshufflePieces
-} from '@/utils/scatterUtils'
+} from '@/utils/puzzleUtils'
 import { audioUtils } from '@/utils/audioUtils'
 import { useGameStore } from '@/stores/game'
 

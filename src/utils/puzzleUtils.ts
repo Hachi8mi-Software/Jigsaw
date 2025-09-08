@@ -13,21 +13,8 @@ export function calculatePieceSize(gridCols: number, gridRows: number, baseSize:
     return { width: 100, height: 75 }
   }
   
-  // 计算拼图比例
-  const aspectRatio = gridCols / gridRows
-  
-  let gridWidth: number
-  let gridHeight: number
-  
-  if (aspectRatio >= 1) {
-    // 宽图：以高度为基准
-    gridHeight = baseSize
-    gridWidth = baseSize * aspectRatio
-  } else {
-    // 高图：以宽度为基准
-    gridWidth = baseSize
-    gridHeight = baseSize / aspectRatio
-  }
+  // 使用统一的尺寸计算逻辑
+  const { width: gridWidth, height: gridHeight } = calculateGridDimensions(gridCols, gridRows, baseSize)
   
   // 减去padding和gap，与createGridStyle保持一致
   const padding = 16 // 8px * 2 (来自createGridStyle的padding)
@@ -45,6 +32,33 @@ export function calculatePieceSize(gridCols: number, gridRows: number, baseSize:
     width: Math.floor(availableWidth / gridCols) - canvasBorderWidth,
     height: Math.floor(availableHeight / gridRows) - canvasBorderHeight
   }
+}
+
+/**
+ * 计算网格尺寸 - 统一的尺寸计算逻辑
+ */
+function calculateGridDimensions(gridCols: number, gridRows: number, baseSize: number = 300) {
+  if (gridCols === 0 || gridRows === 0) {
+    return { width: 300, height: 200 }
+  }
+  
+  // 计算拼图比例
+  const aspectRatio = gridCols / gridRows
+  
+  let width: number
+  let height: number
+  
+  if (aspectRatio >= 1) {
+    // 宽图：以高度为基准
+    height = baseSize
+    width = baseSize * aspectRatio
+  } else {
+    // 高图：以宽度为基准
+    width = baseSize
+    height = baseSize / aspectRatio
+  }
+  
+  return { width, height }
 }
 
 /**
@@ -351,5 +365,69 @@ function determinePieceEdgesDefault(
     bottomEdge: 0, 
     leftEdge: 0 
   }
+}
+
+/**
+ * 散落算法 - 将拼图块随机分布在指定区域内
+ */
+export function scatterPieces(
+  piecesToScatter: PieceStatus[],
+  areaWidth: number,
+  areaHeight: number,
+  pieceWidth: number,
+  pieceHeight: number,
+  updatePiecePosition: (index: number, x: number, y: number) => void
+) {
+  const margin = 5
+  // 记录已经打乱过的拼图块
+  const scatteredPieces: PieceStatus[] = []
+  
+  piecesToScatter.forEach(piece => {
+    let attempts = 0
+    let validPosition = false
+    
+    while (!validPosition && attempts < 100) {
+      const randomPos = generateRandomPosition(areaWidth, areaHeight, pieceWidth, pieceHeight, margin)
+      
+      // 只检查是否与本轮已经打乱过的拼图块重叠
+      const hasOverlap = scatteredPieces.some(scatteredPiece => {
+        return isPieceOverlapping(randomPos, scatteredPiece, pieceWidth, pieceHeight)
+      })
+      
+      if (!hasOverlap) {
+        updatePiecePosition(piece.originalIndex, randomPos.x, randomPos.y)
+        // 更新拼图块位置并添加到已打乱列表
+        const updatedPiece = { ...piece, x: randomPos.x, y: randomPos.y }
+        scatteredPieces.push(updatedPiece)
+        validPosition = true
+      }
+      
+      attempts++
+    }
+    
+    if (!validPosition) {
+      const fallbackPos = generateRandomPosition(areaWidth, areaHeight, pieceWidth, pieceHeight, margin)
+      updatePiecePosition(piece.originalIndex, fallbackPos.x, fallbackPos.y)
+      // 即使是fallback位置也要添加到已打乱列表
+      const updatedPiece = { ...piece, x: fallbackPos.x, y: fallbackPos.y }
+      scatteredPieces.push(updatedPiece)
+    }
+  })
+}
+
+/**
+ * 重新散落指定的拼图块
+ */
+export function reshufflePieces(
+  unplacedPieces: PieceStatus[],
+  areaWidth: number,
+  areaHeight: number,
+  pieceWidth: number,
+  pieceHeight: number,
+  updatePiecePosition: (index: number, x: number, y: number) => void
+) {
+  if (unplacedPieces.length === 0) return
+  
+  scatterPieces(unplacedPieces, areaWidth, areaHeight, pieceWidth, pieceHeight, updatePiecePosition)
 }
 
