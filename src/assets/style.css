@@ -52,6 +52,11 @@ body {
   font-family: 'Inter', 'Avenir', 'Helvetica', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 移动端触摸优化 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 /* 自定义滚动条样式 */
@@ -96,4 +101,90 @@ body {
 
 .slide-leave-to {
   transform: translateX(100%);
+}
+
+/* 移动端优化样式 */
+@media (max-width: 767px) {
+  /* 防止移动端双击缩放 */
+  * {
+    touch-action: manipulation;
+  }
+  
+  /* 优化按钮触摸体验 */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 优化输入框触摸体验 */
+  input, textarea, select {
+    min-height: 44px;
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  /* 优化链接触摸体验 */
+  a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  /* 禁用移动端hover效果 */
+  *:hover {
+    /* 在移动端禁用hover效果，避免触摸后状态残留 */
+  }
+}
+
+/* 移动端竖屏优化 */
+@media (max-width: 767px) and (orientation: portrait) {
+  /* 确保游戏视图正确使用视口高度 */
+  .game-view {
+    height: 100vh;
+    height: 100dvh;
+  }
+  
+  /* 优化拼图板在竖屏下的显示 */
+  .puzzle-board {
+    padding: 1rem;
+    min-height: calc(100vh - 60px); /* 减去顶部栏高度 */
+    min-height: calc(100dvh - 60px);
+  }
+  
+  /* 确保拼图块区域不会过高 */
+  .mobile-scattered {
+    max-height: 40vh;
+  }
+  
+  /* 优化状态栏在竖屏下的显示 */
+  .mobile-status-bar {
+    max-height: 30vh;
+    overflow-y: auto;
+  }
+}
+
+/* 移动端横屏优化 */
+@media (max-width: 767px) and (orientation: landscape) {
+  .mobile-header {
+    height: 50px;
+  }
+  
+  .main-content.mobile-main {
+    padding-top: 50px;
+  }
+  
+  /* 横屏时优化拼图板布局 */
+  .puzzle-board {
+    padding: 0.5rem;
+  }
+  
+  /* 横屏时减少拼图块区域高度 */
+  .mobile-scattered {
+    height: 200px;
+    max-height: 30vh;
+  }
+  
+  /* 横屏时优化状态栏 */
+  .mobile-status-bar {
+    max-height: 25vh;
+  }
 }

@@ -5,69 +5,98 @@
 
 <template>
   <div class="game-status-bar">
-    <div class="status-left">
-      <div class="puzzle-title">
-        <h2>{{ puzzleName }}</h2>
-        <span class="puzzle-dimensions">{{ gridRows }}x{{ gridCols }} = {{ totalPieces }} 块</span>
-      </div>
-    </div>
-    
-    <div class="status-center">
-      <div class="game-stats">
-        <div class="stat-item">
-          <span class="stat-label">进度</span>
-          <span class="stat-value">{{ completionPercentage }}%</span>
-          <small class="stat-detail">({{ placedPieces }}/{{ totalPieces }})</small>
+    <!-- 移动端折叠状态栏 -->
+    <div v-if="isMobile" class="mobile-status-bar">
+      <div class="mobile-status-header">
+        <div class="puzzle-title-mobile">
+          <h2>{{ puzzleName }}</h2>
+          <span class="puzzle-dimensions">{{ gridRows }}x{{ gridCols }}</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">时间</span>
-          <span class="stat-value">{{ formatTime(elapsedTime) }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">步数</span>
-          <span class="stat-value">{{ moveCount }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">难度</span>
-          <span class="stat-value">{{ difficulty }}/5</span>
+        <div class="mobile-header-controls">
+          <button 
+            @click="togglePause"
+            class="mobile-pause-btn"
+            :class="{ 'paused': isPaused }"
+          >
+            <span class="control-icon">{{ isPaused ? '▶️' : '⏸️' }}</span>
+          </button>
+          <button @click="toggleMobileStats" class="mobile-stats-toggle">
+            <span class="toggle-icon">{{ showMobileStats ? '▼' : '▲' }}</span>
+          </button>
         </div>
       </div>
+      
+      <!-- 可折叠的统计信息 -->
+      <div v-if="showMobileStats" class="mobile-stats-content">
+        <div class="mobile-stats-grid">
+          <div class="mobile-stat-item">
+            <span class="stat-label">进度</span>
+            <span class="stat-value">{{ completionPercentage }}%</span>
+            <small class="stat-detail">({{ placedPieces }}/{{ totalPieces }})</small>
+          </div>
+          <div class="mobile-stat-item">
+            <span class="stat-label">时间</span>
+            <span class="stat-value">{{ formatTime(elapsedTime) }}</span>
+          </div>
+          <div class="mobile-stat-item">
+            <span class="stat-label">步数</span>
+            <span class="stat-value">{{ moveCount }}</span>
+          </div>
+          <div class="mobile-stat-item">
+            <span class="stat-label">难度</span>
+            <span class="stat-value">{{ difficulty }}/5</span>
+          </div>
+        </div>
+      </div>
     </div>
-    
-    <div class="status-right">
-      <div class="game-controls">
+
+    <!-- 桌面端状态栏 -->
+    <div v-else class="desktop-status-bar">
+      <div class="status-left">
+        <div class="puzzle-title">
+          <h2>{{ puzzleName }}</h2>
+          <span class="puzzle-dimensions">{{ gridRows }}x{{ gridCols }} = {{ totalPieces }} 块</span>
+        </div>
+      </div>
+      
+      <div class="status-center">
+        <div class="game-stats">
+          <div class="stat-item">
+            <span class="stat-label">进度</span>
+            <span class="stat-value">{{ completionPercentage }}%</span>
+            <small class="stat-detail">({{ placedPieces }}/{{ totalPieces }})</small>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">时间</span>
+            <span class="stat-value">{{ formatTime(elapsedTime) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">步数</span>
+            <span class="stat-value">{{ moveCount }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">难度</span>
+            <span class="stat-value">{{ difficulty }}/5</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="status-right">
         <button 
           @click="togglePause"
-          class="control-btn"
+          class="desktop-pause-btn"
           :class="{ 'paused': isPaused }"
         >
           <span class="control-icon">{{ isPaused ? '▶️' : '⏸️' }}</span>
           <span class="control-text">{{ isPaused ? '继续' : '暂停' }}</span>
         </button>
-        
-        <button @click="resetGame" class="control-btn">
-          <span class="control-icon">🔄</span>
-          <span class="control-text">重置</span>
-        </button>
-        
-        <button @click="showSettings" class="control-btn">
-          <span class="control-icon">⚙️</span>
-          <span class="control-text">设置</span>
-        </button>
-        
-        <button @click="returnToLibrary" class="control-btn">
-          <span class="control-icon">📚</span>
-          <span class="control-text">返回素材库</span>
-        </button>
       </div>
     </div>
-    
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '../stores/game'
 
@@ -107,6 +136,20 @@ const props = withDefaults(defineProps<Props>(), {
 const router = useRouter()
 const gameStore = useGameStore()
 
+// 移动端状态
+const isMobile = ref(false)
+const showMobileStats = ref(false)
+
+// 检测移动端
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+// 切换移动端统计显示
+const toggleMobileStats = () => {
+  showMobileStats.value = !showMobileStats.value
+}
+
 // 计算属性
 const isGameActive = computed(() => gameStore.isGameActive)
 const isCompleted = computed(() => gameStore.isCompleted)
@@ -129,35 +172,131 @@ const togglePause = () => {
   emit('toggle-pause')
 }
 
-const showSettings = () => {
-  // 触发显示设置对话框的事件
-  emit('show-settings')
-}
-
-const returnToLibrary = () => {
-  emit('return-to-library')
-}
-
-const resetGame = () => {
-  emit('reset-game')
-}
-
 // 定义事件
 const emit = defineEmits<{
-  'show-settings': []
   'toggle-pause': []
-  'return-to-library': []
-  'reset-game': []
 }>()
+
+// 生命周期
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 </script>
 
 <style scoped>
 .game-status-bar {
-  @apply flex items-center justify-between px-6 py-4 shadow-sm border-b relative;
+  @apply shadow-sm border-b relative;
   background-color: var(--settings-card-bg);
   border-bottom-color: var(--settings-border);
 }
 
+/* 桌面端状态栏 */
+.desktop-status-bar {
+  @apply flex items-center justify-between px-6 py-4;
+}
+
+/* 移动端状态栏 */
+.mobile-status-bar {
+  @apply px-4 py-3;
+}
+
+.mobile-status-header {
+  @apply flex items-center justify-between;
+}
+
+.mobile-header-controls {
+  @apply flex items-center space-x-2;
+}
+
+.mobile-pause-btn {
+  @apply p-2 rounded-lg transition-colors duration-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-pause-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.mobile-pause-btn.paused {
+  background-color: var(--settings-accent);
+  color: #ffffff;
+}
+
+.mobile-pause-btn.paused:hover {
+  background-color: var(--settings-accent-hover);
+}
+
+.mobile-pause-btn .control-icon {
+  @apply text-lg;
+}
+
+.puzzle-title-mobile h2 {
+  @apply text-lg font-bold mb-1;
+  color: var(--settings-text-primary);
+}
+
+.puzzle-title-mobile .puzzle-dimensions {
+  @apply text-sm;
+  color: var(--settings-text-secondary);
+}
+
+.mobile-stats-toggle {
+  @apply p-2 rounded-lg transition-colors duration-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.mobile-stats-toggle:hover {
+  background-color: var(--settings-border);
+}
+
+.toggle-icon {
+  @apply text-lg;
+}
+
+.mobile-stats-content {
+  @apply mt-4 space-y-4;
+  /* 限制最大高度，避免占用太多空间 */
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.mobile-stats-grid {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.mobile-stat-item {
+  @apply flex flex-col items-center p-3 rounded-lg;
+  background-color: var(--settings-hover);
+}
+
+.mobile-stat-item .stat-label {
+  @apply text-xs mb-1;
+  color: var(--settings-text-secondary);
+}
+
+.mobile-stat-item .stat-value {
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
+}
+
+.mobile-stat-item .stat-detail {
+  @apply text-xs mt-1;
+  color: var(--settings-text-secondary);
+}
+
+/* 桌面端原有样式 */
 .status-left {
   @apply flex items-center;
 }
@@ -207,11 +346,7 @@ const emit = defineEmits<{
   @apply flex items-center;
 }
 
-.game-controls {
-  @apply flex items-center space-x-3;
-}
-
-.control-btn {
+.desktop-pause-btn {
   @apply px-4 py-3 rounded-lg transition-colors duration-200 font-medium text-sm;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
@@ -224,16 +359,16 @@ const emit = defineEmits<{
   gap: 4px;
 }
 
-.control-btn:hover {
+.desktop-pause-btn:hover {
   background-color: var(--settings-border);
 }
 
-.control-btn.paused {
+.desktop-pause-btn.paused {
   background-color: var(--settings-accent);
   color: #ffffff;
 }
 
-.control-btn.paused:hover {
+.desktop-pause-btn.paused:hover {
   background-color: var(--settings-accent-hover);
 }
 

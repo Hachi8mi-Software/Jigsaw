@@ -120,12 +120,42 @@ export class PuzzleBoardViewModel {
     })
   }
 
+  /**
+   * 获取拼图块散落区域的实际尺寸
+   */
+  private getScatteredPiecesAreaSize(): { width: number; height: number } {
+    // 尝试获取移动端散乱拼图块区域
+    const mobileScattered = document.querySelector('.mobile-scattered') as HTMLElement
+    if (mobileScattered) {
+      const rect = mobileScattered.getBoundingClientRect()
+      return {
+        width: rect.width,
+        height: rect.height
+      }
+    }
+    
+    // 尝试获取桌面端散乱拼图块区域
+    const desktopScattered = document.querySelector('.scattered-pieces') as HTMLElement
+    if (desktopScattered) {
+      const rect = desktopScattered.getBoundingClientRect()
+      return {
+        width: rect.width,
+        height: rect.height
+      }
+    }
+    
+    // 默认尺寸（桌面端）
+    return {
+      width: 320,
+      height: 420
+    }
+  }
+
   // 打乱拼图块
   shufflePieces() {
     if (!this.puzzleData) return
     
-    const piecesAreaWidth = 320
-    const piecesAreaHeight = 420
+    const areaSize = this.getScatteredPiecesAreaSize()
     const pieceSize = this.getPieceSize()
     
     const unplacedPieces = this.gameStore.getPuzzleBoardPiecesSnapshot().filter(piece => !piece.isPlaced)
@@ -133,8 +163,8 @@ export class PuzzleBoardViewModel {
     
     reshufflePieces(
       unplacedPieces, 
-      piecesAreaWidth, 
-      piecesAreaHeight, 
+      areaSize.width, 
+      areaSize.height, 
       pieceSize.width, 
       pieceSize.height,
       (index: number, x: number, y: number) => {
@@ -472,18 +502,17 @@ export class PuzzleBoardViewModel {
     const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece || piece.isPlaced) return
     
-    const piecesAreaWidth = 320
-    const piecesAreaHeight = 420
+    const areaSize = this.getScatteredPiecesAreaSize()
     const pieceSize = this.getPieceSize()
     
-    if (!isPositionInBounds(piece.x, piece.y, pieceSize.width, pieceSize.height, piecesAreaWidth, piecesAreaHeight)) {
+    if (!isPositionInBounds(piece.x, piece.y, pieceSize.width, pieceSize.height, areaSize.width, areaSize.height)) {
       
       // 找到合适的位置
       let attempts = 0
       let validPosition = false
       
       while (!validPosition && attempts < 20) {
-        const randomPos = generateRandomPosition(piecesAreaWidth, piecesAreaHeight, pieceSize.width, pieceSize.height)
+        const randomPos = generateRandomPosition(areaSize.width, areaSize.height, pieceSize.width, pieceSize.height)
         
         const hasOverlap = this.gameStore.getPuzzleBoardPiecesSnapshot().some((otherPiece: PieceStatus) => {
           if (otherPiece === piece) return false
@@ -504,8 +533,8 @@ export class PuzzleBoardViewModel {
           piece.y, 
           pieceSize.width, 
           pieceSize.height, 
-          piecesAreaWidth, 
-          piecesAreaHeight
+          areaSize.width, 
+          areaSize.height
         )
         this.gameStore.updatePiecePosition(this.draggingPieceIndex, constrainedPos.x, constrainedPos.y)
       }

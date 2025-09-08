@@ -428,11 +428,16 @@ const preloadImage = async () => {
 
 // 事件处理
 const handleMouseDown = (event: MouseEvent) => {
+  event.preventDefault()
   emit('mousedown', event)
 }
 
 const handleTouchStart = (event: TouchEvent) => {
-  emit('touchstart', event)
+  event.preventDefault()
+  // 移动端触摸优化：防止双击缩放
+  if (event.touches.length === 1) {
+    emit('touchstart', event)
+  }
 }
 
 // 生命周期和监听
@@ -479,6 +484,11 @@ watch(() => [props.pieceWidth, props.pieceHeight, actualCanvasSize.value], () =>
   user-select: none;
   -webkit-user-drag: none;
   box-sizing: border-box;
+  /* 移动端触摸优化 */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .drag-mask {
@@ -491,10 +501,31 @@ watch(() => [props.pieceWidth, props.pieceHeight, actualCanvasSize.value], () =>
 /* 鼠标悬停效果 */
 .puzzle-piece-container:hover .puzzle-piece-canvas {
   filter: brightness(1.1);
+  transform: scale(1.05);
 }
 
 /* 拖拽时的效果 */
 .puzzle-piece-container[style*="scale(1.05)"] .puzzle-piece-canvas {
   filter: brightness(1.1);
+}
+
+/* 移动端触摸优化 */
+@media (max-width: 767px) {
+  .puzzle-piece-canvas {
+    /* 增加触摸目标大小 */
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .puzzle-piece-container:hover .puzzle-piece-canvas {
+    /* 移动端禁用hover效果 */
+    transform: none;
+    filter: none;
+  }
+  
+  .puzzle-piece-container:active .puzzle-piece-canvas {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
 }
 </style>

@@ -18,10 +18,7 @@
       :move-count="moveCount"
       :difficulty="currentDifficulty"
       :is-paused="isPaused"
-      @show-settings="showSettingsModal = true"
       @toggle-pause="handleTogglePause"
-      @return-to-library="handleReturnToLibrary"
-      @reset-game="handleResetGame"
     />
 
     <!-- 游戏主内容 -->
@@ -368,6 +365,9 @@ onUnmounted(() => {
 .game-view {
   @apply h-screen flex flex-col;
   background-color: var(--settings-bg);
+  /* 移动端高度优化 */
+  height: 100vh;
+  height: 100dvh; /* 动态视口高度，考虑移动端浏览器UI */
 }
 
 .game-header {
@@ -416,6 +416,8 @@ onUnmounted(() => {
 
 .game-content {
   @apply flex-1 overflow-hidden relative;
+  /* 移动端优化：确保内容区域正确计算高度 */
+  min-height: 0;
 }
 
 .no-game-state {

@@ -12,71 +12,134 @@
       </div>
 
       <!-- 游戏区域 -->
-      <div class="game-area">
-        <!-- 左侧：散乱的拼图块 -->
-        <div class="pieces-area">
-          <h4>拼图块</h4>
-          <div class="scattered-pieces">
-            <!-- 使用Canvas渲染的拼图块 -->
-            <PuzzlePieceCanvas
-              v-for="(piece, index) in pieces"
-              :key="`piece-${index}`"
-              v-show="!piece.isPlaced"
-              :piece="piece"
-              :puzzle-data="puzzleData!"
-              :grid-cols="gridCols"
-              :grid-rows="gridRows"
-              :piece-width="viewModel.pieceWidth"
-              :piece-height="viewModel.pieceHeight"
-              :is-dragging="draggingPieceIndex === index"
-              :is-placed="false"
-              :show-number="true"
-              :number-display-mode="'minimal'"
-              @mousedown="(event) => startDrag(index, event)"
-              @touchstart="(event) => startDrag(index, event)"
-            />
-          </div>
-        </div>
-
-        <!-- 右侧：目标拼图网格 -->
-        <div class="target-area">
-          <h4>目标区域</h4>
-          <div class="puzzle-grid" :style="gridStyle as any">
-            <!-- 网格占位符 -->
-            <div
-              v-for="index in totalPieces"
-              :key="`slot-${index}`"
-              class="grid-slot"
-              :class="{ 'occupied': isSlotOccupied(index - 1) }"
-            >
-              <span class="slot-number">{{ index }}</span>
+      <div class="game-area" :class="{ 'mobile-layout': isMobile }">
+        <!-- 移动端布局：上下排列 -->
+        <template v-if="isMobile">
+          <!-- 目标拼图网格（上方） -->
+          <div class="target-area mobile-target">
+            <h4>目标区域</h4>
+            <div class="puzzle-grid mobile-grid" :style="gridStyle as any">
+              <!-- 网格占位符 -->
+              <div
+                v-for="index in totalPieces"
+                :key="`slot-${index}`"
+                class="grid-slot"
+                :class="{ 'occupied': isSlotOccupied(index - 1) }"
+              >
+                <span class="slot-number">{{ index }}</span>
+              </div>
+              
+              <!-- 已放置的拼图块 -->
+              <PuzzlePieceCanvas
+                v-for="(piece, index) in pieces"
+                :key="`placed-${index}`"
+                v-show="piece.isPlaced"
+                :piece="piece"
+                :puzzle-data="puzzleData!"
+                :grid-cols="gridCols"
+                :grid-rows="gridRows"
+                :piece-width="viewModel.pieceWidth"
+                :piece-height="viewModel.pieceHeight"
+                :is-dragging="draggingPieceIndex === index"
+                :is-placed="true"
+                :show-number="true"
+                :number-display-mode="'minimal'"
+                @mousedown="(event) => startDrag(index, event)"
+                @touchstart="(event) => startDrag(index, event)"
+              />
             </div>
-            
-            <!-- 已放置的拼图块 -->
-            <!-- 使用Canvas渲染的已放置拼图块 -->
-            <PuzzlePieceCanvas
-              v-for="(piece, index) in pieces"
-              :key="`placed-${index}`"
-              v-show="piece.isPlaced"
-              :piece="piece"
-              :puzzle-data="puzzleData!"
-              :grid-cols="gridCols"
-              :grid-rows="gridRows"
-              :piece-width="viewModel.pieceWidth"
-              :piece-height="viewModel.pieceHeight"
-              :is-dragging="draggingPieceIndex === index"
-              :is-placed="true"
-              :show-number="true"
-              :number-display-mode="'minimal'"
-              @mousedown="(event) => startDrag(index, event)"
-              @touchstart="(event) => startDrag(index, event)"
-            />
           </div>
-        </div>
+
+          <!-- 散乱的拼图块（下方） -->
+          <div class="pieces-area mobile-pieces">
+            <h4>拼图块</h4>
+            <div class="scattered-pieces mobile-scattered">
+              <PuzzlePieceCanvas
+                v-for="(piece, index) in pieces"
+                :key="`piece-${index}`"
+                v-show="!piece.isPlaced"
+                :piece="piece"
+                :puzzle-data="puzzleData!"
+                :grid-cols="gridCols"
+                :grid-rows="gridRows"
+                :piece-width="viewModel.pieceWidth"
+                :piece-height="viewModel.pieceHeight"
+                :is-dragging="draggingPieceIndex === index"
+                :is-placed="false"
+                :show-number="true"
+                :number-display-mode="'minimal'"
+                @mousedown="(event) => startDrag(index, event)"
+                @touchstart="(event) => startDrag(index, event)"
+              />
+            </div>
+          </div>
+        </template>
+
+        <!-- 桌面端布局：左右排列 -->
+        <template v-else>
+          <!-- 左侧：散乱的拼图块 -->
+          <div class="pieces-area">
+            <h4>拼图块</h4>
+            <div class="scattered-pieces">
+              <PuzzlePieceCanvas
+                v-for="(piece, index) in pieces"
+                :key="`piece-${index}`"
+                v-show="!piece.isPlaced"
+                :piece="piece"
+                :puzzle-data="puzzleData!"
+                :grid-cols="gridCols"
+                :grid-rows="gridRows"
+                :piece-width="viewModel.pieceWidth"
+                :piece-height="viewModel.pieceHeight"
+                :is-dragging="draggingPieceIndex === index"
+                :is-placed="false"
+                :show-number="true"
+                :number-display-mode="'minimal'"
+                @mousedown="(event) => startDrag(index, event)"
+                @touchstart="(event) => startDrag(index, event)"
+              />
+            </div>
+          </div>
+
+          <!-- 右侧：目标拼图网格 -->
+          <div class="target-area">
+            <h4>目标区域</h4>
+            <div class="puzzle-grid" :style="gridStyle as any">
+              <!-- 网格占位符 -->
+              <div
+                v-for="index in totalPieces"
+                :key="`slot-${index}`"
+                class="grid-slot"
+                :class="{ 'occupied': isSlotOccupied(index - 1) }"
+              >
+                <span class="slot-number">{{ index }}</span>
+              </div>
+              
+              <!-- 已放置的拼图块 -->
+              <PuzzlePieceCanvas
+                v-for="(piece, index) in pieces"
+                :key="`placed-${index}`"
+                v-show="piece.isPlaced"
+                :piece="piece"
+                :puzzle-data="puzzleData!"
+                :grid-cols="gridCols"
+                :grid-rows="gridRows"
+                :piece-width="viewModel.pieceWidth"
+                :piece-height="viewModel.pieceHeight"
+                :is-dragging="draggingPieceIndex === index"
+                :is-placed="true"
+                :show-number="true"
+                :number-display-mode="'minimal'"
+                @mousedown="(event) => startDrag(index, event)"
+                @touchstart="(event) => startDrag(index, event)"
+              />
+            </div>
+          </div>
+        </template>
       </div>
 
-      <!-- 控制按钮 -->
-      <div class="controls">
+      <!-- 桌面端控制按钮 -->
+      <div v-if="!isMobile" class="controls">
         <button @click="shufflePieces" class="control-btn">
           🔀 打乱
         </button>
@@ -89,6 +152,42 @@
         <button @click="toggleHint" class="control-btn hint-btn">
           💡 提示
         </button>
+      </div>
+
+      <!-- 移动端悬浮控制面板 -->
+      <div v-if="isMobile" class="mobile-control-panel">
+        <!-- 悬浮按钮 -->
+        <button @click="toggleMobileControls" class="mobile-control-toggle">
+          <span class="toggle-icon">⚙️</span>
+        </button>
+        
+        <!-- 控制面板 -->
+        <div v-if="showMobileControls" class="mobile-controls-overlay" @click="closeMobileControls">
+          <div class="mobile-controls-content" @click.stop>
+            <div class="mobile-controls-header">
+              <h3>游戏控制</h3>
+              <button @click="closeMobileControls" class="close-btn">×</button>
+            </div>
+            <div class="mobile-controls-grid">
+              <button @click="handleShufflePieces" class="mobile-control-btn">
+                <span class="control-icon">🔀</span>
+                <span class="control-text">打乱</span>
+              </button>
+              <button @click="handleResetPuzzle" class="mobile-control-btn">
+                <span class="control-icon">🔄</span>
+                <span class="control-text">重置</span>
+              </button>
+              <button @click="handleAutoSolve" class="mobile-control-btn">
+                <span class="control-icon">✨</span>
+                <span class="control-text">自动完成</span>
+              </button>
+              <button @click="handleToggleHint" class="mobile-control-btn hint-btn">
+                <span class="control-icon">💡</span>
+                <span class="control-text">提示</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       
       <!-- 提示原图弹窗 -->
@@ -131,6 +230,46 @@ const props = defineProps<Props>()
 
 // 获取store实例
 const gameStore = useGameStore()
+
+// 移动端状态
+const isMobile = ref(false)
+const showMobileControls = ref(false)
+
+// 检测移动端
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+// 切换移动端控制面板
+const toggleMobileControls = () => {
+  showMobileControls.value = !showMobileControls.value
+}
+
+// 关闭移动端控制面板
+const closeMobileControls = () => {
+  showMobileControls.value = false
+}
+
+// 移动端控制按钮处理方法
+const handleShufflePieces = () => {
+  shufflePieces()
+  closeMobileControls()
+}
+
+const handleResetPuzzle = () => {
+  resetPuzzle()
+  closeMobileControls()
+}
+
+const handleAutoSolve = () => {
+  autoSolve()
+  closeMobileControls()
+}
+
+const handleToggleHint = () => {
+  toggleHint()
+  closeMobileControls()
+}
 
 // 创建ViewModel实例
 // 视图状态
@@ -246,6 +385,8 @@ const initializePuzzle = async (puzzleData: PuzzleData | null) => {
 // 生命周期管理
 onMounted(async () => {
   console.log('PuzzleBoard onMounted, puzzleData:', props.puzzleData)
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   await initializePuzzle(props.puzzleData)
 })
 
@@ -288,6 +429,13 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 .puzzle-board {
   @apply flex flex-col items-center p-6 min-h-screen;
   background-color: var(--settings-bg);
+  /* 移动端高度优化 */
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* 确保内容不会超出视口 */
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
 }
 
 .puzzle-container {
@@ -310,6 +458,11 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 
 .game-area {
   @apply flex space-x-8;
+}
+
+/* 移动端布局 */
+.game-area.mobile-layout {
+  @apply flex-col space-x-0 space-y-6;
 }
 
 .pieces-area {
@@ -335,6 +488,17 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   overflow: visible;
   background-color: var(--settings-card-bg);
   border-color: var(--settings-border);
+}
+
+/* 移动端散乱拼图块区域 */
+.mobile-scattered {
+  width: 100%;
+  max-width: 400px;
+  height: 250px; /* 减少高度，为控制按钮留出空间 */
+  margin: 0 auto;
+  /* 确保内容可以滚动 */
+  overflow-y: visible;
+  overflow-x: visible;
 }
 
 .target-area {
@@ -419,6 +583,89 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   @apply flex space-x-4;
 }
 
+/* 移动端悬浮控制面板 */
+.mobile-control-panel {
+  @apply fixed bottom-4 right-4 z-50;
+}
+
+.mobile-control-toggle {
+  @apply w-14 h-14 rounded-full shadow-lg transition-all duration-300;
+  background-color: var(--settings-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-control-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-control-toggle:active {
+  transform: scale(0.95);
+}
+
+.mobile-controls-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center;
+  z-index: 60;
+}
+
+.mobile-controls-content {
+  @apply bg-white rounded-lg shadow-xl mx-4 max-w-sm w-full;
+  background-color: var(--settings-card-bg);
+  border: 1px solid var(--settings-border);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mobile-controls-header {
+  @apply flex justify-between items-center p-4 border-b;
+  border-color: var(--settings-border);
+}
+
+.mobile-controls-header h3 {
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
+}
+
+.mobile-controls-grid {
+  @apply grid grid-cols-2 gap-3 p-4;
+}
+
+.mobile-control-btn {
+  @apply flex flex-col items-center justify-center p-4 rounded-lg transition-colors duration-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+  min-height: 80px;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-control-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.mobile-control-btn.hint-btn {
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.mobile-control-btn.hint-btn:hover {
+  background-color: var(--settings-accent-hover);
+}
+
+.mobile-control-btn .control-icon {
+  @apply text-2xl mb-2;
+}
+
+.mobile-control-btn .control-text {
+  @apply text-sm font-medium;
+}
+
 .control-btn {
   @apply px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
   @apply transition-colors duration-200 font-medium;
@@ -447,6 +694,17 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   @apply bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col;
   background-color: var(--settings-card-bg);
   border: 1px solid var(--settings-border);
+}
+
+/* 移动端提示弹窗 */
+@media (max-width: 767px) {
+  .hint-content {
+    @apply max-w-[95vw] mx-2;
+  }
+  
+  .hint-image {
+    @apply max-h-[60vh];
+  }
 }
 
 .hint-header {

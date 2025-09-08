@@ -4,7 +4,7 @@
 -->
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, watch, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useLibraryStore } from './stores/library'
 import { useSettingsStore } from './stores/settings'
@@ -15,6 +15,10 @@ const route = useRoute()
 // Store
 const libraryStore = useLibraryStore()
 const settingsStore = useSettingsStore()
+
+// 移动端侧栏状态
+const isMobileSidebarOpen = ref(false)
+const isMobile = ref(false)
 
 // 计算当前路由名称
 const currentRouteName = computed(() => route.name as string)
@@ -37,9 +41,28 @@ const navItems = [
   { name: 'Settings', label: '设置', icon: '⚙️', path: '/settings' }
 ]
 
+// 检测移动端
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
 // 方法
 const navigateTo = (path: string) => {
   router.push(path)
+  // 移动端导航后关闭侧栏
+  if (isMobile.value) {
+    isMobileSidebarOpen.value = false
+  }
+}
+
+// 切换移动端侧栏
+const toggleMobileSidebar = () => {
+  isMobileSidebarOpen.value = !isMobileSidebarOpen.value
+}
+
+// 关闭移动端侧栏
+const closeMobileSidebar = () => {
+  isMobileSidebarOpen.value = false
 }
 
 // 主题切换方法
@@ -108,6 +131,10 @@ onMounted(() => {
   
   // 监听系统主题变化
   watchSystemTheme()
+  
+  // 检测移动端
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
 })
 
 // 监听主题变化
@@ -122,8 +149,33 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
 
 <template>
   <div class="app">
+    <!-- 移动端顶部栏 -->
+    <div v-if="isMobile" class="mobile-header">
+      <button @click="toggleMobileSidebar" class="mobile-menu-btn">
+        <span class="menu-icon">☰</span>
+      </button>
+      <div class="mobile-title">
+        <span class="app-logo">🧩</span>
+        <span class="app-name">拼图乐</span>
+      </div>
+      <div class="mobile-spacer"></div>
+    </div>
+
+    <!-- 移动端遮罩层 -->
+    <div 
+      v-if="isMobile && isMobileSidebarOpen" 
+      class="mobile-overlay"
+      @click="closeMobileSidebar"
+    ></div>
+
     <!-- 侧边导航栏 -->
-    <nav class="sidebar">
+    <nav 
+      class="sidebar"
+      :class="{ 
+        'mobile-sidebar': isMobile,
+        'mobile-sidebar-open': isMobile && isMobileSidebarOpen 
+      }"
+    >
       <div class="sidebar-header">
         <div class="app-logo">🧩</div>
         <h1 class="app-title">拼图乐</h1>
@@ -167,7 +219,7 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
     </nav>
 
     <!-- 主内容区域 -->
-    <main class="main-content">
+    <main class="main-content" :class="{ 'mobile-main': isMobile }">
       <router-view />
     </main>
   </div>
@@ -287,6 +339,98 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
 .main-content {
   @apply flex-1 overflow-hidden;
   background-color: var(--bg-primary);
+}
+
+/* 移动端样式 */
+.mobile-header {
+  @apply flex items-center justify-between px-4 py-3 shadow-sm border-b;
+  background-color: var(--bg-sidebar);
+  border-bottom-color: var(--border-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 60px;
+}
+
+.mobile-menu-btn {
+  @apply p-2 rounded-lg transition-colors duration-200;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.mobile-menu-btn:hover {
+  background-color: var(--bg-secondary);
+  opacity: 0.8;
+}
+
+.menu-icon {
+  @apply text-xl;
+}
+
+.mobile-title {
+  @apply flex items-center space-x-2;
+}
+
+.mobile-title .app-logo {
+  @apply text-2xl;
+}
+
+.app-name {
+  @apply text-lg font-bold;
+  color: var(--text-primary);
+}
+
+.mobile-spacer {
+  @apply w-10;
+}
+
+.mobile-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-40;
+}
+
+.sidebar.mobile-sidebar {
+  @apply fixed top-0 left-0 h-full z-50 transform -translate-x-full transition-transform duration-300 ease-in-out;
+  width: 280px;
+}
+
+.sidebar.mobile-sidebar-open {
+  @apply translate-x-0;
+}
+
+.main-content.mobile-main {
+  @apply pt-16;
+}
+
+/* 响应式断点 */
+@media (max-width: 767px) {
+  .app {
+    @apply flex-col;
+  }
+  
+  .sidebar:not(.mobile-sidebar) {
+    @apply hidden;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-header {
+    @apply hidden;
+  }
+  
+  .mobile-overlay {
+    @apply hidden;
+  }
+  
+  .sidebar.mobile-sidebar {
+    @apply static transform-none;
+    width: auto;
+  }
+  
+  .main-content.mobile-main {
+    @apply pt-0;
+  }
 }
 </style>
 
