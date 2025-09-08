@@ -8,189 +8,57 @@
 -->
 <template>
   <div class="editor-view">
-    <!-- 顶部工具栏 -->
-    <div class="editor-toolbar">
-      <div class="toolbar-left">
-        <h1 class="editor-title">拼图编辑器</h1>
-        <div class="puzzle-info">
-          <span class="info-item">
-            {{ totalPieces }} 块拼图
-          </span>
-          <span class="info-item">
-            难度: {{ puzzleDifficulty }}
-          </span>
-          <span class="info-item" v-if="complexBoundaries > 0">
-            复杂边界: {{ complexBoundaries }}/{{ totalBoundaries }}
-          </span>
+    <!-- 顶部标题栏 -->
+    <div class="editor-header">
+      <h1 class="editor-title">拼图编辑器</h1>
+      <button 
+        v-if="currentImage"
+        @click="clearAll"
+        class="clear-btn"
+        title="清空所有内容"
+      >
+        🗑️ 清空
+      </button>
+    </div>
+
+    <!-- 初始上传状态 -->
+    <div v-if="!currentImage" class="upload-state">
+      <div class="upload-container">
+        <div 
+          class="upload-area"
+          @click="triggerImageUpload"
+          @drop.prevent="handleImageDrop"
+          @dragover.prevent
+          @dragenter.prevent
+        >
+          <div class="upload-icon">📷</div>
+          <h2 class="upload-title">上传拼图图片</h2>
+          <p class="upload-description">点击或拖拽图片到此处</p>
+          <p class="upload-hint">支持 JPG, PNG, BMP 格式</p>
+        </div>
+        
+        <div class="upload-actions">
+          <button @click="openImportDialog" class="action-btn secondary">
+            📁 导入拼图数据
+          </button>
         </div>
       </div>
       
-      <div class="toolbar-right">
-        <button
-          @click="openImportDialog"
-          class="toolbar-btn"
-        >
-          导入拼图数据
-        </button>
-        <button 
-          @click="exportPuzzle" 
-          class="toolbar-btn"
-          :disabled="!canExport"
-        >
-          导出拼图数据
-        </button>
-        <button 
-          @click="addToLibrary" 
-          class="toolbar-btn primary"
-          :disabled="!canExport"
-        >
-          添加到素材库
-        </button>
-      </div>
+      <input 
+        ref="imageInput"
+        type="file"
+        accept="image/jpeg,image/png,image/bmp"
+        @change="handleImageUpload"
+        style="display: none;"
+      />
     </div>
 
-    <div class="editor-content">
-      <!-- 左侧控制面板 -->
-      <div class="editor-sidebar">
-        <!-- 图片上传区域 -->
-        <div class="control-section">
-          <h3 class="section-title">图片素材</h3>
-          <div class="image-upload-area">
-            <div 
-              v-if="!currentImage"
-              class="upload-placeholder"
-              @click="triggerImageUpload"
-              @drop.prevent="handleImageDrop"
-              @dragover.prevent
-              @dragenter.prevent
-            >
-              <div class="upload-icon">📷</div>
-              <p>点击或拖拽上传图片</p>
-              <p class="upload-hint">支持 JPG, PNG, BMP 格式</p>
-            </div>
-            <div v-else class="uploaded-image group">
-              <img :src="currentImage" alt="上传的图片" />
-              <div class="image-overlay">
-                <button @click="triggerImageUpload" class="overlay-btn">
-                  更换图片
-                </button>
-                <button @click="removeImage" class="overlay-btn danger">
-                  移除
-                </button>
-              </div>
-            </div>
-          </div>
-          <input 
-            ref="imageInput"
-            type="file"
-            accept="image/jpeg,image/png,image/bmp"
-            @change="handleImageUpload"
-            style="display: none;"
-          />
-        </div>
-
-        <!-- 网格配置 -->
-        <div class="control-section">
-          <h3 class="section-title">网格配置</h3>
-          <div class="grid-controls">
-            <div class="control-group">
-              <label>行数</label>
-              <input 
-                v-model.number="localGridConfig.rows"
-                type="number"
-                min="2"
-                max="50"
-                @change="updateGrid"
-                class="number-input"
-              />
-            </div>
-            <div class="control-group">
-              <label>列数</label>
-              <input 
-                v-model.number="localGridConfig.cols"
-                type="number"
-                min="2"
-                max="50"
-                @change="updateGrid"
-                class="number-input"
-              />
-            </div>
-            <div class="control-group">
-              <label>块宽度</label>
-              <input 
-                v-model.number="localGridConfig.pieceWidth"
-                type="number"
-                min="50"
-                max="200"
-                @change="updateGrid"
-                class="number-input"
-              />
-            </div>
-            <div class="control-group">
-              <label>块高度</label>
-              <input 
-                v-model.number="localGridConfig.pieceHeight"
-                type="number"
-                min="50"
-                max="200"
-                @change="updateGrid"
-                class="number-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- 边界操作 -->
-        <div class="control-section">
-          <h3 class="section-title">边界编辑</h3>
-          <div class="boundary-controls">
-            <button @click="randomizeBoundaries" class="control-btn">
-              🎲 随机化边界
-            </button>
-            <button @click="resetBoundaries" class="control-btn">
-              🔄 重置为平直
-            </button>
-          </div>
-          
-          <div v-if="selectedBoundary" class="selected-boundary-info">
-            <h4>选中边界</h4>
-            <p>ID: {{ selectedBoundary }}</p>
-            <div class="boundary-state-controls">
-              <button 
-                v-for="state in boundaryStates"
-                :key="state.value"
-                @click="setBoundaryState(state.value)"
-                class="state-btn"
-                :class="{ 'active': getCurrentBoundaryState() === state.value }"
-              >
-                {{ state.label }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 拼图信息 -->
-        <div class="control-section">
-          <h3 class="section-title">拼图信息</h3>
-          <div class="puzzle-meta">
-            <div class="control-group">
-              <label>拼图名称</label>
-              <input 
-                v-model="puzzleName"
-                type="text"
-                class="text-input"
-                placeholder="输入拼图名称"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 主编辑区域 -->
+    <!-- 编辑器状态 -->
+    <div v-else class="editor-state">
+      <!-- 主编辑区域 - 只显示图片 -->
       <div class="editor-main">
         <div class="editor-canvas" ref="canvasRef">
           <div 
-            v-if="currentImage"
             class="image-container"
             :style="imageContainerStyle as any"
           >
@@ -247,17 +115,82 @@
                   @stateChange="handleBoundaryStateChange"
                 />
               </g>
-
             </svg>
           </div>
-          
-          <div v-else class="empty-canvas">
-            <div class="empty-message">
-              <div class="empty-icon">🖼️</div>
-              <h3>开始创建拼图</h3>
-              <p>请先上传一张图片作为拼图素材</p>
-            </div>
+        </div>
+      </div>
+
+      <!-- 网格配置面板 -->
+      <div class="editor-config-panel">
+        <h3 class="config-title">网格配置</h3>
+        <div class="config-controls">
+          <div class="config-group">
+            <label>行数</label>
+            <input 
+              v-model.number="localGridConfig.rows"
+              type="number"
+              min="2"
+              max="50"
+              @change="updateGrid"
+              class="config-input"
+            />
           </div>
+          <div class="config-group">
+            <label>列数</label>
+            <input 
+              v-model.number="localGridConfig.cols"
+              type="number"
+              min="2"
+              max="50"
+              @change="updateGrid"
+              class="config-input"
+            />
+          </div>
+          <div class="config-group">
+            <label>块宽度</label>
+            <input 
+              v-model.number="localGridConfig.pieceWidth"
+              type="number"
+              min="50"
+              max="200"
+              @change="updateGrid"
+              class="config-input"
+            />
+          </div>
+          <div class="config-group">
+            <label>块高度</label>
+            <input 
+              v-model.number="localGridConfig.pieceHeight"
+              type="number"
+              min="50"
+              max="200"
+              @change="updateGrid"
+              class="config-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部操作栏 -->
+      <div class="editor-bottom-bar">
+        <div class="bottom-info">
+          <span class="info-item">{{ totalPieces }} 块拼图</span>
+          <span class="info-item">难度: {{ puzzleDifficulty }}</span>
+          <span class="info-item" v-if="complexBoundaries > 0">
+            复杂边界: {{ complexBoundaries }}/{{ totalBoundaries }}
+          </span>
+        </div>
+        
+        <div class="bottom-actions">
+          <button @click="triggerImageUpload" class="bottom-btn">
+            🔄 更换图片
+          </button>
+          <button @click="exportPuzzle" class="bottom-btn" :disabled="!canExport">
+            📤 导出
+          </button>
+          <button @click="addToLibrary" class="bottom-btn primary" :disabled="!canExport">
+            ➕ 添加到素材库
+          </button>
         </div>
       </div>
     </div>
@@ -469,6 +402,22 @@ const processImageFile = (file: File) => {
 
 const removeImage = () => {
   editorStore.setImage('')
+}
+
+const clearAll = () => {
+  if (confirm('确定要清空所有内容吗？这将删除当前图片和所有编辑内容。')) {
+    editorStore.setImage('')
+    editorStore.setPuzzleName('')
+    editorStore.resetBoundaries()
+    // 重置本地网格配置
+    Object.assign(localGridConfig, {
+      rows: 4,
+      cols: 6,
+      pieceWidth: 100,
+      pieceHeight: 100
+    })
+    editorStore.updateGridConfig(localGridConfig)
+  }
 }
 
 const updateGrid = () => {
@@ -693,254 +642,447 @@ onMounted(() => {
   background-color: var(--settings-bg);
 }
 
-/* 移动端适配：为固定头部栏预留空间 */
+/* 移动端适配 */
 @media (max-width: 767px) {
   .editor-view {
     height: calc(100vh - 60px);
+    margin-top: 0;
+  }
+  
+  /* 工具栏移动端优化 */
+  .editor-toolbar {
+    @apply flex-col space-y-3 px-4 py-3;
+  }
+  
+  .toolbar-left {
+    @apply w-full justify-between;
+  }
+  
+  .toolbar-right {
+    @apply w-full flex-wrap gap-2;
+  }
+  
+  .toolbar-btn {
+    @apply flex-1 min-w-0 text-xs px-2 py-1;
+  }
+  
+  /* 内容区域移动端布局 */
+  .editor-content {
+    @apply flex-col;
+  }
+  
+  .editor-sidebar {
+    @apply w-full h-auto max-h-80 overflow-y-auto border-b;
+  }
+  
+  .control-section {
+    @apply p-4;
+  }
+  
+  .section-title {
+    @apply text-base mb-3;
+  }
+  
+  .grid-controls {
+    @apply grid grid-cols-2 gap-3;
+  }
+  
+  .control-group {
+    @apply flex flex-col;
+  }
+  
+  .control-group label {
+    @apply text-xs mb-1;
+  }
+  
+  .number-input, .text-input {
+    @apply text-sm py-1.5;
+  }
+  
+  .editor-main {
+    @apply flex-1 p-2 min-h-0;
+  }
+  
+  .empty-canvas {
+    @apply min-w-0 w-full h-64;
+  }
+  
+  .image-upload-area {
+    @apply h-32;
+  }
+  
+  .upload-placeholder {
+    @apply h-32;
+  }
+  
+  .uploaded-image {
+    @apply h-32;
+  }
+  
+  /* 模态框移动端优化 */
+  .modal-dialog {
+    @apply w-full max-w-none mx-2;
+  }
+  
+  .modal-body {
+    @apply p-3;
+  }
+  
+  .form-group {
+    @apply mb-3;
+  }
+  
+  .form-input, .form-select {
+    @apply text-sm py-2;
+  }
+  
+  .modal-footer {
+    @apply p-3;
+  }
+  
+  .modal-btn {
+    @apply px-3 py-2 text-sm;
+  }
+  
+  /* 导入区域移动端优化 */
+  .import-drop-zone {
+    @apply h-48;
+  }
+  
+  .drop-zone-content h4 {
+    @apply text-lg;
+  }
+  
+  .file-select-btn {
+    @apply px-4 py-2 text-sm;
   }
 }
 
-.editor-toolbar {
-  @apply flex items-center justify-between px-6 py-4 shadow-sm border-b;
+/* 新的布局样式 */
+.editor-header {
+  @apply flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shadow-sm border-b;
   background-color: var(--settings-card-bg);
   border-bottom-color: var(--settings-border);
-}
-
-.toolbar-left {
-  @apply flex items-center space-x-6;
 }
 
 .editor-title {
-  @apply text-2xl font-bold;
+  @apply text-xl sm:text-2xl font-bold;
   color: var(--settings-text-primary);
 }
 
-.puzzle-info {
-  @apply flex items-center space-x-4 text-sm text-gray-600;
-}
-
-.info-item {
-  @apply px-3 py-1 bg-gray-100 rounded-full;
+.clear-btn {
+  @apply px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200;
+  @apply bg-red-100 text-red-700 hover:bg-red-200;
   background-color: var(--settings-hover);
-  color: var(--settings-text-secondary);
-}
-
-.toolbar-right {
-  @apply flex items-center space-x-3;
-}
-
-.toolbar-btn {
-  @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
-  background-color: var(--settings-hover);
-  color: var(--settings-text-secondary);
-}
-
-.toolbar-btn:hover {
-  background-color: var(--settings-border);
-}
-
-.toolbar-btn.active {
-  @apply bg-blue-500 text-white;
-  background-color: var(--settings-accent);
-  color: white;
-}
-
-.toolbar-btn.primary {
-  @apply bg-blue-500 text-white hover:bg-blue-600;
-  background-color: var(--settings-accent);
-  color: white;
-}
-
-.toolbar-btn.primary:hover {
-  background-color: var(--settings-accent-hover, #2563eb);
-}
-
-.toolbar-btn:disabled {
-  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
-  background-color: var(--settings-border);
-  color: var(--settings-text-secondary);
-  opacity: 0.6;
-}
-
-.editor-content {
-  @apply flex flex-1 overflow-hidden;
-}
-
-.editor-sidebar {
-  @apply w-80 shadow-lg overflow-y-auto;
-  background-color: var(--settings-card-bg);
-}
-
-.control-section {
-  @apply p-6 border-b;
-  border-bottom-color: var(--settings-border);
-}
-
-.section-title {
-  @apply text-lg font-semibold mb-4;
   color: var(--settings-text-primary);
 }
 
-.image-upload-area {
-  @apply relative;
+.clear-btn:hover {
+  background-color: var(--settings-border);
 }
 
-.upload-placeholder {
-  @apply w-full h-48 border-2 border-dashed rounded-lg;
+/* 上传状态样式 */
+.upload-state {
+  @apply flex-1 flex items-center justify-center p-4;
+}
+
+.upload-container {
+  @apply w-full max-w-md mx-auto text-center;
+}
+
+.upload-area {
+  @apply w-full h-64 border-2 border-dashed rounded-lg;
   @apply flex flex-col items-center justify-center cursor-pointer;
-  @apply transition-colors duration-200;
+  @apply transition-all duration-200 mb-6;
   border-color: var(--settings-border);
   background-color: var(--settings-card-bg);
 }
 
-.upload-placeholder:hover {
+.upload-area:hover {
   border-color: var(--settings-accent);
   background-color: var(--settings-hover);
 }
 
 .upload-icon {
-  @apply text-4xl mb-2;
+  @apply text-6xl mb-4;
 }
 
-.upload-hint {
-  @apply text-xs mt-1;
+.upload-title {
+  @apply text-2xl font-bold mb-2;
+  color: var(--settings-text-primary);
+}
+
+.upload-description {
+  @apply text-lg mb-2;
   color: var(--settings-text-secondary);
 }
 
-.uploaded-image {
-  @apply relative w-full h-48 rounded-lg overflow-hidden;
+.upload-hint {
+  @apply text-sm;
+  color: var(--settings-text-secondary);
 }
 
-.uploaded-image img {
-  @apply w-full h-full object-cover;
+.upload-actions {
+  @apply flex justify-center;
 }
 
-.image-overlay {
-  @apply absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center;
-  @apply opacity-0 group-hover:opacity-100 transition-opacity duration-200;
-}
-
-.overlay-btn {
-  @apply px-3 py-1 text-sm text-white bg-blue-500 rounded mr-2;
-  @apply hover:bg-blue-600 transition-colors duration-200;
-}
-
-.overlay-btn.danger {
-  @apply bg-red-500 hover:bg-red-600;
-}
-
-.grid-controls {
-  @apply space-y-4;
-}
-
-.control-group {
-  @apply flex flex-col;
-}
-
-.control-group label {
-  @apply text-sm font-medium mb-1;
-  color: var(--settings-text-primary);
-}
-
-.number-input, .text-input {
-  @apply w-full px-3 py-2 border rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-  background-color: var(--settings-card-bg);
-  color: var(--settings-text-primary);
-  border-color: var(--settings-border);
-}
-
-.number-input:focus, .text-input:focus {
-  border-color: var(--settings-accent);
-}
-
-.boundary-controls {
-  @apply space-y-2;
-}
-
-.control-btn {
-  @apply w-full px-4 py-2 text-sm font-medium rounded-md;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200;
+.action-btn {
+  @apply px-6 py-3 text-base font-medium rounded-lg transition-colors duration-200;
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
 }
 
-.control-btn:hover {
-  background-color: var(--settings-border);
+.action-btn.secondary {
+  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+  background-color: var(--settings-accent);
+  color: white;
 }
 
-.selected-boundary-info {
-  @apply mt-4 p-3 rounded-lg;
-  background-color: var(--settings-hover);
+.action-btn.secondary:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
 }
 
-.selected-boundary-info h4 {
-  @apply font-medium mb-2;
-  color: var(--settings-accent);
-}
-
-.boundary-state-controls {
-  @apply flex space-x-1 mt-2;
-}
-
-.state-btn {
-  @apply flex-1 px-2 py-1 text-xs font-medium rounded transition-colors duration-200;
-  background-color: var(--settings-card-bg);
-  color: var(--settings-text-primary);
-}
-
-.state-btn:hover {
-  background-color: var(--settings-hover);
-}
-
-.state-btn.active {
-  @apply bg-blue-500 text-white;
+/* 编辑器状态样式 */
+.editor-state {
+  @apply flex-1 flex flex-col overflow-hidden;
 }
 
 .editor-main {
-  @apply flex-1 overflow-auto p-6;
+  @apply flex-1 flex items-center justify-center p-4;
 }
 
 .editor-canvas {
-  @apply flex items-center justify-center min-h-full;
+  @apply w-full h-full flex items-center justify-center;
 }
 
 .image-container {
   @apply relative rounded-lg shadow-lg overflow-hidden;
+  @apply w-full max-w-full;
   background-color: var(--settings-card-bg);
 }
 
 .background-image {
-  @apply absolute inset-0 z-0;
+  @apply w-full h-full object-contain;
 }
 
 .grid-overlay {
   @apply absolute inset-0 z-10;
 }
 
-.empty-canvas {
-  @apply flex items-center justify-center h-96 rounded-lg shadow-lg min-w-[500px];
+/* 网格配置面板样式 */
+.editor-config-panel {
+  @apply px-4 sm:px-6 py-3 sm:py-4 border-t;
   background-color: var(--settings-card-bg);
+  border-top-color: var(--settings-border);
 }
 
-.empty-message {
-  @apply text-center;
-}
-
-.empty-icon {
-  @apply text-6xl mb-4;
-}
-
-.empty-message h3 {
-  @apply text-xl font-semibold text-gray-800 mb-2;
+.config-title {
+  @apply text-sm font-semibold mb-3;
   color: var(--settings-text-primary);
 }
 
-.empty-message p {
-  @apply text-gray-600;
+.config-controls {
+  @apply grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4;
+}
+
+.config-group {
+  @apply flex flex-col;
+}
+
+.config-group label {
+  @apply text-xs font-medium mb-1;
   color: var(--settings-text-secondary);
 }
+
+.config-input {
+  @apply w-full px-2 py-1.5 text-sm border rounded-md;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.config-input:focus {
+  border-color: var(--settings-accent);
+}
+
+/* 底部操作栏样式 */
+.editor-bottom-bar {
+  @apply flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shadow-sm border-t;
+  background-color: var(--settings-card-bg);
+  border-top-color: var(--settings-border);
+}
+
+.bottom-info {
+  @apply flex items-center space-x-3 text-sm;
+  color: var(--settings-text-secondary);
+}
+
+.info-item {
+  @apply px-2 py-1 rounded-full;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-secondary);
+}
+
+.bottom-actions {
+  @apply flex items-center space-x-2;
+}
+
+.bottom-btn {
+  @apply px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200;
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.bottom-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.bottom-btn.primary {
+  @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+.bottom-btn.primary:hover {
+  background-color: var(--settings-accent-hover, #2563eb);
+}
+
+.bottom-btn:disabled {
+  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .editor-view {
+    height: calc(100vh - 60px);
+    margin-top: 0;
+  }
+  
+  .editor-header {
+    @apply px-4 py-3;
+  }
+  
+  .editor-title {
+    @apply text-lg;
+  }
+  
+  .clear-btn {
+    @apply px-2 py-1 text-xs;
+  }
+  
+  /* 上传区域移动端优化 */
+  .upload-area {
+    @apply h-48;
+  }
+  
+  .upload-icon {
+    @apply text-4xl mb-3;
+  }
+  
+  .upload-title {
+    @apply text-xl mb-2;
+  }
+  
+  .upload-description {
+    @apply text-base mb-1;
+  }
+  
+  .action-btn {
+    @apply px-4 py-2 text-sm;
+  }
+  
+  /* 主编辑区域移动端优化 */
+  .editor-main {
+    @apply p-2;
+  }
+  
+  .image-container {
+    @apply w-full h-auto;
+  }
+  
+  /* 配置面板移动端优化 */
+  .editor-config-panel {
+    @apply px-4 py-3;
+  }
+  
+  .config-title {
+    @apply text-xs mb-2;
+  }
+  
+  .config-controls {
+    @apply grid-cols-2 gap-2;
+  }
+  
+  .config-group label {
+    @apply text-xs mb-1;
+  }
+  
+  .config-input {
+    @apply px-2 py-1 text-xs;
+  }
+  
+  /* 底部操作栏移动端优化 */
+  .editor-bottom-bar {
+    @apply flex-col space-y-2 px-4 py-3;
+  }
+  
+  .bottom-info {
+    @apply w-full justify-center flex-wrap gap-2;
+  }
+  
+  .bottom-actions {
+    @apply w-full justify-center flex-wrap gap-2;
+  }
+  
+  .bottom-btn {
+    @apply flex-1 min-w-0 text-xs px-2 py-1;
+  }
+  
+  /* 模态框移动端优化 */
+  .modal-dialog {
+    @apply w-full max-w-none mx-2;
+  }
+  
+  .modal-body {
+    @apply p-3;
+  }
+  
+  .form-group {
+    @apply mb-3;
+  }
+  
+  .form-input, .form-select {
+    @apply text-sm py-2;
+  }
+  
+  .modal-footer {
+    @apply p-3;
+  }
+  
+  .modal-btn {
+    @apply px-3 py-2 text-sm;
+  }
+  
+  /* 导入区域移动端优化 */
+  .import-drop-zone {
+    @apply h-48;
+  }
+  
+  .drop-zone-content h4 {
+    @apply text-lg;
+  }
+  
+  .file-select-btn {
+    @apply px-4 py-2 text-sm;
+  }
+}
+
 
 .modal-overlay {
   @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
