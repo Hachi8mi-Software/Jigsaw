@@ -448,7 +448,17 @@ onMounted(async () => {
   renderPiece()
 })
 
-// 监听属性变化，重新渲染
+// 监听属性变化，重新渲染（优化：减少不必要的重渲染）
+let renderScheduled = false
+const scheduleRender = () => {
+  if (renderScheduled) return
+  renderScheduled = true
+  requestAnimationFrame(() => {
+    renderPiece()
+    renderScheduled = false
+  })
+}
+
 watch(() => [
   props.piece.x, 
   props.piece.y, 
@@ -456,7 +466,7 @@ watch(() => [
   props.puzzleData.imageUrl,
   props.showNumber
 ], () => {
-  nextTick(() => renderPiece())
+  scheduleRender()
 }, { deep: true })
 
 // 监听尺寸变化

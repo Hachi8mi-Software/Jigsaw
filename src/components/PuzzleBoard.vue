@@ -308,6 +308,23 @@ const closeHint = () => {
   showHint.value = false
 }
 
+// 缓存网格矩形，避免频繁DOM查询
+let cachedGridRect: DOMRect | null = null
+let gridRectCacheTime = 0
+const GRID_RECT_CACHE_DURATION = 1000 // 1秒缓存
+
+const getCachedGridRect = (): DOMRect | null => {
+  const now = Date.now()
+  if (!cachedGridRect || now - gridRectCacheTime > GRID_RECT_CACHE_DURATION) {
+    const gridElement = document.querySelector('.puzzle-grid')
+    if (gridElement) {
+      cachedGridRect = gridElement.getBoundingClientRect()
+      gridRectCacheTime = now
+    }
+  }
+  return cachedGridRect
+}
+
 // 拖拽处理方法
 const startDrag = (index: number, event: MouseEvent | TouchEvent) => {
   event.preventDefault()
@@ -317,16 +334,25 @@ const startDrag = (index: number, event: MouseEvent | TouchEvent) => {
   
   viewModel.value.startDrag(index, clientX, clientY)
   
-  document.addEventListener('mousemove', handleDrag, { passive: false })
-  document.addEventListener('mouseup', stopDrag)
-  document.addEventListener('touchmove', handleDrag, { passive: false })
-  document.addEventListener('touchend', stopDrag)
+  // 预缓存网格矩形
+  getCachedGridRect()
+  
+  document.addEventListener('mousemove', handleDrag, { passive: true })
+  document.addEventListener('mouseup', stopDrag, { passive: true })
+  document.addEventListener('touchmove', handleDrag, { passive: true })
+  document.addEventListener('touchend', stopDrag, { passive: true })
 }
+
+// 节流处理，提升拖拽性能
+let lastDragTime = 0
+const DRAG_THROTTLE_MS = 16 // 约60fps
 
 const handleDrag = (event: MouseEvent | TouchEvent) => {
   if (draggingPieceIndex.value === -1) return
   
-  event.preventDefault()
+  const now = Date.now()
+  if (now - lastDragTime < DRAG_THROTTLE_MS) return
+  lastDragTime = now
   
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
   const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
@@ -337,19 +363,20 @@ const handleDrag = (event: MouseEvent | TouchEvent) => {
 const stopDrag = (event: MouseEvent | TouchEvent) => {
   if (draggingPieceIndex.value === -1) return
   
-  event.preventDefault()
-  
   const clientX = 'touches' in event ? (event.changedTouches?.[0]?.clientX ?? 0) : event.clientX
   const clientY = 'touches' in event ? (event.changedTouches?.[0]?.clientY ?? 0) : event.clientY
   
-  const gridRect = document.querySelector('.puzzle-grid')?.getBoundingClientRect()
+  const gridRect = getCachedGridRect()
   
-  viewModel.value.stopDrag(clientX, clientY, gridRect || null)
+  viewModel.value.stopDrag(clientX, clientY, gridRect)
   
   document.removeEventListener('mousemove', handleDrag)
   document.removeEventListener('mouseup', stopDrag)
   document.removeEventListener('touchmove', handleDrag)
   document.removeEventListener('touchend', stopDrag)
+  
+  // 清除缓存，下次拖拽时重新获取
+  cachedGridRect = null
 }
 
 const initializePuzzle = async (puzzleData: PuzzleData | null) => {

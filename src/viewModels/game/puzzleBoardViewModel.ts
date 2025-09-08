@@ -286,7 +286,6 @@ export class PuzzleBoardViewModel {
     
     const newX = clientX - this.gameStore.dragOffset.x
     const newY = clientY - this.gameStore.dragOffset.y
-    console.log('Dragging piece', this.draggingPieceIndex, 'toString', this.draggingPieceIndex, 'new position:', { newX, newY })
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
   }
 
