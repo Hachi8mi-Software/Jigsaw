@@ -95,7 +95,7 @@ onMounted(() => {
 
 <style scoped>
 .achievements-view {
-  @apply min-h-screen p-6;
+  @apply h-screen flex flex-col p-6;
   background-color: var(--settings-bg);
   transition: background-color 0.3s ease;
 }
@@ -103,7 +103,7 @@ onMounted(() => {
 /* 移动端适配：为固定头部栏预留空间 */
 @media (max-width: 767px) {
   .achievements-view {
-    min-height: calc(100vh - 60px);
+    height: calc(100vh - 60px);
   }
 }
 
@@ -118,7 +118,7 @@ onMounted(() => {
 }
 
 .achievements-stats {
-  @apply flex justify-center space-x-8;
+  @apply flex justify-center space-x-4;
 }
 
 .stat-card {
@@ -148,11 +148,34 @@ onMounted(() => {
 }
 
 .achievements-content {
-  @apply max-w-4xl mx-auto;
+  @apply max-w-4xl mx-auto flex-1 overflow-y-auto;
+  /* 添加自定义滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--settings-border) transparent;
+}
+
+/* Webkit浏览器滚动条样式 */
+.achievements-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.achievements-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.achievements-content::-webkit-scrollbar-thumb {
+  background-color: var(--settings-border);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.achievements-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--settings-accent);
 }
 
 .achievements-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6 pb-6;
+  /* 底部添加padding，确保最后一个元素不会被遮挡 */
 }
 
 .achievement-card {
@@ -237,11 +260,15 @@ onMounted(() => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .achievements-stats {
-    @apply flex-col space-y-4 space-x-0;
+    @apply space-x-2;
   }
   
   .stat-card {
-    @apply min-w-full;
+    @apply min-w-0 flex-1 p-4;
+  }
+  
+  .stat-number {
+    @apply text-2xl;
   }
   
   .achievements-grid {
