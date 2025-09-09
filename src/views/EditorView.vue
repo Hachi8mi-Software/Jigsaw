@@ -1217,7 +1217,7 @@ onUnmounted(() => {
 
 .config-input {
   @apply w-full px-2 py-1.5 text-sm border rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply focus:outline-none focus:ring-2 focus:border-transparent;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
   border-color: var(--settings-border);
@@ -1526,7 +1526,7 @@ onUnmounted(() => {
 
 .import-textarea {
   @apply w-full h-32 p-3 border rounded-md resize-none;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+  @apply focus:outline-none focus:ring-2;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
   border-color: var(--settings-border);
@@ -1547,9 +1547,22 @@ onUnmounted(() => {
 
 .form-input,
 .form-select {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply w-full px-3 py-2 border rounded-md;
+  @apply focus:outline-none focus:ring-2 focus:border-transparent;
   @apply transition-colors duration-200;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--settings-accent);
+}
+
+.form-select option {
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }
 
 .form-input:disabled,
