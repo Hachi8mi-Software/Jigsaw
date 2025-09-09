@@ -84,7 +84,7 @@
           v-for="item in filteredItems"
           :key="item.id"
           class="puzzle-card"
-          @click="selectPuzzle(item)"
+          @click="handleCardClick(item)"
         >
           <div class="card-image">
             <img 
@@ -103,7 +103,7 @@
               </div>
             </div>
             <div class="card-overlay">
-              <div class="overlay-actions">
+              <div class="overlay-actions hidden md:flex">
                 <button @click.stop="playPuzzle(item)" class="overlay-btn primary">
                   🎮 开始游戏
                 </button>
@@ -113,6 +113,14 @@
                 <button v-if="!item.isBuiltIn" @click.stop="deletePuzzle(item)" class="overlay-btn danger">
                   🗑️ 删除
                 </button>
+              </div>
+              
+              <!-- 移动端点击整个卡片显示操作dialog -->
+              <div class="mobile-overlay md:hidden" @click.stop="showMobileActionDialog(item)">
+                <div class="mobile-overlay-hint">
+                  <div class="hint-icon">⚡</div>
+                  <div class="hint-text">点击操作</div>
+                </div>
               </div>
             </div>
           </div>
@@ -174,6 +182,42 @@
         </div>
       </div>
     </div>
+
+    <!-- 移动端操作对话框 -->
+    <div v-if="showMobileActions" class="modal-overlay" @click="closeMobileActionDialog">
+      <div class="modal-dialog mobile-actions-modal" @click.stop>
+        <div class="modal-header">
+          <h3>{{ selectedMobileItem?.name }}</h3>
+          <button @click="closeMobileActionDialog" class="close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="mobile-action-buttons">
+            <button @click="playPuzzleFromDialog" class="mobile-action-btn primary">
+              <span class="action-icon">🎮</span>
+              <span class="action-text">开始游戏</span>
+            </button>
+            
+            <button 
+              v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" 
+              @click="editPuzzleFromDialog" 
+              class="mobile-action-btn"
+            >
+              <span class="action-icon">✏️</span>
+              <span class="action-text">编辑拼图</span>
+            </button>
+            
+            <button 
+              v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" 
+              @click="deletePuzzleFromDialog" 
+              class="mobile-action-btn danger"
+            >
+              <span class="action-icon">🗑️</span>
+              <span class="action-text">删除拼图</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -192,6 +236,8 @@ const router = useRouter()
 // 响应式状态
 const showDeleteModal = ref(false)
 const itemToDelete = ref<LibraryItem | null>(null)
+const showMobileActions = ref(false)
+const selectedMobileItem = ref<LibraryItem | null>(null)
 
 // 图片URL缓存
 const imageUrlCache = reactive<Record<string, string>>({})
@@ -276,6 +322,17 @@ const selectPuzzle = (item: LibraryItem) => {
   console.log('选择拼图:', item.name)
 }
 
+const handleCardClick = (item: LibraryItem) => {
+  // 检查是否为移动端（使用简单的屏幕宽度检测）
+  const isMobile = window.innerWidth < 768
+  
+  if (isMobile) {
+    showMobileActionDialog(item)
+  } else {
+    selectPuzzle(item)
+  }
+}
+
 const playPuzzle = (item: LibraryItem) => {
   router.push(`/game/${item.id}`)
 }
@@ -304,6 +361,37 @@ const closeDeleteModal = () => {
 
 const setSortBy = (field: 'name' | 'difficulty' | 'date') => {
   libraryStore.setSortBy(field)
+}
+
+const showMobileActionDialog = (item: LibraryItem) => {
+  selectedMobileItem.value = item
+  showMobileActions.value = true
+}
+
+const closeMobileActionDialog = () => {
+  showMobileActions.value = false
+  selectedMobileItem.value = null
+}
+
+const playPuzzleFromDialog = () => {
+  if (selectedMobileItem.value) {
+    playPuzzle(selectedMobileItem.value)
+    closeMobileActionDialog()
+  }
+}
+
+const editPuzzleFromDialog = () => {
+  if (selectedMobileItem.value) {
+    editPuzzle(selectedMobileItem.value)
+    closeMobileActionDialog()
+  }
+}
+
+const deletePuzzleFromDialog = () => {
+  if (selectedMobileItem.value) {
+    deletePuzzle(selectedMobileItem.value)
+    closeMobileActionDialog()
+  }
 }
 
 const getItemDifficulty = (item: LibraryItem) => {
@@ -580,6 +668,24 @@ onMounted(() => {
   @apply opacity-0 hover:opacity-100 transition-opacity duration-200;
 }
 
+/* 移动端overlay样式 */
+.mobile-overlay {
+  @apply absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center;
+  @apply opacity-0 active:opacity-100 transition-opacity duration-200;
+}
+
+.mobile-overlay-hint {
+  @apply text-center text-white;
+}
+
+.hint-icon {
+  @apply text-2xl mb-1;
+}
+
+.hint-text {
+  @apply text-sm font-medium;
+}
+
 .overlay-actions {
   @apply flex flex-col space-y-2;
 }
@@ -757,6 +863,55 @@ onMounted(() => {
 
 .delete-warning {
   @apply text-sm text-red-600 mt-2;
+}
+
+/* 移动端操作对话框样式 */
+.mobile-actions-modal {
+  @apply w-full max-w-xs;
+}
+
+.mobile-action-buttons {
+  @apply space-y-3;
+}
+
+.mobile-action-btn {
+  @apply w-full flex items-center justify-start px-4 py-3 rounded-lg;
+  @apply text-left font-medium transition-all duration-200;
+  @apply bg-gray-50 text-gray-700 hover:bg-gray-100 active:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.mobile-action-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.mobile-action-btn.primary {
+  @apply bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-200;
+  background-color: var(--settings-accent);
+  color: #ffffff;
+}
+
+.mobile-action-btn.primary:hover {
+  background-color: var(--settings-accent-hover);
+}
+
+.mobile-action-btn.danger {
+  @apply bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200;
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.mobile-action-btn.danger:hover {
+  background-color: #fee2e2;
+}
+
+.action-icon {
+  @apply text-xl mr-3;
+}
+
+.action-text {
+  @apply text-base;
 }
 </style>
 
