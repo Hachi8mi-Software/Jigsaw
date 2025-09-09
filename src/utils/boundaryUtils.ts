@@ -130,11 +130,19 @@ export class BoundaryManager {
   /**
    * 生成初始边界数组
    * @param gridConfig 网格配置
+   * @param dynamicPieceWidth 动态拼图块宽度（可选，默认使用gridConfig中的值）
+   * @param dynamicPieceHeight 动态拼图块高度（可选，默认使用gridConfig中的值）
    * @returns 边界数组
    */
-  static generateInitialBoundaries(gridConfig: GridConfig): Boundary[] {
+  static generateInitialBoundaries(
+    gridConfig: GridConfig, 
+    dynamicPieceWidth?: number, 
+    dynamicPieceHeight?: number
+  ): Boundary[] {
     const boundaries: Boundary[] = []
-    const { rows, cols, pieceWidth, pieceHeight } = gridConfig
+    const { rows, cols } = gridConfig
+    const pieceWidth = dynamicPieceWidth ?? gridConfig.pieceWidth
+    const pieceHeight = dynamicPieceHeight ?? gridConfig.pieceHeight
 
     // 生成水平边界
     for (let row = 0; row < rows - 1; row++) {

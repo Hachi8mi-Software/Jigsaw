@@ -163,8 +163,12 @@ export const useEditorStore = defineStore('editor', () => {
     }
   }
 
-  const generateBoundaries = () => {
-    boundaries.value = BoundaryManager.generateInitialBoundaries(gridConfig.value)
+  const generateBoundaries = (dynamicPieceWidth?: number, dynamicPieceHeight?: number) => {
+    boundaries.value = BoundaryManager.generateInitialBoundaries(
+      gridConfig.value, 
+      dynamicPieceWidth, 
+      dynamicPieceHeight
+    )
     isModified.value = true
   }
 

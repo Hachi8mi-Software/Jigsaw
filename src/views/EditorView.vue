@@ -84,10 +84,10 @@
                 <line
                   v-for="col in gridCols + 1"
                   :key="`v-line-${col}`"
-                  :x1="(col - 1) * gridConfig.pieceWidth"
+                  :x1="(col - 1) * dynamicPieceWidth"
                   :y1="0"
-                  :x2="(col - 1) * gridConfig.pieceWidth"
-                  :y2="gridConfig.rows * gridConfig.pieceHeight"
+                  :x2="(col - 1) * dynamicPieceWidth"
+                  :y2="gridConfig.rows * dynamicPieceHeight"
                   stroke="rgba(0, 0, 0, 0.2)"
                   stroke-width="1"
                 />
@@ -96,9 +96,9 @@
                   v-for="row in gridRows + 1"
                   :key="`h-line-${row}`"
                   :x1="0"
-                  :y1="(row - 1) * gridConfig.pieceHeight"
-                  :x2="gridConfig.cols * gridConfig.pieceWidth"
-                  :y2="(row - 1) * gridConfig.pieceHeight"
+                  :y1="(row - 1) * dynamicPieceHeight"
+                  :x2="gridConfig.cols * dynamicPieceWidth"
+                  :y2="(row - 1) * dynamicPieceHeight"
                   stroke="rgba(0, 0, 0, 0.2)"
                   stroke-width="1"
                 />
@@ -111,6 +111,8 @@
                   :key="boundary.id"
                   :boundary="boundary"
                   :is-selected="selectedBoundary === boundary.id"
+                  :piece-width="dynamicPieceWidth"
+                  :piece-height="dynamicPieceHeight"
                   @click="selectBoundary"
                   @hover="hoverBoundary"
                   @stateChange="handleBoundaryStateChange"
@@ -299,7 +301,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted, nextTick, watch } from 'vue'
+import { computed, ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useEditorStore } from '../stores/editor'
 import { useLibraryStore } from '../stores/library'
@@ -338,6 +340,12 @@ const libraryItemTags = ref('')
 const isAddingToLibrary = ref(false)
 const isDragOver = ref(false)
 
+// 窗口尺寸状态
+const windowSize = ref({
+  width: window.innerWidth,
+  height: window.innerHeight
+})
+
 // 计算属性
 const currentImage = computed(() => editorStore.currentImage) // 现在直接是Blob URL
 const gridConfig = computed(() => editorStore.gridConfig)
@@ -353,23 +361,67 @@ const complexBoundaries = computed(() => editorStore.complexBoundaries)
 const puzzleDifficulty = computed(() => editorStore.puzzleDifficulty)
 const canExport = computed(() => editorStore.canExport)
 
-const svgWidth = computed(() => gridConfig.value.cols * gridConfig.value.pieceWidth)
-const svgHeight = computed(() => gridConfig.value.rows * gridConfig.value.pieceHeight)
+// 计算容器的实际尺寸（用于SVG网格）
+const containerDimensions = computed(() => {
+  const aspectRatio = gridConfig.value.cols * gridConfig.value.pieceWidth / (gridConfig.value.rows * gridConfig.value.pieceHeight)
+  
+  // 设置固定的基准尺寸
+  const baseSize = 600
+  
+  let containerWidth, containerHeight
+  if (aspectRatio >= 1) {
+    containerWidth = baseSize
+    containerHeight = baseSize / aspectRatio
+  } else {
+    containerHeight = baseSize
+    containerWidth = baseSize * aspectRatio
+  }
+  
+  // 应用窗口大小限制
+  const maxWidth = Math.min(containerWidth, windowSize.value.width * 0.8)
+  const maxHeight = Math.min(containerHeight, windowSize.value.height * 0.6)
+  
+  if (containerWidth > maxWidth) {
+    containerWidth = maxWidth
+    containerHeight = containerWidth / aspectRatio
+  }
+  
+  if (containerHeight > maxHeight) {
+    containerHeight = maxHeight
+    containerWidth = containerHeight * aspectRatio
+  }
+  
+  return { width: containerWidth, height: containerHeight }
+})
+
+// 基于容器尺寸计算动态的拼图块尺寸
+const dynamicPieceWidth = computed(() => containerDimensions.value.width / gridConfig.value.cols)
+const dynamicPieceHeight = computed(() => containerDimensions.value.height / gridConfig.value.rows)
+
+const svgWidth = computed(() => containerDimensions.value.width)
+const svgHeight = computed(() => containerDimensions.value.height)
 const svgViewBox = computed(() => `0 0 ${svgWidth.value} ${svgHeight.value}`)
 
 const gridRows = computed(() => gridConfig.value.rows)
 const gridCols = computed(() => gridConfig.value.cols)
 
-const imageContainerStyle = computed(() => ({
-  width: `${svgWidth.value}px`,
-  height: `${svgHeight.value}px`,
-  position: 'relative'
-}))
+const imageContainerStyle = computed(() => {
+  const { width, height } = containerDimensions.value
+  
+  return {
+    width: `${width}px`,
+    height: `${height}px`,
+    position: 'relative',
+    maxWidth: `${windowSize.value.width * 0.8}px`,
+    maxHeight: `${windowSize.value.height * 0.6}px`
+  }
+})
 
 const backgroundImageStyle = computed(() => ({
   width: '100%',
   height: '100%',
-  objectFit: 'contain' as const
+  objectFit: 'cover' as const,
+  objectPosition: 'center' as const
 }))
 
 // 边界状态选项
@@ -455,6 +507,8 @@ const processImageFile = async (file: File) => {
       
       // 更新store中的网格配置
       editorStore.updateGridConfig(localGridConfig)
+      // 重新生成边界，使用动态尺寸
+      editorStore.generateBoundaries(dynamicPieceWidth.value, dynamicPieceHeight.value)
       
       console.log(`图片尺寸: ${img.naturalWidth}x${img.naturalHeight}, 宽高比: ${aspectRatio.toFixed(2)}, 建议网格: ${suggestedRows}x${suggestedCols}`)
     }
@@ -500,6 +554,8 @@ const clearAll = async () => {
 
 const updateGrid = () => {
   editorStore.updateGridConfig(localGridConfig)
+  // 重新生成边界，使用动态尺寸
+  editorStore.generateBoundaries(dynamicPieceWidth.value, dynamicPieceHeight.value)
 }
 
 const updateAspectRatio = () => {
@@ -522,6 +578,8 @@ const updateAspectRatio = () => {
   localGridConfig.pieceHeight = Math.max(50, localGridConfig.pieceHeight)
   
   editorStore.updateGridConfig(localGridConfig)
+  // 重新生成边界，使用动态尺寸
+  editorStore.generateBoundaries(dynamicPieceWidth.value, dynamicPieceHeight.value)
 }
 
 const randomizeBoundaries = () => {
@@ -794,7 +852,27 @@ onMounted(async () => {
   
   // 生成初始边界
   if (boundaries.value.length === 0) {
-    editorStore.generateBoundaries()
+    editorStore.generateBoundaries(dynamicPieceWidth.value, dynamicPieceHeight.value)
+  }
+  
+  // 添加窗口大小变化监听器
+  handleResize = () => {
+    windowSize.value = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    }
+  }
+  
+  window.addEventListener('resize', handleResize)
+})
+
+// 窗口大小变化处理函数
+let handleResize: (() => void) | null = null
+
+// 清理函数
+onUnmounted(() => {
+  if (handleResize) {
+    window.removeEventListener('resize', handleResize)
   }
 })
 </script>

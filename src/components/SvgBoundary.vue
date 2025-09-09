@@ -70,6 +70,8 @@ interface Props {
   isPreviewMode?: boolean
   showStateIndicator?: boolean
   showStateText?: boolean
+  pieceWidth?: number
+  pieceHeight?: number
 }
 
 interface Emits {
@@ -82,7 +84,9 @@ const props = withDefaults(defineProps<Props>(), {
   isSelected: false,
   isPreviewMode: false,
   showStateIndicator: true,
-  showStateText: true
+  showStateText: true,
+  pieceWidth: 100,
+  pieceHeight: 100
 })
 
 const emit = defineEmits<Emits>()
@@ -100,9 +104,6 @@ const pathData = computed(() => {
   }
   
   // 使用SVG路径生成器生成复杂路径
-  const pieceWidth = Math.abs(props.boundary.endX - props.boundary.startX) || 100
-  const pieceHeight = Math.abs(props.boundary.endY - props.boundary.startY) || 100
-  
   return `M ${props.boundary.startX} ${props.boundary.startY} ` + 
          SvgPathGenerator.generateBoundaryPath(
            props.boundary.state,
@@ -110,8 +111,8 @@ const pathData = computed(() => {
            props.boundary.startY,
            props.boundary.endX,
            props.boundary.endY,
-           pieceWidth,
-           pieceHeight
+           props.pieceWidth,
+           props.pieceHeight
          )
 })
 
