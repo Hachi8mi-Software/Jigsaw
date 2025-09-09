@@ -366,7 +366,7 @@ const containerDimensions = computed(() => {
   const aspectRatio = gridConfig.value.cols * gridConfig.value.pieceWidth / (gridConfig.value.rows * gridConfig.value.pieceHeight)
   
   // 设置固定的基准尺寸
-  const baseSize = windowSize.value.width * 0.8
+  const baseSize = 600
   
   let containerWidth, containerHeight
   if (aspectRatio >= 1) {
@@ -379,7 +379,7 @@ const containerDimensions = computed(() => {
   
   // 应用窗口大小限制
   const maxWidth = Math.min(containerWidth, windowSize.value.width * 0.8)
-  const maxHeight = Math.min(containerHeight, windowSize.value.height * 0.8)
+  const maxHeight = Math.min(containerHeight, windowSize.value.height * 0.6)
   
   if (containerWidth > maxWidth) {
     containerWidth = maxWidth
