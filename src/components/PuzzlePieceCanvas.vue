@@ -341,19 +341,6 @@ const renderPiece = async () => {
     createPuzzlePiecePath(ctx, actualPieceWidth, actualPieceHeight)
     ctx.stroke()
     
-    // 添加内部光效增强立体感
-    ctx.globalCompositeOperation = 'source-atop'
-    createPuzzlePiecePath(ctx, actualPieceWidth, actualPieceHeight)
-    // 创建径向渐变光效
-    const gradient = ctx.createRadialGradient(
-      actualPieceWidth/2, actualPieceHeight/2, 0,
-      actualPieceWidth/2, actualPieceHeight/2, actualPieceWidth/1.5
-    )
-    gradient.addColorStop(0, 'rgba(255,255,255,0.2)')
-    gradient.addColorStop(1, 'rgba(0,0,0,0.1)')
-    ctx.fillStyle = gradient
-    ctx.fill()
-    
     ctx.restore() // 恢复上下文状态
 
     // 根据显示模式决定是否显示编号
