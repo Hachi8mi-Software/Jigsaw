@@ -458,7 +458,6 @@ const windowSize = ref({
 const showCropDialog = ref(false)
 const cropImageUrl = ref('')
 const cropArea = ref<CropArea | null>(null)
-const originalImageFile = ref<File | null>(null)
 const cropperRef = ref()
 
 // 网格配置更改跟踪
@@ -467,6 +466,7 @@ const gridConfigChangedAfterCrop = ref(false)
 
 // 计算属性
 const currentImage = computed(() => editorStore.currentImage) // 现在直接是Blob URL
+const originalImageFile = computed(() => editorStore.originalImageFile) // 使用store中的原始文件
 const gridConfig = computed(() => editorStore.gridConfig)
 const boundaries = computed(() => editorStore.boundaries)
 const selectedBoundary = computed(() => editorStore.selectedBoundary)
@@ -590,8 +590,8 @@ const processImageFile = async (file: File) => {
   try {
     console.log('开始处理图片文件:', file.name, file.size)
     
-    // 保存原始文件
-    originalImageFile.value = file
+    // 保存原始文件到store（临时文件名，稍后会被实际的文件名替换）
+    await editorStore.setImage('temp_' + file.name, file)
     
     // 创建图片URL用于裁剪
     const imageUrl = URL.createObjectURL(file)
@@ -712,7 +712,6 @@ const removeImage = () => {
   editorStore.setImage('')
   // 清理裁剪相关状态
   cropArea.value = null
-  originalImageFile.value = null
   if (cropImageUrl.value) {
     URL.revokeObjectURL(cropImageUrl.value)
     cropImageUrl.value = ''
@@ -725,7 +724,6 @@ const clearAll = async () => {
     
     // 清理裁剪相关状态
     cropArea.value = null
-    originalImageFile.value = null
     if (cropImageUrl.value) {
       URL.revokeObjectURL(cropImageUrl.value)
       cropImageUrl.value = ''
