@@ -35,3 +35,34 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 // 挂载应用
 app.mount('#app')
+
+// 初始化应用数据和OPFS迁移
+async function initializeApp() {
+  try {
+    // 动态导入store避免循环依赖
+    const { useLibraryStore } = await import('./stores/library')
+    const { useEditorStore } = await import('./stores/editor')
+    
+    const libraryStore = useLibraryStore()
+    const editorStore = useEditorStore()
+    
+    // 初始化库数据
+    await libraryStore.initializeLibrary()
+    
+    // 执行OPFS迁移（如果需要）
+    console.log('🔄 检查OPFS迁移...')
+    const migrationCount = await libraryStore.migrateToOPFS()
+    if (migrationCount > 0) {
+      console.log(`✅ 成功迁移 ${migrationCount} 个图片到OPFS`)
+    } else {
+      console.log('✅ 无需迁移或迁移已完成')
+    }
+    
+    console.log('🚀 应用初始化完成')
+  } catch (error) {
+    console.error('❌ 应用初始化失败:', error)
+  }
+}
+
+// 延迟执行初始化，确保DOM已经挂载
+setTimeout(initializeApp, 100)

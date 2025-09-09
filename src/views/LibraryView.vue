@@ -87,7 +87,21 @@
           @click="selectPuzzle(item)"
         >
           <div class="card-image">
-            <img :src="item.imageUrl" :alt="item.name" />
+            <img 
+              v-if="imageUrlCache[item.imageUrl]"
+              :src="imageUrlCache[item.imageUrl]" 
+              :alt="item.name" 
+            />
+            <div 
+              v-else 
+              class="image-placeholder"
+              @click="loadItemImage(item.imageUrl)"
+            >
+              <div class="placeholder-content">
+                <div class="placeholder-icon">🖼️</div>
+                <div class="placeholder-text">加载中...</div>
+              </div>
+            </div>
             <div class="card-overlay">
               <div class="overlay-actions">
                 <button @click.stop="playPuzzle(item)" class="overlay-btn primary">
@@ -164,11 +178,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLibraryStore } from '../stores/library'
 import { calculatePuzzleDifficulty, calculateBasicDifficulty } from '../utils/difficultyUtils'
 import type { LibraryItem } from '../types'
+import { imageStorage } from '../utils/imageStorage'
 
 // Store和路由
 const libraryStore = useLibraryStore()
@@ -177,6 +192,45 @@ const router = useRouter()
 // 响应式状态
 const showDeleteModal = ref(false)
 const itemToDelete = ref<LibraryItem | null>(null)
+
+// 图片URL缓存
+const imageUrlCache = reactive<Record<string, string>>({})
+
+// 异步获取图片URL的函数
+const getImageUrl = async (imageUrl: string): Promise<string> => {
+  if (!imageUrl) return ''
+
+  // 如果不是fs URL`，直接返回
+  if (!imageUrl.startsWith('fs://')) {
+    return imageUrl
+  }
+  const filename = imageUrl.replace('fs://', '')
+  
+  // 检查缓存
+  if (imageUrlCache[imageUrl]) {
+    return imageUrlCache[imageUrl]
+  }
+  
+  try {
+    // 获取实际的图片URL
+    const blobUrl = await imageStorage.getImageURL(filename)
+    imageUrlCache[imageUrl] = blobUrl
+    return blobUrl
+  } catch (error) {
+    console.error('获取图片URL失败:', error)
+    return ''
+  }
+}
+
+// 为每个项目准备图片URL
+const prepareImageUrls = async () => {
+  const items = filteredItems.value
+  for (const item of items) {
+    if (item.imageUrl && !imageUrlCache[item.imageUrl]) {
+      imageUrlCache[item.imageUrl] = await getImageUrl(item.imageUrl) // 异步加载，不等待
+    }
+  }
+}
 
 // 计算属性
 const filteredItems = computed(() => libraryStore.filteredItems)
@@ -197,7 +251,25 @@ const selectedCategory = computed({
   set: (value) => libraryStore.setSelectedCategory(value)
 })
 
+// 监听filteredItems变化，预加载图片
+watch(filteredItems, () => {
+  prepareImageUrls()
+}, { immediate: true })
+
 // 方法
+
+const loadItemImage = async (imageUrl: string) => {
+  if (!imageUrl || imageUrlCache[imageUrl]) return
+  
+  try {
+    const blobUrl = await getImageUrl(imageUrl)
+    if (blobUrl) {
+      imageUrlCache[imageUrl] = blobUrl
+    }
+  } catch (error) {
+    console.error('加载图片失败:', imageUrl, error)
+  }
+}
 
 const selectPuzzle = (item: LibraryItem) => {
   // 可以显示拼图详情或直接开始游戏
@@ -255,6 +327,9 @@ const getItemDifficulty = (item: LibraryItem) => {
 onMounted(() => {
   // 素材库已在App.vue中统一初始化，无需重复调用
   console.log('LibraryView 已加载')
+  
+  // 预加载当前显示的图片
+  prepareImageUrls()
 })
 </script>
 
@@ -475,6 +550,29 @@ onMounted(() => {
 
 .card-image img {
   @apply w-full h-full object-cover;
+}
+
+.image-placeholder {
+  @apply w-full h-full flex items-center justify-center cursor-pointer;
+  background-color: var(--settings-hover);
+  transition: background-color 0.2s ease;
+}
+
+.image-placeholder:hover {
+  background-color: var(--settings-border);
+}
+
+.placeholder-content {
+  @apply text-center;
+  color: var(--settings-text-secondary);
+}
+
+.placeholder-icon {
+  @apply text-2xl mb-2;
+}
+
+.placeholder-text {
+  @apply text-sm;
 }
 
 .card-overlay {

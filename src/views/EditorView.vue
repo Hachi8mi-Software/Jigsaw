@@ -68,6 +68,7 @@
               :alt="puzzleName"
               class="background-image"
               :style="backgroundImageStyle"
+              v-if="currentImage"
             />
             
             <!-- SVG 网格覆盖层 -->
@@ -298,7 +299,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted, nextTick } from 'vue'
+import { computed, ref, reactive, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useEditorStore } from '../stores/editor'
 import { useLibraryStore } from '../stores/library'
@@ -338,7 +339,7 @@ const isAddingToLibrary = ref(false)
 const isDragOver = ref(false)
 
 // 计算属性
-const currentImage = computed(() => editorStore.currentImage)
+const currentImage = computed(() => editorStore.currentImage) // 现在直接是Blob URL
 const gridConfig = computed(() => editorStore.gridConfig)
 const boundaries = computed(() => editorStore.boundaries)
 const selectedBoundary = computed(() => editorStore.selectedBoundary)
@@ -371,7 +372,6 @@ const backgroundImageStyle = computed(() => ({
   objectFit: 'contain' as const
 }))
 
-
 // 边界状态选项
 const boundaryStates = [
   { value: BoundaryState.FLAT, label: '平直' },
@@ -399,11 +399,15 @@ const handleImageDrop = (event: DragEvent) => {
   }
 }
 
-const processImageFile = (file: File) => {
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const imageUrl = e.target?.result as string
+const processImageFile = async (file: File) => {
+  try {
+    // 直接使用OPFS存储图片，使用压缩版本
+    const { imageStorage } = await import('../utils/imageStorage')
+    const filename = await imageStorage.storeCompressedImage(file)
     
+    // 获取存储后的图片URL
+    const imageUrl = await imageStorage.getImageURL(filename)
+
     // 创建图片对象来获取原始尺寸
     const img = new Image()
     img.onload = () => {
@@ -454,22 +458,28 @@ const processImageFile = (file: File) => {
       
       console.log(`图片尺寸: ${img.naturalWidth}x${img.naturalHeight}, 宽高比: ${aspectRatio.toFixed(2)}, 建议网格: ${suggestedRows}x${suggestedCols}`)
     }
-    
+
+    img.onerror = () => {
+      console.error('图片加载失败')
+    }
+
     img.src = imageUrl
-    editorStore.setImage(imageUrl, file)
+    
+    // 存储文件名到editorStore，而不是DataURI
+    await editorStore.setImage(filename, file)
+  } catch (error) {
+    console.error('处理图片文件失败:', error)
+    alert('图片处理失败，请重试')
   }
-  reader.readAsDataURL(file)
 }
 
 const removeImage = () => {
   editorStore.setImage('')
 }
 
-const clearAll = () => {
+const clearAll = async () => {
   if (confirm('确定要清空所有内容吗？这将删除当前图片和所有编辑内容。')) {
-    editorStore.setImage('')
-    editorStore.setPuzzleName('')
-    editorStore.resetBoundaries()
+    await editorStore.clearEditor()
     
     // 重置高宽比配置
     Object.assign(aspectRatioConfig, {
@@ -740,14 +750,14 @@ const handleImportDrop = (event: DragEvent) => {
   }
 }
 
-const processImportFile = (file: File) => {
+const processImportFile = async (file: File) => {
   // 检查文件类型
   if (file.type === 'application/json' || file.name.endsWith('.json') || file.name.endsWith('.puzzle')) {
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const content = e.target?.result as string
       if (content) {
-        const success = editorStore.importPuzzle(content)
+        const success = await editorStore.importPuzzle(content)
         if (success) {
           // 同步本地网格配置
           Object.assign(localGridConfig, gridConfig.value)
@@ -765,7 +775,7 @@ const processImportFile = (file: File) => {
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
   // 同步网格配置
   Object.assign(localGridConfig, gridConfig.value)
   
@@ -780,7 +790,7 @@ onMounted(() => {
   }
   
   // 尝试加载草稿
-  editorStore.loadDraft()
+  await editorStore.loadDraft()
   
   // 生成初始边界
   if (boundaries.value.length === 0) {

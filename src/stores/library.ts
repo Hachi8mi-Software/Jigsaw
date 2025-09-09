@@ -13,6 +13,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue, GridConfig } from '../types'
 import { BUILTIN_PUZZLES, ACHIEVEMENTS } from '../data'
+import { imageStorage } from '../utils/imageStorage'
 
 
 
@@ -304,21 +305,23 @@ export const useLibraryStore = defineStore('library', () => {
   }
 
   const addLibraryItem = async (file: File, name: string, category: string, tags: string[], gridConfig?: GridConfig) => {
-    if (!libraryViewModel.validateImageFile(file)) {
+    if (!validateImageFile(file)) {
       throw new Error('无效的图片文件')
     }
 
     try {
       isLoading.value = true
       
-      // 生成缩略图，传入 gridConfig 进行中心裁剪
-      const thumbnail = await libraryViewModel.generateThumbnail(file, 800, gridConfig)
+      // 使用OPFS存储图片，并生成压缩版本
+      const filename = await imageStorage.storeCompressedImage(file)
+      
+      const imageUrl = await imageStorage.getImageURL(filename)
       
       // 创建新的库项目
       const newItem: LibraryItem = {
         id: `user_${Date.now()}`,
         name,
-        imageUrl: thumbnail,
+        imageUrl: `fs://${filename}`, // 存储OPFS文件名而不是DataURI
         category,
         tags,
         difficulty: Math.ceil(Math.random() * 5), // 随机难度，实际应根据复杂度计算
@@ -337,9 +340,20 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
-  const removeLibraryItem = (itemId: string) => {
+  const removeLibraryItem = async (itemId: string) => {
     const index = items.value.findIndex(item => item.id === itemId)
     if (index !== -1 && !items.value[index].isBuiltIn) {
+      const item = items.value[index]
+      
+      // 如果图片存储在OPFS中，删除文件
+      if (item.imageUrl && !item.imageUrl.startsWith('data:') && !item.imageUrl.startsWith('http')) {
+        try {
+          await imageStorage.deleteImage(item.imageUrl)
+        } catch (error) {
+          console.warn('删除OPFS图片文件失败:', error)
+        }
+      }
+      
       items.value.splice(index, 1)
       libraryViewModel.saveToStorage(items.value)
     }
@@ -428,9 +442,139 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
-  const clearUserLibrary = () => {
+  const clearAllUserItems = async () => {
+    const userItemsToRemove = items.value.filter(item => !item.isBuiltIn)
+    
+    // 删除OPFS中的图片文件
+    for (const item of userItemsToRemove) {
+      if (item.imageUrl && !item.imageUrl.startsWith('data:') && !item.imageUrl.startsWith('http')) {
+        try {
+          await imageStorage.deleteImage(item.imageUrl)
+        } catch (error) {
+          console.warn(`删除OPFS图片文件失败: ${item.imageUrl}`, error)
+        }
+      }
+    }
+    
     items.value = items.value.filter(item => item.isBuiltIn)
     libraryViewModel.saveToStorage(items.value)
+  }
+
+  // 获取图片的显示URL（处理OPFS文件名）
+  const getImageDisplayURL = async (imageUrl: string): Promise<string> => {
+    // 如果是DataURI或HTTP URL，直接返回
+    if (imageUrl.startsWith('data:') || imageUrl.startsWith('http')) {
+      return imageUrl
+    }
+    
+    // 如果是OPFS文件名，获取Blob URL
+    try {
+      return await imageStorage.getImageURL(imageUrl)
+    } catch (error) {
+      console.error('获取图片显示URL失败:', error)
+      return imageUrl // 回退到原始值
+    }
+  }
+
+  // 迁移现有的DataURI到OPFS
+  const migrateToOPFS = async () => {
+    let migrationCount = 0
+    
+    for (const item of items.value) {
+      if (!item.isBuiltIn && item.imageUrl.startsWith('data:')) {
+        try {
+          console.log(`迁移图片到OPFS: ${item.name}`)
+          const filename = await imageStorage.migrateFromDataURI(item.imageUrl, `migrated_${item.id}`)
+          item.imageUrl = filename
+          migrationCount++
+        } catch (error) {
+          console.error(`迁移失败: ${item.name}`, error)
+        }
+      }
+    }
+    
+    if (migrationCount > 0) {
+      libraryViewModel.saveToStorage(items.value)
+      console.log(`成功迁移 ${migrationCount} 个图片到OPFS`)
+    }
+    
+    return migrationCount
+  }
+
+  /**
+   * 验证图片文件
+   */
+  const validateImageFile = (file: File): boolean => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/bmp']
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    
+    return validTypes.includes(file.type) && file.size <= maxSize
+  }
+
+  /**
+   * 生成缩略图
+   * 提高画质：增大最大尺寸，提高压缩质量
+   * 支持按拼图比例中心裁剪
+   */
+  const generateThumbnail = async (file: File, maxWidth: number = 800, gridConfig?: GridConfig): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      img.onload = () => {
+        let sourceX = 0
+        let sourceY = 0
+        let sourceWidth = img.width
+        let sourceHeight = img.height
+
+        // 如果提供了 gridConfig，按拼图比例进行中心裁剪
+        if (gridConfig) {
+          const puzzleRatio = gridConfig.cols / gridConfig.rows // 拼图的宽高比
+          const imageRatio = img.width / img.height // 原图的宽高比
+
+          if (imageRatio > puzzleRatio) {
+            // 原图比拼图更宽，需要裁剪宽度
+            sourceWidth = img.height * puzzleRatio
+            sourceX = (img.width - sourceWidth) / 2
+          } else if (imageRatio < puzzleRatio) {
+            // 原图比拼图更高，需要裁剪高度
+            sourceHeight = img.width / puzzleRatio
+            sourceY = (img.height - sourceHeight) / 2
+          }
+          // 如果比例相同，不需要裁剪
+        }
+
+        // 计算目标尺寸
+        let targetWidth = sourceWidth
+        let targetHeight = sourceHeight
+
+        // 如果裁剪后的图片仍然大于最大尺寸，则进行缩放
+        if (sourceWidth > maxWidth || sourceHeight > maxWidth) {
+          const ratio = Math.min(maxWidth / sourceWidth, maxWidth / sourceHeight)
+          targetWidth = sourceWidth * ratio
+          targetHeight = sourceHeight * ratio
+        }
+
+        // 设置画布尺寸
+        canvas.width = targetWidth
+        canvas.height = targetHeight
+
+        // 绘制裁剪后的图片
+        ctx?.drawImage(
+          img,
+          sourceX, sourceY, sourceWidth, sourceHeight, // 源图片的裁剪区域
+          0, 0, targetWidth, targetHeight // 目标画布的绘制区域
+        )
+
+        // 提高压缩质量从 0.8 到 0.95，保持原始格式
+        const originalFormat = file.type.includes('png') ? 'image/png' : 'image/jpeg'
+        resolve(canvas.toDataURL(originalFormat, 0.95))
+      }
+
+      img.onerror = reject
+      img.src = URL.createObjectURL(file)
+    })
   }
 
   return {
@@ -464,6 +608,14 @@ export const useLibraryStore = defineStore('library', () => {
     exportLibrary,
     importLibrary,
     updateUserStats,
-    clearUserLibrary
+    clearAllUserItems,
+    
+    // OPFS相关
+    getImageDisplayURL,
+    migrateToOPFS,
+    
+    // 工具函数
+    validateImageFile,
+    generateThumbnail
   }
 })

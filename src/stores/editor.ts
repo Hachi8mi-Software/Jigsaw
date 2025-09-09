@@ -15,6 +15,7 @@ import type { GridConfig, Boundary, PuzzleData } from '../types'
 import { BoundaryState } from '../types'
 import { BoundaryManager } from '../utils/boundaryUtils'
 import { calculateDifficultyFromConfig } from '../utils/difficultyUtils'
+import { imageStorage } from '../utils/imageStorage'
 
 /**
  * 编辑器管理器类
@@ -82,7 +83,8 @@ class EditorViewModel {
 
 export const useEditorStore = defineStore('editor', () => {
   // 状态
-  const currentImage = ref<string | null>(null)
+  const currentImage = ref<string | null>(null) // 存储Blob URL，可直接用于img元素
+  const currentImageFilename = ref<string | null>(null) // 存储OPFS文件名用于管理
   const originalImageFile = ref<File | null>(null)
   const gridConfig = ref<GridConfig>({
     rows: 4,
@@ -120,14 +122,30 @@ export const useEditorStore = defineStore('editor', () => {
     return currentImage.value !== null && boundaries.value.length > 0
   })
 
+  // 获取当前图片的显示URL
+  const getCurrentImageURL = async (): Promise<string | null> => {
+    return currentImage.value
+  }
+
   const imageAspectRatio = computed(() => {
     if (!gridConfig.value.pieceWidth || !gridConfig.value.pieceHeight) return 1
     return gridConfig.value.pieceWidth / gridConfig.value.pieceHeight
   })
 
   // Actions
-  const setImage = (imageUrl: string, imageFile?: File) => {
-    currentImage.value = imageUrl
+  const setImage = async (imageFilename: string, imageFile?: File) => {
+    // 存储文件名用于管理
+    currentImageFilename.value = imageFilename
+    
+    // 获取Blob URL并存储到currentImage
+    try {
+      const blobURL = await imageStorage.getImageURL(imageFilename)
+      currentImage.value = blobURL
+    } catch (error) {
+      console.error('获取图片URL失败:', error)
+      currentImage.value = null
+    }
+    
     if (imageFile) {
       originalImageFile.value = imageFile
     }
@@ -223,7 +241,7 @@ export const useEditorStore = defineStore('editor', () => {
     const puzzleData: PuzzleData = {
       id: `puzzle_${Date.now()}`,
       name: puzzleName.value,
-      imageUrl: currentImage.value!,
+      imageUrl: `fs://${currentImageFilename.value!}`,
       gridConfig: gridConfig.value,
       boundaries: boundaries.value,
       createdAt: new Date(),
@@ -233,10 +251,33 @@ export const useEditorStore = defineStore('editor', () => {
     return editorManager.exportPuzzleData(puzzleData)
   }
 
-  const importPuzzle = (jsonString: string): boolean => {
+  const importPuzzle = async (jsonString: string): Promise<boolean> => {
     const puzzleData = editorManager.importPuzzleData(jsonString)
     if (puzzleData) {
-      currentImage.value = puzzleData.imageUrl
+      // 如果导入的数据包含DataURI，需要迁移到OPFS
+      let imageFilename = puzzleData.imageUrl
+      
+      if (puzzleData.imageUrl.startsWith('data:')) {
+        try {
+          console.log('检测到DataURI，正在迁移到OPFS...')
+          imageFilename = await imageStorage.migrateFromDataURI(puzzleData.imageUrl)
+          console.log('DataURI迁移成功:', imageFilename)
+        } catch (error) {
+          console.error('DataURI迁移失败:', error)
+          return false
+        }
+      }
+      
+      // 设置文件名和获取Blob URL
+      currentImageFilename.value = imageFilename
+      try {
+        const blobURL = await imageStorage.getImageURL(imageFilename)
+        currentImage.value = blobURL
+      } catch (error) {
+        console.error('获取图片URL失败:', error)
+        currentImage.value = null
+      }
+      
       gridConfig.value = puzzleData.gridConfig
       boundaries.value = puzzleData.boundaries
       puzzleName.value = puzzleData.name
@@ -246,8 +287,23 @@ export const useEditorStore = defineStore('editor', () => {
     return false
   }
 
-  const clearEditor = () => {
+  const clearEditor = async () => {
+    // 清理OPFS中的图片文件
+    if (currentImageFilename.value) {
+      try {
+        await imageStorage.deleteImage(currentImageFilename.value)
+      } catch (error) {
+        console.warn('清理图片文件失败:', error)
+      }
+    }
+    
+    // 释放Blob URL
+    if (currentImage.value && currentImage.value.startsWith('blob:')) {
+      URL.revokeObjectURL(currentImage.value)
+    }
+    
     currentImage.value = null
+    currentImageFilename.value = null
     originalImageFile.value = null
     gridConfig.value = {
       rows: 4,
@@ -264,7 +320,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   const saveDraft = () => {
     const draft = {
-      currentImage: currentImage.value,
+      currentImage: currentImageFilename.value, // 保存文件名而不是Blob URL
       gridConfig: gridConfig.value,
       boundaries: boundaries.value,
       puzzleName: puzzleName.value,
@@ -275,12 +331,39 @@ export const useEditorStore = defineStore('editor', () => {
     isModified.value = false
   }
 
-  const loadDraft = (): boolean => {
+  const loadDraft = async (): Promise<boolean> => {
     try {
       const draftString = localStorage.getItem('puzzle_editor_draft')
       if (draftString) {
         const draft = JSON.parse(draftString)
-        currentImage.value = draft.currentImage
+        
+        // 如果草稿中的图片是DataURI，需要迁移到OPFS
+        if (draft.currentImage && draft.currentImage.startsWith('data:')) {
+          try {
+            console.log('检测到草稿中的DataURI，正在迁移到OPFS...')
+            const filename = await imageStorage.migrateFromDataURI(draft.currentImage)
+            draft.currentImage = filename
+            console.log('草稿DataURI迁移成功:', filename)
+          } catch (error) {
+            console.error('草稿DataURI迁移失败:', error)
+            return false
+          }
+        }
+        
+        // 设置文件名和获取Blob URL
+        currentImageFilename.value = draft.currentImage
+        if (draft.currentImage) {
+          try {
+            const blobURL = await imageStorage.getImageURL(draft.currentImage)
+            currentImage.value = blobURL
+          } catch (error) {
+            console.error('获取草稿图片URL失败:', error)
+            currentImage.value = null
+          }
+        } else {
+          currentImage.value = null
+        }
+        
         gridConfig.value = draft.gridConfig
         boundaries.value = draft.boundaries
         puzzleName.value = draft.puzzleName
@@ -296,7 +379,8 @@ export const useEditorStore = defineStore('editor', () => {
 
   return {
     // 状态
-    currentImage,
+    currentImage, // 现在直接存储可用的Blob URL
+    currentImageFilename, // OPFS文件名，用于管理
     originalImageFile,
     gridConfig,
     boundaries,
@@ -312,6 +396,9 @@ export const useEditorStore = defineStore('editor', () => {
     puzzleDifficulty,
     canExport,
     imageAspectRatio,
+    
+    // 方法
+    getCurrentImageURL,
     
     // Actions
     setImage,

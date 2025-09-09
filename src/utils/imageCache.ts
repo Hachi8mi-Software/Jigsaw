@@ -51,7 +51,13 @@ export class ImageCacheManager {
   /**
    * 加载单个图片
    */
-  private loadImage(url: string): Promise<HTMLImageElement> {
+  private async loadImage(url: string): Promise<HTMLImageElement> {
+    // 处理 fs:// 协议
+    if (url.startsWith('fs://')) {
+      return this.loadFileSystemImage(url)
+    }
+    
+    // 处理普通 URL
     return new Promise((resolve, reject) => {
       const img = new Image()
       img.crossOrigin = 'anonymous'
@@ -68,6 +74,44 @@ export class ImageCacheManager {
       
       img.src = url
     })
+  }
+
+  /**
+   * 加载文件系统图片 (fs:// 协议)
+   */
+  private async loadFileSystemImage(fsUrl: string): Promise<HTMLImageElement> {
+    try {
+      // 从 fs:// URL 中提取文件路径
+      const filePath = fsUrl.replace('fs://', '')
+      console.log(`加载文件系统图片: ${filePath}`)
+      
+      // 动态导入 imageStorage 以获取实际的 blob URL
+      const { imageStorage } = await import('./imageStorage')
+      
+      // 获取实际的 blob URL
+      const blobUrl = await imageStorage.getImageURL(filePath)
+      
+      // 使用 blob URL 加载图片
+      return new Promise((resolve, reject) => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        
+        img.onload = () => {
+          console.log(`文件系统图片加载成功: ${fsUrl} -> ${blobUrl}`)
+          resolve(img)
+        }
+        
+        img.onerror = (error) => {
+          console.error(`文件系统图片加载失败: ${fsUrl}`, error)
+          reject(new Error(`Failed to load filesystem image: ${fsUrl}`))
+        }
+        
+        img.src = blobUrl
+      })
+    } catch (error) {
+      console.error(`处理文件系统URL失败: ${fsUrl}`, error)
+      throw new Error(`Failed to process filesystem URL: ${fsUrl}`)
+    }
   }
 
   /**
@@ -138,6 +182,46 @@ export class ImageCacheManager {
   removeFromCache(url: string): void {
     this.cache.delete(url)
     this.loadingPromises.delete(url)
+  }
+
+  /**
+   * 检查URL是否为文件系统协议
+   */
+  static isFileSystemUrl(url: string): boolean {
+    return url.startsWith('fs://')
+  }
+
+  /**
+   * 创建文件系统URL
+   */
+  static createFileSystemUrl(filename: string): string {
+    return `fs://${filename}`
+  }
+
+  /**
+   * 从文件系统URL提取文件名
+   */
+  static extractFilenameFromFsUrl(fsUrl: string): string {
+    if (!this.isFileSystemUrl(fsUrl)) {
+      throw new Error(`Invalid filesystem URL: ${fsUrl}`)
+    }
+    return fsUrl.replace('fs://', '')
+  }
+
+  /**
+   * 预加载文件系统图片
+   */
+  async preloadFileSystemImage(filename: string): Promise<void> {
+    const fsUrl = ImageCacheManager.createFileSystemUrl(filename)
+    return this.preloadImage(fsUrl)
+  }
+
+  /**
+   * 批量预加载文件系统图片
+   */
+  async preloadFileSystemImages(filenames: string[]): Promise<void> {
+    const fsUrls = filenames.map(filename => ImageCacheManager.createFileSystemUrl(filename))
+    return this.preloadImages(fsUrls)
   }
 }
 
