@@ -20,6 +20,16 @@ export interface ImageStorageInterface {
   }>
 }
 
+/**
+ * 裁剪图像接口
+ */
+export interface CropArea {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export class UnifiedImageStorage implements ImageStorageInterface {
   private storage: OPFSImageManager | MemoryImageStorage
   private isUsingOPFS: boolean = false
@@ -263,7 +273,7 @@ export class UnifiedImageStorage implements ImageStorageInterface {
     })
   }
 
-  async cropImage(file: File, gridConfig: GridConfig): Promise<File> {
+  async cropImage(file: File, gridConfig?: GridConfig, cropArea?: CropArea): Promise<File> {
     return new Promise((resolve, reject) => {
       const img = new Image()
       const canvas = document.createElement('canvas')
@@ -275,8 +285,14 @@ export class UnifiedImageStorage implements ImageStorageInterface {
         let sourceWidth = img.width
         let sourceHeight = img.height
 
-        // 如果提供了 gridConfig，按拼图比例进行中心裁剪
-        if (gridConfig) {
+        // 如果提供了自定义裁剪区域，使用自定义区域
+        if (cropArea) {
+          sourceX = cropArea.x
+          sourceY = cropArea.y
+          sourceWidth = cropArea.width
+          sourceHeight = cropArea.height
+        } else if (gridConfig) {
+          // 如果提供了 gridConfig，按拼图比例进行中心裁剪
           const puzzleRatio = gridConfig.cols / gridConfig.rows // 拼图的宽高比
           const imageRatio = img.width / img.height // 原图的宽高比
 
@@ -336,6 +352,7 @@ export class UnifiedImageStorage implements ImageStorageInterface {
   async storeCompressedImage(
     file: File, 
     gridConfig?: GridConfig,
+    cropArea?: CropArea,
     compressionOptions?: {
       quality?: number
       maxWidth?: number
@@ -357,7 +374,7 @@ export class UnifiedImageStorage implements ImageStorageInterface {
       
       console.log(`图像压缩: ${file.size} -> ${compressedFile.size} bytes (${(compressedFile.size/file.size*100).toFixed(1)}%)`)
       
-      const croppedFile = gridConfig ? await this.cropImage(compressedFile, gridConfig) : compressedFile
+      const croppedFile = (gridConfig || cropArea) ? await this.cropImage(compressedFile, gridConfig, cropArea) : compressedFile
       return await this.storeImage(croppedFile)
     } catch (error) {
       console.warn('图像压缩失败，使用原始文件:', error)

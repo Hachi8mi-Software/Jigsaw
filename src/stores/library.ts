@@ -13,7 +13,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue, GridConfig, LeaderboardEntry } from '../types'
 import { BUILTIN_PUZZLES, ACHIEVEMENTS } from '../data'
-import { imageStorage } from '../utils/imageStorage'
+import { imageStorage, type CropArea } from '../utils/imageStorage'
 
 
 
@@ -333,7 +333,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = false
   }
 
-  const addLibraryItem = async (file: File, name: string, category: string, tags: string[], gridConfig?: GridConfig) => {
+  const addLibraryItem = async (file: File, name: string, category: string, tags: string[], gridConfig?: GridConfig, cropArea?: CropArea) => {
     if (!validateImageFile(file)) {
       throw new Error('无效的图片文件')
     }
@@ -341,8 +341,8 @@ export const useLibraryStore = defineStore('library', () => {
     try {
       isLoading.value = true
       
-      // 使用OPFS存储图片，并生成压缩版本
-      const filename = await imageStorage.storeCompressedImage(file, gridConfig)
+      // 使用OPFS存储图片，并生成压缩版本，支持自定义裁剪
+      const filename = await imageStorage.storeCompressedImage(file, gridConfig, cropArea)
       
       const imageUrl = await imageStorage.getImageURL(filename)
       

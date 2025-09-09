@@ -195,7 +195,7 @@ export class OPFSTestManager {
     
     // 测试压缩存储
     console.log('执行压缩存储...')
-    const filename = await imageStorage.storeCompressedImage(originalFile, 'compressed_test.jpg', {
+    const filename = await imageStorage.storeCompressedImage(originalFile, undefined, undefined, {
       quality: 0.8,
       maxWidth: 400,
       maxHeight: 300

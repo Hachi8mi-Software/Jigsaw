@@ -240,6 +240,9 @@
           <button @click="triggerImageUpload" class="bottom-btn">
             🔄 更换图片
           </button>
+          <button @click="reopenCropDialog" class="bottom-btn" v-if="currentImage">
+            ✂️ 重新裁剪
+          </button>
           <button @click="exportPuzzle" class="bottom-btn" :disabled="!canExport">
             📤 导出
           </button>
@@ -347,6 +350,49 @@
         </div>
       </div>
     </div>
+
+    <!-- 图片裁剪对话框 -->
+    <div v-if="showCropDialog" class="modal-overlay" @click="closeCropDialog">
+      <div class="modal-dialog crop-dialog" @click.stop>
+        <div class="modal-header">
+          <h3>裁剪图片</h3>
+          <button @click="closeCropDialog" class="close-btn">×</button>
+        </div>
+        <div class="modal-body crop-body">
+          <div class="cropper-container">
+            <div v-if="!cropImageUrl" class="loading-placeholder">
+              <p>正在加载图片...</p>
+            </div>
+            <Cropper
+              v-else
+              ref="cropperRef"
+              :src="cropImageUrl"
+              :stencil-props="{
+                aspectRatio: gridConfig.cols / gridConfig.rows
+              }"
+              :canvas="{
+                background: false
+              }"
+              :background-class="'cropper-background'"
+              class="cropper"
+            />
+          </div>
+          <div class="crop-hint">
+            <p>请选择要裁剪的区域，裁剪区域将按照拼图比例自动调整</p>
+            <p>当前拼图比例: {{ gridConfig.cols }}:{{ gridConfig.rows }}</p>
+            <p v-if="cropImageUrl">图片URL: {{ cropImageUrl.substring(0, 50) }}...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeCropDialog" class="modal-btn">
+            取消
+          </button>
+          <button @click="confirmCrop" class="modal-btn primary">
+            确认裁剪
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -357,6 +403,9 @@ import { useEditorStore } from '../stores/editor'
 import { useLibraryStore } from '../stores/library'
 import { BoundaryState, PuzzleData } from '../types'
 import SvgBoundary from '../components/SvgBoundary.vue'
+import { Cropper } from 'vue-advanced-cropper'
+import type { CropArea } from '../utils/imageStorage'
+import 'vue-advanced-cropper/dist/style.css'
 
 // Store和路由
 const editorStore = useEditorStore()
@@ -399,6 +448,13 @@ const windowSize = ref({
   width: window.innerWidth,
   height: window.innerHeight
 })
+
+// 裁剪相关状态
+const showCropDialog = ref(false)
+const cropImageUrl = ref('')
+const cropArea = ref<CropArea | null>(null)
+const originalImageFile = ref<File | null>(null)
+const cropperRef = ref()
 
 // 计算属性
 const currentImage = computed(() => editorStore.currentImage) // 现在直接是Blob URL
@@ -516,9 +572,66 @@ const handleImageDrop = (event: DragEvent) => {
 
 const processImageFile = async (file: File) => {
   try {
-    // 直接使用OPFS存储图片，使用压缩版本
+    console.log('开始处理图片文件:', file.name, file.size)
+    
+    // 保存原始文件
+    originalImageFile.value = file
+    
+    // 创建图片URL用于裁剪
+    const imageUrl = URL.createObjectURL(file)
+    
+    // 等待图片加载完成
+    await new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        console.log('图片加载完成:', img.width, 'x', img.height)
+        resolve(true)
+      }
+      img.onerror = reject
+      img.src = imageUrl
+    })
+    
+    cropImageUrl.value = imageUrl
+    
+    console.log('图片URL创建成功:', imageUrl)
+    console.log('显示裁剪对话框')
+    
+    // 显示裁剪对话框
+    showCropDialog.value = true
+  } catch (error) {
+    console.error('处理图片文件失败:', error)
+    alert('图片处理失败，请重试')
+  }
+}
+
+const confirmCrop = async () => {
+  if (!originalImageFile.value || !cropperRef.value) {
+    return
+  }
+  
+  try {
+    // 获取裁剪区域
+    const cropData = cropperRef.value.getResult()
+    if (!cropData) {
+      alert('请选择裁剪区域')
+      return
+    }
+    
+    // 保存裁剪区域信息
+    cropArea.value = {
+      x: cropData.coordinates.left,
+      y: cropData.coordinates.top,
+      width: cropData.coordinates.width,
+      height: cropData.coordinates.height
+    }
+    
+    // 使用裁剪区域存储图片
     const { imageStorage } = await import('../utils/imageStorage')
-    const filename = await imageStorage.storeCompressedImage(file)
+    const filename = await imageStorage.storeCompressedImage(
+      originalImageFile.value,
+      localGridConfig,
+      cropArea.value
+    )
     
     // 获取存储后的图片URL
     const imageUrl = await imageStorage.getImageURL(filename)
@@ -582,20 +695,59 @@ const processImageFile = async (file: File) => {
     img.src = imageUrl
     
     // 存储文件名到editorStore，而不是DataURI
-    await editorStore.setImage(filename, file)
+    await editorStore.setImage(filename, originalImageFile.value)
+    
+    // 关闭裁剪对话框
+    closeCropDialog()
   } catch (error) {
-    console.error('处理图片文件失败:', error)
-    alert('图片处理失败，请重试')
+    console.error('裁剪图片失败:', error)
+    alert('裁剪图片失败，请重试')
   }
+}
+
+const closeCropDialog = () => {
+  showCropDialog.value = false
+  if (cropImageUrl.value) {
+    URL.revokeObjectURL(cropImageUrl.value)
+    cropImageUrl.value = ''
+  }
+  // 不要清空 originalImageFile，因为用户可能需要重新裁剪或添加到素材库
+}
+
+const reopenCropDialog = async () => {
+  if (!originalImageFile.value) {
+    alert('没有原始图片文件')
+    return
+  }
+  
+  // 重新创建图片URL
+  const imageUrl = URL.createObjectURL(originalImageFile.value)
+  cropImageUrl.value = imageUrl
+  showCropDialog.value = true
 }
 
 const removeImage = () => {
   editorStore.setImage('')
+  // 清理裁剪相关状态
+  cropArea.value = null
+  originalImageFile.value = null
+  if (cropImageUrl.value) {
+    URL.revokeObjectURL(cropImageUrl.value)
+    cropImageUrl.value = ''
+  }
 }
 
 const clearAll = async () => {
   if (confirm('确定要清空所有内容吗？这将删除当前图片和所有编辑内容。')) {
     await editorStore.clearEditor()
+    
+    // 清理裁剪相关状态
+    cropArea.value = null
+    originalImageFile.value = null
+    if (cropImageUrl.value) {
+      URL.revokeObjectURL(cropImageUrl.value)
+      cropImageUrl.value = ''
+    }
     
     // 重置高宽比配置
     Object.assign(aspectRatioConfig, {
@@ -775,7 +927,7 @@ const handleAddToLibrary = async () => {
     return
   }
   
-  if (!currentImage.value || !editorStore.originalImageFile) {
+  if (!currentImage.value || !originalImageFile.value) {
     alert('没有找到原始图片文件')
     return
   }
@@ -806,13 +958,14 @@ const handleAddToLibrary = async () => {
       difficulty: Math.ceil(Math.random() * 5) // 随机难度，实际应根据复杂度计算
     }
     
-    // 添加到素材库，并传递自定义拼图数据和 gridConfig 进行中心裁剪
+    // 添加到素材库，使用原始文件和裁剪区域
     const newItem = await libraryStore.addLibraryItem(
-      editorStore.originalImageFile,
+      originalImageFile.value,
       libraryItemName.value.trim(),
       libraryItemCategory.value,
       tags,
-      puzzleData.gridConfig
+      puzzleData.gridConfig,
+      cropArea.value || undefined
     )
     
     // 更新库项目，添加puzzleData
@@ -1759,6 +1912,77 @@ onUnmounted(() => {
     /* 移动端工具栏宽度调整 */
     width: 280px;
     max-height: calc(100vh - 160px);
+  }
+}
+
+/* 裁剪对话框样式 */
+.crop-dialog {
+  @apply w-full max-w-4xl mx-4;
+  max-height: 90vh;
+}
+
+.crop-body {
+  @apply p-0;
+  max-height: calc(90vh - 120px);
+  overflow: hidden;
+}
+
+.cropper-container {
+  @apply w-full h-96 sm:h-[500px] lg:h-[600px];
+  background-color: var(--settings-card-bg);
+}
+
+.cropper {
+  @apply w-full h-full;
+}
+
+.cropper-background {
+  background-color: var(--settings-card-bg);
+}
+
+.loading-placeholder {
+  @apply w-full h-full flex items-center justify-center;
+  background-color: var(--settings-card-bg);
+}
+
+.loading-placeholder p {
+  @apply text-lg;
+  color: var(--settings-text-secondary);
+}
+
+.crop-hint {
+  @apply p-4 border-t;
+  border-top-color: var(--settings-border);
+  background-color: var(--settings-card-bg);
+}
+
+.crop-hint p {
+  @apply text-sm mb-1;
+  color: var(--settings-text-secondary);
+}
+
+.crop-hint p:last-child {
+  @apply font-medium;
+  color: var(--settings-text-primary);
+}
+
+/* 移动端裁剪对话框优化 */
+@media (max-width: 767px) {
+  .crop-dialog {
+    @apply w-full max-w-none mx-2;
+    max-height: 95vh;
+  }
+  
+  .cropper-container {
+    @apply h-80;
+  }
+  
+  .crop-hint {
+    @apply p-3;
+  }
+  
+  .crop-hint p {
+    @apply text-xs;
   }
 }
 </style>
