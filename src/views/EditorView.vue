@@ -164,17 +164,7 @@
       <div class="editor-config-panel">
         <h3 class="config-title">网格配置</h3>
         <div class="config-controls">
-          <div class="config-group">
-            <label>行数</label>
-            <input 
-              v-model.number="localGridConfig.rows"
-              type="number"
-              min="2"
-              max="50"
-              @change="updateGrid"
-              class="config-input"
-            />
-          </div>
+          
           <div class="config-group">
             <label>列数</label>
             <input 
@@ -186,21 +176,32 @@
               class="config-input"
             />
           </div>
+          <div class="config-group">
+            <label>行数</label>
+            <input 
+              v-model.number="localGridConfig.rows"
+              type="number"
+              min="2"
+              max="50"
+              @change="updateGrid"
+              class="config-input"
+            />
+          </div>
           <div class="config-group aspect-ratio-group">
-            <label>高宽比(高:宽)</label>
+            <label>宽高比(宽:高)</label>
             <div class="aspect-ratio-inputs">
               <input 
-                v-model.number="aspectRatioConfig.height"
-                type="number"
-                min="1"
-                max="10"
-                step="0.1"
-                @change="updateAspectRatio"
-                class="config-input aspect-input"
+              v-model.number="aspectRatioConfig.width"
+              type="number"
+              min="1"
+              max="10"
+              step="0.1"
+              @change="updateAspectRatio"
+              class="config-input aspect-input"
               />
               <span class="ratio-separator">:</span>
               <input 
-                v-model.number="aspectRatioConfig.width"
+                v-model.number="aspectRatioConfig.height"
                 type="number"
                 min="1"
                 max="10"
@@ -379,7 +380,8 @@
           </div>
           <div class="crop-hint">
             <p>请选择要裁剪的区域，裁剪区域将按照拼图比例自动调整</p>
-            <p>当前拼图比例: {{ gridConfig.cols }}:{{ gridConfig.rows }}</p>
+            <p>当前拼图比例: {{ actualPuzzleRatio }}</p>
+            <p>网格配置: {{ gridConfig.cols }}列 × {{ gridConfig.rows }}行</p>
             <p v-if="cropImageUrl">图片URL: {{ cropImageUrl.substring(0, 50) }}...</p>
           </div>
         </div>
@@ -470,6 +472,13 @@ const totalBoundaries = computed(() => editorStore.totalBoundaries)
 const complexBoundaries = computed(() => editorStore.complexBoundaries)
 const puzzleDifficulty = computed(() => editorStore.puzzleDifficulty)
 const canExport = computed(() => editorStore.canExport)
+
+// 计算实际的拼图比例（考虑高宽比设置）
+const actualPuzzleRatio = computed(() => {
+  const totalWidth = gridConfig.value.cols * gridConfig.value.pieceWidth
+  const totalHeight = gridConfig.value.rows * gridConfig.value.pieceHeight
+  return `${totalWidth}:${totalHeight}`
+})
 
 // 计算容器的实际尺寸（用于SVG网格）
 const containerDimensions = computed(() => {
@@ -636,56 +645,18 @@ const confirmCrop = async () => {
     // 获取存储后的图片URL
     const imageUrl = await imageStorage.getImageURL(filename)
 
-    // 创建图片对象来获取原始尺寸
+    // 创建图片对象来获取原始尺寸（仅用于日志记录）
     const img = new Image()
     img.onload = () => {
-      // 计算图片宽高比
+      // 计算图片宽高比（仅用于日志记录）
       const aspectRatio = img.naturalWidth / img.naturalHeight
       
-      // 根据宽高比自动设置合适的行列数
-      let suggestedCols, suggestedRows
-      
-      if (aspectRatio > 1.5) {
-        // 宽图：更多列
-        suggestedCols = 6
-        suggestedRows = Math.round(6 / aspectRatio)
-      } else if (aspectRatio < 0.75) {
-        // 高图：更多行
-        suggestedRows = 6
-        suggestedCols = Math.round(6 * aspectRatio)
-      } else {
-        // 接近正方形：平衡的行列数
-        suggestedCols = 4
-        suggestedRows = Math.round(4 / aspectRatio)
-      }
-      
-      // 确保最小值为2，最大值为12
-      suggestedCols = Math.max(2, Math.min(12, suggestedCols))
-      suggestedRows = Math.max(2, Math.min(12, suggestedRows))
-      
-      // 计算建议的高宽比 - 固定为1:1正方形
-      aspectRatioConfig.width = 1
-      aspectRatioConfig.height = 1
-      
-      // 根据1:1高宽比计算pieceWidth和pieceHeight - 固定为正方形
-      const baseSize = 100
-      const pieceWidth = baseSize
-      const pieceHeight = baseSize
-      
-      // 更新本地网格配置
-      Object.assign(localGridConfig, {
-        rows: suggestedRows,
-        cols: suggestedCols,
-        pieceWidth: Math.max(50, pieceWidth),
-        pieceHeight: Math.max(50, pieceHeight)
-      })
-      
-      // 更新store中的网格配置
+      // 保持用户当前设置的行列数不变，只更新store中的网格配置
       editorStore.updateGridConfig(localGridConfig)
       // 重新生成边界，使用动态尺寸
       editorStore.generateBoundaries(dynamicPieceWidth.value, dynamicPieceHeight.value)
       
-      console.log(`图片尺寸: ${img.naturalWidth}x${img.naturalHeight}, 宽高比: ${aspectRatio.toFixed(2)}, 建议网格: ${suggestedRows}x${suggestedCols}`)
+      console.log(`图片尺寸: ${img.naturalWidth}x${img.naturalHeight}, 宽高比: ${aspectRatio.toFixed(2)}, 保持网格: ${localGridConfig.rows}x${localGridConfig.cols}`)
     }
 
     img.onerror = () => {
