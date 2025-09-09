@@ -121,6 +121,43 @@
             </svg>
           </div>
         </div>
+        
+        <!-- 移动端悬浮工具栏 -->
+        <div v-if="isMobile" class="mobile-floating-toolbar">
+          <!-- 悬浮球按钮 -->
+          <button 
+            @click="toggleFloatingToolbar"
+            class="floating-ball-btn"
+            :class="{ 'expanded': showFloatingToolbar }"
+          >
+            <span class="ball-icon">{{ showFloatingToolbar ? '✕' : '🔧' }}</span>
+          </button>
+          
+          <!-- 展开的工具栏 -->
+          <div v-if="showFloatingToolbar" class="floating-toolbar-content">
+            <div class="toolbar-header">
+              <h4 class="toolbar-title">边界操作</h4>
+            </div>
+            <div class="toolbar-buttons">
+              <button 
+                @click="randomizeBoundaries" 
+                class="toolbar-btn" 
+                :disabled="!canExport"
+              >
+                <span class="btn-icon">🎲</span>
+                <span class="btn-text">随机化边界</span>
+              </button>
+              <button 
+                @click="resetBoundaries" 
+                class="toolbar-btn" 
+                :disabled="!canExport"
+              >
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">重置边界</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 网格配置面板 -->
@@ -172,6 +209,19 @@
                 class="config-input aspect-input"
               />
             </div>
+          </div>
+        </div>
+        
+        <!-- 边界操作区域 -->
+        <div class="boundary-controls desktop-only">
+          <h4 class="boundary-title">边界操作</h4>
+          <div class="boundary-buttons">
+            <button @click="randomizeBoundaries" class="boundary-btn" :disabled="!canExport">
+              🎲 随机化边界
+            </button>
+            <button @click="resetBoundaries" class="boundary-btn" :disabled="!canExport">
+              🔄 重置边界
+            </button>
           </div>
         </div>
       </div>
@@ -339,6 +389,10 @@ const libraryItemCategory = ref('自定义')
 const libraryItemTags = ref('')
 const isAddingToLibrary = ref(false)
 const isDragOver = ref(false)
+
+// 移动端状态
+const isMobile = ref(false)
+const showFloatingToolbar = ref(false)
 
 // 窗口尺寸状态
 const windowSize = ref({
@@ -623,6 +677,16 @@ const setBoundaryState = (state: BoundaryState) => {
   }
 }
 
+// 移动端检测
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+// 切换悬浮工具栏
+const toggleFloatingToolbar = () => {
+  showFloatingToolbar.value = !showFloatingToolbar.value
+}
+
 
 const exportPuzzle = () => {
   const puzzleJson = editorStore.exportPuzzle()
@@ -870,9 +934,13 @@ onMounted(async () => {
       width: window.innerWidth,
       height: window.innerHeight
     }
+    checkMobile() // 同时检测移动端状态
   }
   
   window.addEventListener('resize', handleResize)
+  
+  // 初始化移动端检测
+  checkMobile()
 })
 
 // 窗口大小变化处理函数
@@ -1157,6 +1225,51 @@ onUnmounted(() => {
   border-color: var(--settings-accent);
 }
 
+/* 边界操作区域样式 */
+.boundary-controls {
+  @apply mt-4 pt-4 border-t;
+  border-top-color: var(--settings-border);
+}
+
+/* 桌面端显示，移动端隐藏 */
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+.boundary-title {
+  @apply text-xs font-semibold mb-2;
+  color: var(--settings-text-primary);
+}
+
+.boundary-buttons {
+  @apply flex gap-3;
+}
+
+.boundary-btn {
+  @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+  min-width: 120px;
+}
+
+.boundary-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.boundary-btn:disabled {
+  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
+}
+
 /* 高宽比输入框样式 */
 .aspect-ratio-group {
   @apply col-span-2;
@@ -1295,6 +1408,24 @@ onUnmounted(() => {
   
   .config-input {
     @apply px-2 py-1 text-xs;
+  }
+  
+  /* 边界操作区域移动端优化 */
+  .boundary-controls {
+    @apply mt-3 pt-3;
+  }
+  
+  .boundary-title {
+    @apply text-xs mb-2;
+  }
+  
+  .boundary-buttons {
+    @apply flex-col gap-2;
+  }
+  
+  .boundary-btn {
+    @apply w-full px-3 py-2 text-sm;
+    min-width: auto;
   }
   
   /* 底部操作栏移动端优化 */
@@ -1488,5 +1619,110 @@ onUnmounted(() => {
 .file-select-btn:hover {
   background-color: var(--settings-accent-hover, #2563eb);
   @apply shadow-md;
+}
+
+/* 移动端悬浮工具栏样式 */
+.mobile-floating-toolbar {
+  @apply fixed top-20 right-6 z-50;
+}
+
+.floating-ball-btn {
+  @apply w-14 h-14 rounded-full shadow-lg transition-all duration-300;
+  @apply flex items-center justify-center;
+  background-color: var(--settings-accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.floating-ball-btn:hover {
+  @apply scale-110 shadow-xl;
+  background-color: var(--settings-accent-hover, #2563eb);
+}
+
+.floating-ball-btn.expanded {
+  @apply scale-110;
+  background-color: var(--settings-accent-hover, #2563eb);
+}
+
+.ball-icon {
+  @apply text-xl font-bold;
+}
+
+.floating-toolbar-content {
+  @apply absolute top-16 right-0 w-64 p-4 rounded-lg shadow-xl;
+  background-color: var(--settings-card-bg);
+  border: 1px solid var(--settings-border);
+  animation: slideDown 0.3s ease-out;
+  /* 确保工具栏不会超出屏幕顶部 */
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toolbar-header {
+  @apply mb-3 pb-2 border-b;
+  border-bottom-color: var(--settings-border);
+}
+
+.toolbar-title {
+  @apply text-sm font-semibold;
+  color: var(--settings-text-primary);
+}
+
+.toolbar-buttons {
+  @apply space-y-2;
+}
+
+.toolbar-btn {
+  @apply w-full flex items-center px-3 py-2 rounded-md transition-colors duration-200;
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+  border: none;
+  cursor: pointer;
+}
+
+.toolbar-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.toolbar-btn:disabled {
+  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
+}
+
+.btn-icon {
+  @apply text-lg mr-3;
+}
+
+.btn-text {
+  @apply text-sm font-medium;
+}
+
+/* 移动端悬浮工具栏额外优化 */
+@media (max-width: 767px) {
+  .mobile-floating-toolbar {
+    /* 确保在移动端有足够的顶部间距 */
+    top: 80px;
+  }
+  
+  .floating-toolbar-content {
+    /* 移动端工具栏宽度调整 */
+    width: 280px;
+    max-height: calc(100vh - 140px);
+  }
 }
 </style>
