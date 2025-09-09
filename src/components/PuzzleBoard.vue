@@ -464,15 +464,10 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 
 <style scoped>
 .puzzle-board {
-  @apply flex flex-col items-center p-6 min-h-screen;
+  @apply flex flex-col items-center p-6;
   background-color: var(--settings-bg);
-  /* 移动端高度优化 */
-  min-height: 100vh;
-  min-height: 100dvh;
-  /* 确保内容不会超出视口 */
-  max-height: 100vh;
-  max-height: 100dvh;
   overflow-y: auto;
+  height: 100%;
 }
 
 .puzzle-container {

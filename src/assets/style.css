@@ -146,8 +146,6 @@ body {
   /* 优化拼图板在竖屏下的显示 */
   .puzzle-board {
     padding: 1rem;
-    min-height: calc(100vh - 60px); /* 减去顶部栏高度 */
-    min-height: calc(100dvh - 60px);
   }
   
   /* 确保拼图块区域不会过高 */
