@@ -874,52 +874,6 @@ const closeAddToLibraryDialog = () => {
   isAddingToLibrary.value = false
 }
 
-// 检查图片比例和网格比例是否匹配
-const checkImageGridRatio = (): Promise<boolean> => {
-  return new Promise((resolve) => {
-    if (!currentImage.value) {
-      resolve(true)
-      return
-    }
-    
-    const img = new Image()
-    img.onload = () => {
-      const imageAspectRatio = img.naturalWidth / img.naturalHeight
-      const gridAspectRatio = (gridConfig.value.cols * gridConfig.value.pieceWidth) / (gridConfig.value.rows * gridConfig.value.pieceHeight)
-      
-      // 计算比例差异（允许10%的误差）
-      const ratioDifference = Math.abs(imageAspectRatio - gridAspectRatio) / imageAspectRatio
-      
-      if (ratioDifference > 0.1) {
-        // 比例不匹配，弹出警告
-        const imageRatioText = imageAspectRatio > 1 ? `${imageAspectRatio.toFixed(2)}:1 (横向)` : `1:${(1/imageAspectRatio).toFixed(2)} (纵向)`
-        const gridRatioText = gridAspectRatio > 1 ? `${gridAspectRatio.toFixed(2)}:1 (横向)` : `1:${(1/gridAspectRatio).toFixed(2)} (纵向)`
-        
-        const message = `⚠️ 比例不匹配警告\n\n` +
-          `图片原始比例: ${imageRatioText}\n` +
-          `当前网格比例: ${gridRatioText}\n\n` +
-          `比例不匹配可能导致图片在游戏中被裁剪或变形。\n\n` +
-          `建议调整网格设置：\n` +
-          `• 行数: ${gridConfig.value.rows} → ${Math.round(gridConfig.value.cols / imageAspectRatio)}\n` +
-          `• 列数: ${gridConfig.value.cols}\n\n` +
-          `是否仍要继续添加到素材库？`
-        
-        const userConfirmed = confirm(message)
-        resolve(userConfirmed)
-      } else {
-        // 比例匹配，直接继续
-        resolve(true)
-      }
-    }
-    
-    img.onerror = () => {
-      console.error('无法加载图片进行比例检查')
-      resolve(true) // 出错时允许继续
-    }
-    
-    img.src = currentImage.value
-  })
-}
 
 const handleAddToLibrary = async () => {
   if (!libraryItemName.value.trim()) {
@@ -932,11 +886,6 @@ const handleAddToLibrary = async () => {
     return
   }
   
-  // 检查图片比例和网格比例是否匹配
-  const shouldCheckRatio = await checkImageGridRatio()
-  if (!shouldCheckRatio) {
-    return // 用户取消了操作
-  }
   
   try {
     isAddingToLibrary.value = true
