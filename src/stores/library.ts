@@ -342,7 +342,7 @@ export const useLibraryStore = defineStore('library', () => {
       isLoading.value = true
       
       // 使用OPFS存储图片，并生成压缩版本
-      const filename = await imageStorage.storeCompressedImage(file)
+      const filename = await imageStorage.storeCompressedImage(file, gridConfig)
       
       const imageUrl = await imageStorage.getImageURL(filename)
       

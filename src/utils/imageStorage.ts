@@ -3,6 +3,7 @@
  * 自动选择OPFS或内存存储作为回退方案
  */
 
+import { GridConfig } from '@/types'
 import { opfsImageManager, memoryImageStorage, OPFSImageManager, MemoryImageStorage } from './opfsImageManager'
 
 export interface ImageStorageInterface {
@@ -216,8 +217,8 @@ export class UnifiedImageStorage implements ImageStorageInterface {
   async compressImage(
     file: File, 
     quality: number = 0.8, 
-    maxWidth: number = 1920, 
-    maxHeight: number = 1080
+    maxWidth?: number, 
+    maxHeight?: number
   ): Promise<File> {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas')
@@ -227,9 +228,11 @@ export class UnifiedImageStorage implements ImageStorageInterface {
       img.onload = () => {
         // 计算新的尺寸
         let { width, height } = img
-        
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height)
+        const maxW = maxWidth || width
+        const maxH = maxHeight || height
+
+        if (width > maxW || height > maxH) {
+          const ratio = Math.min(maxW / width, maxH / height)
           width *= ratio
           height *= ratio
         }
@@ -260,6 +263,69 @@ export class UnifiedImageStorage implements ImageStorageInterface {
     })
   }
 
+  async cropImage(file: File, gridConfig: GridConfig): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      img.onload = () => {
+        let sourceX = 0
+        let sourceY = 0
+        let sourceWidth = img.width
+        let sourceHeight = img.height
+
+        // 如果提供了 gridConfig，按拼图比例进行中心裁剪
+        if (gridConfig) {
+          const puzzleRatio = gridConfig.cols / gridConfig.rows // 拼图的宽高比
+          const imageRatio = img.width / img.height // 原图的宽高比
+
+          if (imageRatio > puzzleRatio) {
+            // 原图比拼图更宽，需要裁剪宽度
+            sourceWidth = img.height * puzzleRatio
+            sourceX = (img.width - sourceWidth) / 2
+          } else if (imageRatio < puzzleRatio) {
+            // 原图比拼图更高，需要裁剪高度
+            sourceHeight = img.width / puzzleRatio
+            sourceY = (img.height - sourceHeight) / 2
+          }
+          // 如果比例相同，不需要裁剪
+        }
+
+        // 计算目标尺寸
+        let targetWidth = sourceWidth
+        let targetHeight = sourceHeight
+
+        // 设置画布尺寸
+        canvas.width = targetWidth
+        canvas.height = targetHeight
+
+        // 绘制裁剪后的图片
+        ctx?.drawImage(
+          img,
+          sourceX, sourceY, sourceWidth, sourceHeight, // 源图片的裁剪区域
+          0, 0, targetWidth, targetHeight // 目标画布的绘制区域
+        )
+
+        // 转换为Blob
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: blob.type,
+              lastModified: Date.now()
+            })
+            resolve(compressedFile)
+          } else {
+            reject(new Error('图像裁剪失败'))
+          }
+        }, file.type, 0.95)
+      }
+
+      img.onerror = reject
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   /**
    * 存储压缩后的图像
    * @param file - 原始文件
@@ -269,7 +335,7 @@ export class UnifiedImageStorage implements ImageStorageInterface {
    */
   async storeCompressedImage(
     file: File, 
-    filename?: string, 
+    gridConfig?: GridConfig,
     compressionOptions?: {
       quality?: number
       maxWidth?: number
@@ -278,8 +344,6 @@ export class UnifiedImageStorage implements ImageStorageInterface {
   ): Promise<string> {
     const options = {
       quality: 0.85,
-      maxWidth: 1920,
-      maxHeight: 1080,
       ...compressionOptions
     }
 
@@ -293,10 +357,11 @@ export class UnifiedImageStorage implements ImageStorageInterface {
       
       console.log(`图像压缩: ${file.size} -> ${compressedFile.size} bytes (${(compressedFile.size/file.size*100).toFixed(1)}%)`)
       
-      return await this.storeImage(compressedFile, filename)
+      const croppedFile = gridConfig ? await this.cropImage(compressedFile, gridConfig) : compressedFile
+      return await this.storeImage(croppedFile)
     } catch (error) {
       console.warn('图像压缩失败，使用原始文件:', error)
-      return await this.storeImage(file, filename)
+      return await this.storeImage(file)
     }
   }
 }
