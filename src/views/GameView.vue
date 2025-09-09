@@ -510,8 +510,13 @@ onUnmounted(() => {
 
 .new-achievements {
   @apply mb-6 p-4 bg-yellow-50 rounded-lg;
-  background-color: var(--settings-accent);
-  opacity: 0.1;
+  background-color: rgb(57, 121, 211); /* 浅绿色背景，浅色主题 */
+  border: 0px solid rgb(17, 123, 56);
+}
+
+[data-theme="dark"] .new-achievements {
+  background-color: rgb(11, 52, 97); /* 深色主题下稍微深一点的绿色 */
+  border: 0px solid rgb(1, 23, 9);
 }
 
 .new-achievements h3 {
@@ -525,8 +530,14 @@ onUnmounted(() => {
 
 .achievement-item {
   @apply flex items-center p-2 bg-white rounded;
-  background-color: var(--settings-card-bg);
+  background-color: rgba(156, 205, 250, 0.507);
+  border: 0px solid rgba(34, 197, 94, 0.15);
   color: var(--settings-text-primary);
+}
+
+[data-theme="dark"] .achievement-item {
+  background-color: rgb(4, 32, 65);
+  border: 0px solid rgb(1, 24, 9);
 }
 
 .achievement-icon {
@@ -544,7 +555,7 @@ onUnmounted(() => {
 
 .achievement-desc {
   @apply text-sm text-gray-600;
-  color: var(--settings-text-secondary);
+  color: white;
 }
 
 .completion-actions {
