@@ -550,15 +550,14 @@ const processImageFile = async (file: File) => {
       suggestedCols = Math.max(2, Math.min(12, suggestedCols))
       suggestedRows = Math.max(2, Math.min(12, suggestedRows))
       
-      // 计算建议的高宽比
-      const suggestedRatio = aspectRatio
-      aspectRatioConfig.width = suggestedRatio >= 1 ? suggestedRatio : 1
-      aspectRatioConfig.height = suggestedRatio >= 1 ? 1 : (1 / suggestedRatio)
+      // 计算建议的高宽比 - 固定为1:1正方形
+      aspectRatioConfig.width = 1
+      aspectRatioConfig.height = 1
       
-      // 根据高宽比计算pieceWidth和pieceHeight
+      // 根据1:1高宽比计算pieceWidth和pieceHeight - 固定为正方形
       const baseSize = 100
-      const pieceWidth = suggestedRatio >= 1 ? baseSize : Math.round(baseSize * suggestedRatio)
-      const pieceHeight = suggestedRatio >= 1 ? Math.round(baseSize / suggestedRatio) : baseSize
+      const pieceWidth = baseSize
+      const pieceHeight = baseSize
       
       // 更新本地网格配置
       Object.assign(localGridConfig, {
