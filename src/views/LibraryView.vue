@@ -605,7 +605,7 @@ onMounted(() => {
 }
 
 .empty-state p {
-  @apply text-gray-600 mb-6;
+  @apply mb-6;
   color: var(--settings-text-secondary);
 }
 
@@ -692,7 +692,12 @@ onMounted(() => {
 
 .overlay-btn {
   @apply px-3 py-1 text-sm font-medium rounded transition-colors duration-200;
-  @apply bg-white text-gray-700 hover:bg-gray-100;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+}
+
+.overlay-btn:hover {
+  background-color: var(--settings-hover);
 }
 
 .overlay-btn.primary {
@@ -715,8 +720,9 @@ onMounted(() => {
 }
 
 .card-title {
-  @apply font-semibold text-gray-800 mb-1 sm:mb-2 truncate;
+  @apply font-semibold mb-1 sm:mb-2 truncate;
   font-size: 0.875rem;
+  color: var(--settings-text-primary);
 }
 
 /* 移动端标题优化 */
@@ -738,7 +744,7 @@ onMounted(() => {
 }
 
 .card-category {
-  @apply text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded;
+  @apply text-xs px-2 py-1 rounded;
   color: var(--settings-text-secondary);
   background-color: var(--settings-hover);
 }
@@ -780,7 +786,8 @@ onMounted(() => {
 }
 
 .difficulty-star:not(.filled) {
-  @apply text-gray-300;
+  @apply opacity-30;
+  color: var(--settings-border);
 }
 
 .card-tags {
@@ -805,7 +812,7 @@ onMounted(() => {
 }
 
 .tag.more {
-  @apply bg-gray-100 text-gray-600;
+  @apply text-xs px-2 py-1 rounded;
   background-color: var(--settings-border);
   color: var(--settings-text-secondary);
 }
@@ -833,7 +840,12 @@ onMounted(() => {
 }
 
 .close-btn {
-  @apply text-2xl text-gray-400 hover:text-gray-600 cursor-pointer;
+  @apply text-2xl cursor-pointer;
+  color: var(--settings-text-secondary);
+}
+
+.close-btn:hover {
+  color: var(--settings-text-primary);
 }
 
 .modal-body {
@@ -846,7 +858,12 @@ onMounted(() => {
 
 .modal-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.modal-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .modal-btn.primary {
@@ -858,7 +875,10 @@ onMounted(() => {
 }
 
 .modal-btn:disabled {
-  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  @apply cursor-not-allowed;
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
 }
 
 .delete-warning {
@@ -877,9 +897,16 @@ onMounted(() => {
 .mobile-action-btn {
   @apply w-full flex items-center justify-start px-4 py-3 rounded-lg;
   @apply text-left font-medium transition-all duration-200;
-  @apply bg-gray-50 text-gray-700 hover:bg-gray-100 active:bg-gray-200;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
+}
+
+.mobile-action-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.mobile-action-btn:active {
+  background-color: var(--settings-border);
 }
 
 .mobile-action-btn:hover {

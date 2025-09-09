@@ -1146,9 +1146,12 @@ onUnmounted(() => {
 
 .action-btn {
   @apply px-6 py-3 text-base font-medium rounded-lg transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
+}
+
+.action-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .action-btn.secondary {
@@ -1253,7 +1256,6 @@ onUnmounted(() => {
 
 .boundary-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
   min-width: 120px;
@@ -1263,8 +1265,12 @@ onUnmounted(() => {
   background-color: var(--settings-border);
 }
 
+.boundary-btn:hover {
+  background-color: var(--settings-border);
+}
+
 .boundary-btn:disabled {
-  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  @apply cursor-not-allowed;
   background-color: var(--settings-border);
   color: var(--settings-text-secondary);
   opacity: 0.6;
@@ -1314,9 +1320,12 @@ onUnmounted(() => {
 
 .bottom-btn {
   @apply px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
+}
+
+.bottom-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .bottom-btn:hover {
@@ -1334,7 +1343,7 @@ onUnmounted(() => {
 }
 
 .bottom-btn:disabled {
-  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  @apply cursor-not-allowed;
   background-color: var(--settings-border);
   color: var(--settings-text-secondary);
   opacity: 0.6;
@@ -1504,7 +1513,12 @@ onUnmounted(() => {
 }
 
 .close-btn {
-  @apply text-2xl text-gray-400 hover:text-gray-600 cursor-pointer;
+  @apply text-2xl cursor-pointer;
+  color: var(--settings-text-secondary);
+}
+
+.close-btn:hover {
+  color: var(--settings-text-primary);
 }
 
 .modal-body {
@@ -1541,11 +1555,13 @@ onUnmounted(() => {
 
 .form-input:disabled,
 .form-select:disabled {
-  @apply bg-gray-100 cursor-not-allowed;
+  @apply cursor-not-allowed;
+  background-color: var(--settings-border);
 }
 
 .form-hint {
-  @apply mt-1 text-xs text-gray-500;
+  @apply mt-1 text-xs;
+  color: var(--settings-text-secondary);
 }
 
 .modal-footer {
@@ -1554,7 +1570,12 @@ onUnmounted(() => {
 
 .modal-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.modal-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .modal-btn.primary {
@@ -1686,7 +1707,6 @@ onUnmounted(() => {
 
 .toolbar-btn {
   @apply w-full flex items-center px-3 py-2 rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
   border: none;
@@ -1697,8 +1717,12 @@ onUnmounted(() => {
   background-color: var(--settings-border);
 }
 
+.toolbar-btn:hover {
+  background-color: var(--settings-border);
+}
+
 .toolbar-btn:disabled {
-  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  @apply cursor-not-allowed;
   background-color: var(--settings-border);
   color: var(--settings-text-secondary);
   opacity: 0.6;

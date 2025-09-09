@@ -271,7 +271,7 @@ onMounted(async () => {
 }
 
 .hero-description {
-  @apply text-lg text-gray-600 leading-relaxed;
+  @apply text-lg leading-relaxed;
   color: var(--text-secondary);
 }
 
@@ -295,9 +295,13 @@ onMounted(async () => {
 }
 
 .hero-btn.secondary {
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  @apply px-6 py-3 text-base font-medium rounded-lg transition-colors duration-200;
   background-color: var(--settings-hover);
   color: var(--settings-text-primary);
+}
+
+.hero-btn.secondary:hover {
+  background-color: var(--settings-border);
 }
 
 .hero-btn.secondary:hover {
@@ -407,7 +411,8 @@ onMounted(async () => {
 }
 
 .card-arrow {
-  @apply text-2xl text-gray-400 mt-4 text-center;
+  @apply text-2xl mt-4 text-center;
+  color: var(--settings-text-secondary);
 }
 
 /* 特色网格 */

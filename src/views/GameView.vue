@@ -395,7 +395,8 @@ onUnmounted(() => {
 }
 
 .stat-item {
-  @apply flex flex-col items-center px-3 py-2 bg-gray-50 rounded-lg;
+  @apply flex flex-col items-center px-3 py-2 rounded-lg;
+  background-color: var(--settings-hover);
 }
 
 .stat-label {
@@ -409,7 +410,8 @@ onUnmounted(() => {
 }
 
 .debug-info {
-  @apply text-xs text-gray-500 mt-1 block;
+  @apply text-xs mt-1 block;
+  color: var(--settings-text-secondary);
 }
 
 .game-controls {
@@ -418,7 +420,12 @@ onUnmounted(() => {
 
 .control-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.control-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .game-content {
@@ -445,7 +452,7 @@ onUnmounted(() => {
 }
 
 .no-game-message p {
-  @apply text-gray-600 mb-8;
+  @apply mb-8;
   color: var(--settings-text-secondary);
 }
 
@@ -455,7 +462,12 @@ onUnmounted(() => {
 
 .action-btn {
   @apply px-6 py-3 text-sm font-medium rounded-lg transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.action-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .action-btn.primary {
@@ -485,7 +497,7 @@ onUnmounted(() => {
 }
 
 .completion-content h2 {
-  @apply text-2xl font-bold text-gray-800 mb-6;
+  @apply text-2xl font-bold mb-6;
   color: var(--settings-text-primary);
 }
 
@@ -494,7 +506,7 @@ onUnmounted(() => {
 }
 
 .completion-stat {
-  @apply flex flex-col items-center p-4 bg-gray-50 rounded-lg;
+  @apply flex flex-col items-center p-4 rounded-lg;
   background-color: var(--settings-hover);
 }
 
@@ -549,13 +561,13 @@ onUnmounted(() => {
 }
 
 .achievement-name {
-  @apply font-medium text-gray-800;
+  @apply font-medium;
   color: var(--settings-text-primary);
 }
 
 .achievement-desc {
-  @apply text-sm text-gray-600;
-  color: white;
+  @apply text-sm;
+  color: var(--settings-text-secondary);
 }
 
 .completion-actions {
@@ -564,9 +576,12 @@ onUnmounted(() => {
 
 .completion-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
   background-color: var(--settings-hover);
-  color: var(--settings-text-secondary);
+  color: var(--settings-text-primary);
+}
+
+.completion-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .completion-btn:hover {
@@ -596,7 +611,12 @@ onUnmounted(() => {
 }
 
 .close-btn {
-  @apply text-2xl text-gray-400 hover:text-gray-600 cursor-pointer;
+  @apply text-2xl cursor-pointer;
+  color: var(--settings-text-secondary);
+}
+
+.close-btn:hover {
+  color: var(--settings-text-primary);
 }
 
 .modal-body {
@@ -620,7 +640,8 @@ onUnmounted(() => {
 }
 
 .volume-value {
-  @apply text-sm text-gray-600 min-w-12;
+  @apply text-sm min-w-12;
+  color: var(--settings-text-secondary);
 }
 
 .modal-footer {
@@ -629,7 +650,12 @@ onUnmounted(() => {
 
 .modal-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.modal-btn:hover {
+  background-color: var(--settings-border);
 }
 
 .modal-btn.primary {
@@ -652,12 +678,12 @@ onUnmounted(() => {
 }
 
 .pause-message h2 {
-  @apply text-2xl font-bold text-gray-800 mb-2;
+  @apply text-2xl font-bold mb-2;
   color: var(--settings-text-primary);
 }
 
 .pause-subtitle {
-  @apply text-sm text-gray-600 mb-6;
+  @apply text-sm mb-6;
   color: var(--settings-text-secondary);
 }
 
