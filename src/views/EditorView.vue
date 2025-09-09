@@ -353,7 +353,7 @@
     </div>
 
     <!-- 图片裁剪对话框 -->
-    <div v-if="showCropDialog" class="modal-overlay" @click="closeCropDialog">
+    <div v-if="showCropDialog" class="modal-overlay">
       <div class="modal-dialog crop-dialog" @click.stop>
         <div class="modal-header">
           <h3>裁剪图片</h3>
