@@ -45,6 +45,67 @@ const DOMRectMock = class DOMRect {
 
 Object.defineProperty(global, 'DOMRect', { value: DOMRectMock })
 
+// Mock OPFS API
+const mockFileHandle = {
+  getFile: vi.fn(() => Promise.resolve(new File(['mock content'], 'test.png', { type: 'image/png' }))),
+  createWritable: vi.fn(() => Promise.resolve({
+    write: vi.fn(() => Promise.resolve()),
+    close: vi.fn(() => Promise.resolve())
+  }))
+}
+
+const mockDirectoryHandle = {
+  getFileHandle: vi.fn(() => Promise.resolve(mockFileHandle)),
+  getDirectoryHandle: vi.fn(() => Promise.resolve(mockDirectoryHandle)),
+  removeEntry: vi.fn(() => Promise.resolve()),
+  entries: vi.fn(function* () {
+    yield ['test.png', mockFileHandle]
+  })
+}
+
+// Mock navigator.storage for OPFS
+Object.defineProperty(global, 'navigator', {
+  value: {
+    ...global.navigator,
+    storage: {
+      getDirectory: vi.fn(() => Promise.resolve(mockDirectoryHandle))
+    }
+  }
+})
+
+// Mock URL.createObjectURL and revokeObjectURL
+Object.defineProperty(global, 'URL', {
+  value: {
+    createObjectURL: vi.fn((blob) => `blob:${Math.random()}`),
+    revokeObjectURL: vi.fn()
+  }
+})
+
+// Mock Blob
+Object.defineProperty(global, 'Blob', {
+  value: class MockBlob {
+    size: number
+    type: string
+    constructor(parts: any[], options: any = {}) {
+      this.size = parts.reduce((acc, part) => acc + (part.length || 0), 0)
+      this.type = options.type || ''
+    }
+  }
+})
+
+// Mock File extends Blob
+Object.defineProperty(global, 'File', {
+  value: class MockFile extends (global as any).Blob {
+    name: string
+    lastModified: number
+    constructor(parts: any[], name: string, options: any = {}) {
+      super(parts, options)
+      this.name = name
+      this.lastModified = options.lastModified || Date.now()
+    }
+  }
+})
+
 // Clear all mocks before each test
 beforeEach(() => {
   vi.clearAllMocks()
