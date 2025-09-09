@@ -235,6 +235,9 @@
           <span class="info-item" v-if="complexBoundaries > 0">
             复杂边界: {{ complexBoundaries }}/{{ totalBoundaries }}
           </span>
+          <span class="info-item warning" v-if="gridConfigChangedAfterCrop">
+            ⚠️ 需要重新裁剪
+          </span>
         </div>
         
         <div class="bottom-actions">
@@ -458,6 +461,10 @@ const cropArea = ref<CropArea | null>(null)
 const originalImageFile = ref<File | null>(null)
 const cropperRef = ref()
 
+// 网格配置更改跟踪
+const lastCropGridConfig = ref<typeof localGridConfig | null>(null)
+const gridConfigChangedAfterCrop = ref(false)
+
 // 计算属性
 const currentImage = computed(() => editorStore.currentImage) // 现在直接是Blob URL
 const gridConfig = computed(() => editorStore.gridConfig)
@@ -668,6 +675,10 @@ const confirmCrop = async () => {
     // 存储文件名到editorStore，而不是DataURI
     await editorStore.setImage(filename, originalImageFile.value)
     
+    // 记录最后一次裁剪时的网格配置
+    lastCropGridConfig.value = { ...localGridConfig }
+    gridConfigChangedAfterCrop.value = false
+    
     // 关闭裁剪对话框
     closeCropDialog()
   } catch (error) {
@@ -720,6 +731,10 @@ const clearAll = async () => {
       cropImageUrl.value = ''
     }
     
+    // 重置网格配置更改跟踪
+    lastCropGridConfig.value = null
+    gridConfigChangedAfterCrop.value = false
+    
     // 重置高宽比配置
     Object.assign(aspectRatioConfig, {
       width: 1,
@@ -741,6 +756,19 @@ const updateGrid = () => {
   editorStore.updateGridConfig(localGridConfig)
   // 重新生成边界，使用动态尺寸
   editorStore.generateBoundaries(dynamicPieceWidth.value, dynamicPieceHeight.value)
+  
+  // 检查网格配置是否在最后一次裁剪后被更改
+  if (lastCropGridConfig.value) {
+    const hasChanged = 
+      lastCropGridConfig.value.rows !== localGridConfig.rows ||
+      lastCropGridConfig.value.cols !== localGridConfig.cols ||
+      lastCropGridConfig.value.pieceWidth !== localGridConfig.pieceWidth ||
+      lastCropGridConfig.value.pieceHeight !== localGridConfig.pieceHeight
+    
+    if (hasChanged) {
+      gridConfigChangedAfterCrop.value = true
+    }
+  }
 }
 
 const updateAspectRatio = () => {
@@ -765,6 +793,19 @@ const updateAspectRatio = () => {
   editorStore.updateGridConfig(localGridConfig)
   // 重新生成边界，使用动态尺寸
   editorStore.generateBoundaries(dynamicPieceWidth.value, dynamicPieceHeight.value)
+  
+  // 检查网格配置是否在最后一次裁剪后被更改
+  if (lastCropGridConfig.value) {
+    const hasChanged = 
+      lastCropGridConfig.value.rows !== localGridConfig.rows ||
+      lastCropGridConfig.value.cols !== localGridConfig.cols ||
+      lastCropGridConfig.value.pieceWidth !== localGridConfig.pieceWidth ||
+      lastCropGridConfig.value.pieceHeight !== localGridConfig.pieceHeight
+    
+    if (hasChanged) {
+      gridConfigChangedAfterCrop.value = true
+    }
+  }
 }
 
 const randomizeBoundaries = () => {
@@ -857,6 +898,29 @@ const handleAddToLibrary = async () => {
     return
   }
   
+  // 检查网格配置是否在最后一次裁剪后被更改
+  if (gridConfigChangedAfterCrop.value) {
+    const shouldRecrop = confirm(
+      '检测到网格配置已更改，但图片未重新裁剪。\n\n' +
+      '为了确保拼图质量，建议重新裁剪图片以匹配当前的网格配置。\n\n' +
+      '是否现在重新裁剪？'
+    )
+    
+    if (shouldRecrop) {
+      closeAddToLibraryDialog()
+      await reopenCropDialog()
+      return
+    } else {
+      const proceed = confirm(
+        '确定要使用旧的裁剪区域继续添加到素材库吗？\n\n' +
+        '这可能导致拼图块比例不匹配。'
+      )
+      
+      if (!proceed) {
+        return
+      }
+    }
+  }
   
   try {
     isAddingToLibrary.value = true
@@ -1384,6 +1448,12 @@ onUnmounted(() => {
   @apply px-2 py-1 rounded-full;
   background-color: var(--settings-hover);
   color: var(--settings-text-secondary);
+}
+
+.info-item.warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
 }
 
 .bottom-actions {
