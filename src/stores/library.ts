@@ -514,7 +514,7 @@ export const useLibraryStore = defineStore('library', () => {
         try {
           console.log(`迁移图片到OPFS: ${item.name}`)
           const filename = await imageStorage.migrateFromDataURI(item.imageUrl, `migrated_${item.id}`)
-          item.imageUrl = filename
+          item.imageUrl = `fs://${filename}`
           migrationCount++
         } catch (error) {
           console.error(`迁移失败: ${item.name}`, error)
