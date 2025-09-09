@@ -34,6 +34,7 @@ const currentTheme = computed(() => {
 
 // 导航菜单项
 const navItems = [
+  { name: 'Home', label: '主页', icon: '🏠', path: '/' },
   { name: 'Library', label: '素材库', icon: '📚', path: '/library' },
   { name: 'Editor', label: '编辑器', icon: '✏️', path: '/editor' },
   { name: 'Game', label: '游戏', icon: '🎮', path: '/game' },
@@ -338,7 +339,7 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
 }
 
 .main-content {
-  @apply flex-1 overflow-hidden;
+  @apply flex-1 overflow-auto;
   background-color: var(--bg-primary);
 }
 

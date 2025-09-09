@@ -7,6 +7,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
 // 路由组件懒加载
+const HomeView = () => import('../views/HomeView.vue')
 const LibraryView = () => import('../views/LibraryView.vue')
 const EditorView = () => import('../views/EditorView.vue')
 const GameView = () => import('../views/GameView.vue')
@@ -21,7 +22,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
-    redirect: '/library'
+    component: HomeView,
+    meta: {
+      title: '主页',
+      description: '拼图乐应用主页'
+    }
   },
   {
     path: '/library',
