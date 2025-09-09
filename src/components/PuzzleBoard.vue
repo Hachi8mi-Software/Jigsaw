@@ -415,6 +415,8 @@ const initializePuzzle = async (puzzleData: PuzzleData | null) => {
     gameStore.clearPuzzleBoardPieces()
   }
   loadImage(puzzleData?.imageUrl || '')
+  await nextTick()
+  shufflePieces()
 }
 
 // 生命周期管理
