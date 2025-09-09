@@ -8,6 +8,7 @@ import { computed, onMounted, watch, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useLibraryStore } from './stores/library'
 import { useSettingsStore } from './stores/settings'
+import NotificationSystem from './components/NotificationSystem.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -224,6 +225,9 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
     <main class="main-content" :class="{ 'mobile-main': isMobile }">
       <router-view />
     </main>
+    
+    <!-- 通知系统 -->
+    <NotificationSystem />
   </div>
 </template>
 

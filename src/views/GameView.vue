@@ -190,14 +190,16 @@
 <script setup lang="ts">
 import { computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useNotificationStore } from '../stores/notification'
 import type { PuzzleData, Achievement } from '../types'
 import PuzzleBoard from '../components/PuzzleBoard.vue'
 import GameStatusBar from '../components/GameStatusBar.vue'
 import { GameViewModel } from '../viewModels/game/gameViewModel'
 
-// 路由
+// 路由和通知
 const router = useRouter()
 const route = useRoute()
+const notificationStore = useNotificationStore()
 
 // 业务逻辑管理器
 const gameViewModel = GameViewModel.getInstance()
@@ -259,8 +261,16 @@ const handleReturnToLibrary = () => {
   router.push('/library')
 }
 
-const handleResetGame = () => {
-  if (confirm('确定要重置当前游戏吗？所有进度将被清除。')) {
+const handleResetGame = async () => {
+  const confirmed = await notificationStore.showConfirm({
+    title: '重置游戏',
+    message: '确定要重置当前游戏吗？所有进度将被清除。',
+    type: 'warning',
+    confirmText: '重置',
+    cancelText: '取消'
+  })
+  
+  if (confirmed) {
     gameViewModel.resetGame()
   }
 }

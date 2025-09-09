@@ -1,9 +1,11 @@
 import { useSettingsStore } from '@/stores/settings'
+import { useNotificationStore } from '@/stores/notification'
 import { computed } from 'vue'
 import { audioUtils } from '@/utils/audioUtils'
 
 export class SettingsViewModel {
   private settingsStore = useSettingsStore()
+  private notificationStore = useNotificationStore()
 
   // 计算属性，绑定到View
   public gameSettings = computed({
@@ -35,11 +37,19 @@ export class SettingsViewModel {
   // 方法
   public saveSettings() {
     this.settingsStore.saveSettings()
-    alert('设置已保存')
+    this.notificationStore.success('设置已保存')
   }
 
-  public resetToDefaults() {
-    if (confirm('确定要恢复所有设置到默认值吗？')) {
+  public async resetToDefaults() {
+    const confirmed = await this.notificationStore.showConfirm({
+      title: '恢复默认设置',
+      message: '确定要恢复所有设置到默认值吗？',
+      type: 'warning',
+      confirmText: '恢复',
+      cancelText: '取消'
+    })
+    
+    if (confirmed) {
       this.settingsStore.resetToDefaults()
     }
   }
@@ -60,9 +70,9 @@ export class SettingsViewModel {
           try {
             const data = JSON.parse(e.target?.result as string)
             this.settingsStore.importSettings(data)
-            alert('设置导入成功')
+            this.notificationStore.success('设置导入成功')
           } catch (error) {
-            alert('导入失败，文件格式不正确')
+            this.notificationStore.error('导入失败', '文件格式不正确')
           }
         }
         reader.readAsText(file)
@@ -71,11 +81,27 @@ export class SettingsViewModel {
     input.click()
   }
 
-  public clearData() {
-    if (confirm('确定要清除所有数据吗？这将删除所有设置、游戏记录和自定义拼图！')) {
-      if (confirm('此操作无法撤销，确定继续吗？')) {
+  public async clearData() {
+    const firstConfirmed = await this.notificationStore.showConfirm({
+      title: '清除所有数据',
+      message: '确定要清除所有数据吗？这将删除所有设置、游戏记录和自定义拼图！',
+      type: 'danger',
+      confirmText: '继续',
+      cancelText: '取消'
+    })
+    
+    if (firstConfirmed) {
+      const secondConfirmed = await this.notificationStore.showConfirm({
+        title: '最终确认',
+        message: '此操作无法撤销，确定继续吗？',
+        type: 'danger',
+        confirmText: '确定清除',
+        cancelText: '取消'
+      })
+      
+      if (secondConfirmed) {
         this.settingsStore.clearAllData()
-        alert('所有数据已清除')
+        this.notificationStore.success('所有数据已清除')
         location.reload()
       }
     }
@@ -86,7 +112,7 @@ export class SettingsViewModel {
   }
 
   public showLicenses() {
-    alert('开源许可信息将在后续版本中提供')
+    this.notificationStore.info('开源许可信息将在后续版本中提供')
   }
 
   // 主题切换方法

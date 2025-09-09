@@ -147,10 +147,12 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useLibraryStore } from '../stores/library'
+import { useNotificationStore } from '../stores/notification'
 import type { LeaderboardEntry, LibraryItem } from '../types'
 
 // Store
 const libraryStore = useLibraryStore()
+const notificationStore = useNotificationStore()
 
 // 响应式状态
 const isLoading = ref(false)
@@ -227,8 +229,16 @@ const handleImageError = (event: Event) => {
   img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyNkM5IDI2IDkgMTQgMjAgMTRTMzEgMjYgMjAgMjZaIiBmaWxsPSIjOUI5QkEzIi8+CjwvZz4KPC9zdmc+'
 }
 
-const clearGameRecords = (puzzleId: string, gameName: string) => {
-  if (confirm(`确定要清空「${gameName}」的所有排行榜记录吗？\n\n此操作无法撤销。`)) {
+const clearGameRecords = async (puzzleId: string, gameName: string) => {
+  const confirmed = await notificationStore.showConfirm({
+    title: '清空排行榜记录',
+    message: `确定要清空「${gameName}」的所有排行榜记录吗？\n\n此操作无法撤销。`,
+    type: 'danger',
+    confirmText: '清空',
+    cancelText: '取消'
+  })
+  
+  if (confirmed) {
     libraryStore.clearLeaderboardRecords(puzzleId)
   }
 }

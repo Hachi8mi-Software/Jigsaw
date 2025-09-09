@@ -406,6 +406,7 @@ import { computed, ref, reactive, onMounted, onUnmounted, nextTick, watch } from
 import { useRouter } from 'vue-router'
 import { useEditorStore } from '../stores/editor'
 import { useLibraryStore } from '../stores/library'
+import { useNotificationStore } from '../stores/notification'
 import { BoundaryState, PuzzleData } from '../types'
 import SvgBoundary from '../components/SvgBoundary.vue'
 import { Cropper } from 'vue-advanced-cropper'
@@ -415,6 +416,7 @@ import 'vue-advanced-cropper/dist/style.css'
 // Store和路由
 const editorStore = useEditorStore()
 const libraryStore = useLibraryStore()
+const notificationStore = useNotificationStore()
 const router = useRouter()
 
 // 模板引用
@@ -616,7 +618,7 @@ const processImageFile = async (file: File) => {
     showCropDialog.value = true
   } catch (error) {
     console.error('处理图片文件失败:', error)
-    alert('图片处理失败，请重试')
+    notificationStore.error('图片处理失败', '请重试')
   }
 }
 
@@ -629,7 +631,7 @@ const confirmCrop = async () => {
     // 获取裁剪区域
     const cropData = cropperRef.value.getResult()
     if (!cropData) {
-      alert('请选择裁剪区域')
+      notificationStore.warning('请选择裁剪区域')
       return
     }
     
@@ -683,7 +685,7 @@ const confirmCrop = async () => {
     closeCropDialog()
   } catch (error) {
     console.error('裁剪图片失败:', error)
-    alert('裁剪图片失败，请重试')
+    notificationStore.error('裁剪图片失败', '请重试')
   }
 }
 
@@ -698,7 +700,7 @@ const closeCropDialog = () => {
 
 const reopenCropDialog = async () => {
   if (!originalImageFile.value) {
-    alert('没有原始图片文件')
+    notificationStore.error('没有原始图片文件')
     return
   }
   
@@ -719,7 +721,15 @@ const removeImage = () => {
 }
 
 const clearAll = async () => {
-  if (confirm('确定要清空所有内容吗？这将删除当前图片和所有编辑内容。')) {
+  const confirmed = await notificationStore.showConfirm({
+    title: '清空编辑器',
+    message: '确定要清空所有内容吗？这将删除当前图片和所有编辑内容。',
+    type: 'warning',
+    confirmText: '清空',
+    cancelText: '取消'
+  })
+  
+  if (confirmed) {
     await editorStore.clearEditor()
     
     // 清理裁剪相关状态
@@ -887,32 +897,37 @@ const closeAddToLibraryDialog = () => {
 
 const handleAddToLibrary = async () => {
   if (!libraryItemName.value.trim()) {
-    alert('请输入拼图名称')
+    notificationStore.warning('请输入拼图名称')
     return
   }
   
   if (!currentImage.value || !originalImageFile.value) {
-    alert('没有找到原始图片文件')
+    notificationStore.error('没有找到原始图片文件')
     return
   }
   
   // 检查网格配置是否在最后一次裁剪后被更改
   if (gridConfigChangedAfterCrop.value) {
-    const shouldRecrop = confirm(
-      '检测到网格配置已更改，但图片未重新裁剪。\n\n' +
-      '为了确保拼图质量，建议重新裁剪图片以匹配当前的网格配置。\n\n' +
-      '是否现在重新裁剪？'
-    )
+    const shouldRecrop = await notificationStore.showConfirm({
+      title: '网格配置已更改',
+      message: '检测到网格配置已更改，但图片未重新裁剪。\n\n为了确保拼图质量，建议重新裁剪图片以匹配当前的网格配置。\n\n是否现在重新裁剪？',
+      type: 'warning',
+      confirmText: '重新裁剪',
+      cancelText: '继续添加'
+    })
     
     if (shouldRecrop) {
       closeAddToLibraryDialog()
       await reopenCropDialog()
       return
     } else {
-      const proceed = confirm(
-        '确定要使用旧的裁剪区域继续添加到素材库吗？\n\n' +
-        '这可能导致拼图块比例不匹配。'
-      )
+      const proceed = await notificationStore.showConfirm({
+        title: '使用旧裁剪区域',
+        message: '确定要使用旧的裁剪区域继续添加到素材库吗？\n\n这可能导致拼图块比例不匹配。',
+        type: 'warning',
+        confirmText: '继续',
+        cancelText: '取消'
+      })
       
       if (!proceed) {
         return
@@ -958,12 +973,12 @@ const handleAddToLibrary = async () => {
       })
     }
     
-    alert('成功添加到素材库！')
+    notificationStore.success('成功添加到素材库！')
     closeAddToLibraryDialog()
     
   } catch (error) {
     console.error('添加到素材库失败:', error)
-    alert('添加到素材库失败，请重试')
+    notificationStore.error('添加到素材库失败', '请重试')
   } finally {
     isAddingToLibrary.value = false
   }
@@ -1027,15 +1042,15 @@ const processImportFile = async (file: File) => {
           // 同步本地网格配置
           Object.assign(localGridConfig, gridConfig.value)
           closeImportDialog()
-          alert('拼图数据导入成功！')
+          notificationStore.success('拼图数据导入成功！')
         } else {
-          alert('导入失败，请检查文件格式是否正确')
+          notificationStore.error('导入失败', '请检查文件格式是否正确')
         }
       }
     }
     reader.readAsText(file)
   } else {
-    alert('请选择 .json 或 .puzzle 格式的文件')
+    notificationStore.warning('请选择 .json 或 .puzzle 格式的文件')
   }
 }
 
