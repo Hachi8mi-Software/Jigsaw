@@ -120,3 +120,44 @@ export function reshufflePieces(
   scatterPieces(unplacedPieces, areaWidth, areaHeight, pieceWidth, pieceHeight, updatePiecePosition)
 }
 
+/**
+ * 为单个拼图块生成智能位置，避免与现有拼图块重叠
+ * @param existingPieces 现有的拼图块数组
+ * @param areaWidth 区域宽度
+ * @param areaHeight 区域高度
+ * @param pieceWidth 拼图块宽度
+ * @param pieceHeight 拼图块高度
+ * @param margin 边距
+ * @returns 生成的位置坐标
+ */
+export function generateSmartPosition(
+  existingPieces: PieceStatus[],
+  areaWidth: number,
+  areaHeight: number,
+  pieceWidth: number,
+  pieceHeight: number,
+  margin: number = 5
+): { x: number; y: number } {
+  let attempts = 0
+  const maxAttempts = 100
+  
+  while (attempts < maxAttempts) {
+    const randomPos = generateRandomPosition(areaWidth, areaHeight, pieceWidth, pieceHeight, margin)
+    
+    // 检查是否与现有拼图块重叠
+    const hasOverlap = existingPieces.some(existingPiece => {
+      return isPieceOverlapping(randomPos, existingPiece, pieceWidth, pieceHeight)
+    })
+    
+    if (!hasOverlap) {
+      return randomPos
+    }
+    
+    attempts++
+  }
+  
+  // 如果找不到不重叠的位置，返回一个随机位置
+  console.warn('无法找到不重叠的位置，使用随机位置')
+  return generateRandomPosition(areaWidth, areaHeight, pieceWidth, pieceHeight, margin)
+}
+

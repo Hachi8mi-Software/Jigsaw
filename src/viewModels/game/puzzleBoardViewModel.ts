@@ -17,7 +17,8 @@ import {
   calculateGridCoordinates
 } from '@/utils/positionUtils'
 import {
-  reshufflePieces
+  reshufflePieces,
+  generateSmartPosition
 } from '@/utils/puzzleUtils'
 import {
   createGridStyle,
@@ -460,8 +461,22 @@ export class PuzzleBoardViewModel {
       
       // 将原拼图块移动到拼图区域
       const pieceSize = this.getPieceSize()
-      const randomPos = generateRandomPosition(800, 600, pieceSize.width, pieceSize.height, 10)
-      this.gameStore.updatePiecePosition(occupiedPieceIndex, randomPos.x, randomPos.y)
+      const areaSize = this.getScatteredPiecesAreaSize()
+      
+      // 获取所有未放置的拼图块（包括即将被移出的拼图块）
+      const unplacedPieces = this.gameStore.pieces.filter((piece: PieceStatus) => !piece.isPlaced)
+      
+      // 使用智能位置生成，避免重叠
+      const smartPos = generateSmartPosition(
+        unplacedPieces,
+        areaSize.width,
+        areaSize.height,
+        pieceSize.width,
+        pieceSize.height,
+        5
+      )
+      
+      this.gameStore.updatePiecePosition(occupiedPieceIndex, smartPos.x, smartPos.y)
     } else {
       // 如果拖拽的拼图块已经放置，执行对换
       this.gameStore.swapPuzzleBoardPieces(this.draggingPieceIndex, occupiedPieceIndex)
