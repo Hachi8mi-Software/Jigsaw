@@ -1739,14 +1739,14 @@ onUnmounted(() => {
 /* 移动端悬浮工具栏额外优化 */
 @media (max-width: 767px) {
   .mobile-floating-toolbar {
-    /* 确保在移动端有足够的顶部间距 */
-    top: 80px;
+    /* 确保在移动端有足够的顶部间距，避免遮住清空按钮 */
+    top: 150px;
   }
   
   .floating-toolbar-content {
     /* 移动端工具栏宽度调整 */
     width: 280px;
-    max-height: calc(100vh - 140px);
+    max-height: calc(100vh - 160px);
   }
 }
 </style>
