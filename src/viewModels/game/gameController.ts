@@ -159,18 +159,29 @@ export class GameController {
    * 放置拼图块
    */
   placePiece(pieceId: string, isPlaced: boolean, isCorrect?: boolean): void {
+    console.log('placePiece被调用:', { pieceId, isPlaced, isCorrect })
     this.gameStore.updatePiecePlacement(pieceId, isPlaced, isCorrect)
     this.saveGameState()
     
     // 检查游戏是否完成
-    if (this.gameStore.checkGameCompletion()) {
+    const isCompleted = this.gameStore.checkGameCompletion()
+    console.log('游戏完成检查结果:', isCompleted)
+    if (isCompleted) {
       // checkGameCompletion 已经处理了游戏完成逻辑，不需要再次调用 completeGame
       this.stopRealTimeTimer()
       
       // 更新用户统计
+      console.log('准备更新用户统计:', {
+        hasStartTime: !!this.gameStore.startTime,
+        hasPuzzle: !!this.gameStore.currentPuzzle,
+        puzzleId: this.gameStore.currentPuzzle?.id
+      })
       if (this.gameStore.startTime && this.gameStore.currentPuzzle) {
         const gameTime = this.gameStore.calculateElapsedTime(this.gameStore.startTime, new Date())
+        console.log('计算的游戏时间:', gameTime)
         this.updateUserStats(this.gameStore.currentPuzzle, gameTime)
+      } else {
+        console.log('无法更新用户统计：缺少开始时间或拼图数据')
       }
       
       this.saveGameState()
@@ -218,6 +229,25 @@ export class GameController {
       
       return userStats
     })
+
+    // 添加排行榜记录
+    this.addLeaderboardRecord(puzzleData, gameTime)
+  }
+
+  /**
+   * 添加排行榜记录
+   */
+  private addLeaderboardRecord(puzzleData: PuzzleData, gameTime: number): void {
+    const leaderboardEntry = {
+      playerName: '玩家', // 可以后续扩展为用户输入的名称
+      puzzleId: puzzleData.id,
+      completionTime: gameTime,
+      moveCount: this.gameStore.moveCount,
+      completedAt: Date.now()
+    }
+
+    this.libraryStore.addLeaderboardRecord(leaderboardEntry)
+    console.log('排行榜记录已添加:', leaderboardEntry)
   }
 
   /**
@@ -225,6 +255,21 @@ export class GameController {
    */
   checkAchievements(): boolean {
     return this.libraryStore.checkAchievements(this.libraryStore.userStats)
+  }
+
+  /**
+   * 处理游戏完成（公共方法，供PuzzleBoard调用）
+   */
+  handleGameCompleted(): void {
+    console.log('gameController: handleGameCompleted被调用')
+    if (this.gameStore.startTime && this.gameStore.currentPuzzle) {
+      const gameTime = this.gameStore.calculateElapsedTime(this.gameStore.startTime, new Date())
+      console.log('gameController: 计算的游戏时间:', gameTime)
+      this.updateUserStats(this.gameStore.currentPuzzle, gameTime)
+      console.log('gameController: 用户统计和排行榜记录已更新')
+    } else {
+      console.log('gameController: 无法更新用户统计：缺少开始时间或拼图数据')
+    }
   }
 
   /**

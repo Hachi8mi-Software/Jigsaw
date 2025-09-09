@@ -12,6 +12,7 @@ const EditorView = () => import('../views/EditorView.vue')
 const GameView = () => import('../views/GameView.vue')
 const SettingsView = () => import('../views/SettingsView.vue')
 const AchievementsView = () => import('../views/AchievementsView.vue')
+const LeaderboardView = () => import('../views/LeaderboardView.vue')
 
 /**
  * 路由配置
@@ -57,6 +58,15 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: '成就',
       description: '查看解锁的成就'
+    }
+  },
+  {
+    path: '/leaderboard',
+    name: 'Leaderboard',
+    component: LeaderboardView,
+    meta: {
+      title: '排行榜',
+      description: '查看游戏排行榜'
     }
   },
   {

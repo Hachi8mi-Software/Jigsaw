@@ -278,6 +278,19 @@ const viewModel = ref<PuzzleBoardViewModel>(new PuzzleBoardViewModel(props.puzzl
 const isInitializing = ref(false) // 防护标记，避免初始化时触发循环
 const showHint = ref(false) // 控制提示原图显示状态
 
+// 设置游戏完成回调
+const handleGameCompleted = () => {
+  console.log('PuzzleBoard: 游戏完成回调被触发')
+  if (props.controller) {
+    console.log('PuzzleBoard: 调用controller.handleGameCompleted()')
+    props.controller.handleGameCompleted()
+  } else {
+    console.log('PuzzleBoard: controller不存在')
+  }
+}
+
+viewModel.value.setOnGameCompletedCallback(handleGameCompleted)
+
 // 计算属性 - 从ViewModel获取
 const totalPieces = computed(() => viewModel.value.totalPieces)
 const gridRows = computed(() => viewModel.value.gridRows)
@@ -431,6 +444,8 @@ onMounted(async () => {
 watch(() => props.puzzleData, async (newPuzzleData) => {
   // 重新创建 ViewModel 实例以更新 puzzleData
   viewModel.value = new PuzzleBoardViewModel(newPuzzleData)
+  // 重新设置游戏完成回调
+  viewModel.value.setOnGameCompletedCallback(handleGameCompleted)
   
   await initializePuzzle(newPuzzleData)
 })

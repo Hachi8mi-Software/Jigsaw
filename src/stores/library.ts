@@ -11,7 +11,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue, GridConfig } from '../types'
+import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue, GridConfig, LeaderboardEntry } from '../types'
 import { BUILTIN_PUZZLES, ACHIEVEMENTS } from '../data'
 import { imageStorage } from '../utils/imageStorage'
 
@@ -24,6 +24,7 @@ class LibraryViewModel {
   private readonly STORAGE_KEY = 'puzzle_library'
   private readonly USER_STATS_KEY = 'user_stats'
   private readonly ACHIEVEMENTS_KEY = 'puzzle_achievements'
+  private readonly LEADERBOARD_KEY = 'puzzle_leaderboard'
 
   /**
    * 获取内置素材库数据
@@ -73,6 +74,30 @@ class LibraryViewModel {
       return stored ? JSON.parse(stored) : []
     } catch (error) {
       console.error('加载素材库失败:', error)
+      return []
+    }
+  }
+
+  /**
+   * 保存排行榜记录到本地存储
+   */
+  saveLeaderboardRecords(records: LeaderboardEntry[]): void {
+    try {
+      localStorage.setItem(this.LEADERBOARD_KEY, JSON.stringify(records))
+    } catch (error) {
+      console.error('保存排行榜记录失败:', error)
+    }
+  }
+
+  /**
+   * 从本地存储加载排行榜记录
+   */
+  loadLeaderboardRecords(): LeaderboardEntry[] {
+    try {
+      const stored = localStorage.getItem(this.LEADERBOARD_KEY)
+      return stored ? JSON.parse(stored) : []
+    } catch (error) {
+      console.error('加载排行榜记录失败:', error)
       return []
     }
   }
@@ -217,6 +242,7 @@ export const useLibraryStore = defineStore('library', () => {
   const sortBy = ref<'name' | 'difficulty' | 'date'>('name')
   const sortOrder = ref<'asc' | 'desc'>('asc')
   const achievements = ref<Achievement[]>([])
+  const leaderboardRecords = ref<LeaderboardEntry[]>([])
   const isLoading = ref(false)
 
   // 素材库管理器实例
@@ -297,6 +323,9 @@ export const useLibraryStore = defineStore('library', () => {
     
     // 加载成就
     achievements.value = libraryViewModel.loadAchievements()
+
+    // 加载排行榜记录
+    leaderboardRecords.value = libraryViewModel.loadLeaderboardRecords()
 
     // 加载统计数据
     userStats.value = libraryViewModel.loadUserStats()
@@ -501,6 +530,26 @@ export const useLibraryStore = defineStore('library', () => {
     return migrationCount
   }
 
+  // 排行榜相关方法
+  const addLeaderboardRecord = (record: LeaderboardEntry) => {
+    console.log('添加排行榜记录到store:', record)
+    console.log('当前排行榜记录数量:', leaderboardRecords.value.length)
+    leaderboardRecords.value.push(record)
+    libraryViewModel.saveLeaderboardRecords(leaderboardRecords.value)
+    console.log('排行榜记录添加后数量:', leaderboardRecords.value.length)
+    console.log('localStorage中的记录:', localStorage.getItem('puzzle_leaderboard'))
+  }
+
+  const clearLeaderboardRecords = (puzzleId: string) => {
+    leaderboardRecords.value = leaderboardRecords.value.filter(record => record.puzzleId !== puzzleId)
+    libraryViewModel.saveLeaderboardRecords(leaderboardRecords.value)
+  }
+
+  const clearAllLeaderboardRecords = () => {
+    leaderboardRecords.value = []
+    libraryViewModel.saveLeaderboardRecords(leaderboardRecords.value)
+  }
+
   /**
    * 验证图片文件
    */
@@ -586,6 +635,7 @@ export const useLibraryStore = defineStore('library', () => {
     sortBy,
     sortOrder,
     achievements,
+    leaderboardRecords,
     isLoading,
     userStats,
     
@@ -609,6 +659,11 @@ export const useLibraryStore = defineStore('library', () => {
     importLibrary,
     updateUserStats,
     clearAllUserItems,
+    
+    // 排行榜相关
+    addLeaderboardRecord,
+    clearLeaderboardRecords,
+    clearAllLeaderboardRecords,
     
     // OPFS相关
     getImageDisplayURL,

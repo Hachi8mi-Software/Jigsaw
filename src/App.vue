@@ -37,7 +37,8 @@ const navItems = [
   { name: 'Library', label: '素材库', icon: '📚', path: '/library' },
   { name: 'Editor', label: '编辑器', icon: '✏️', path: '/editor' },
   { name: 'Game', label: '游戏', icon: '🎮', path: '/game' },
-  { name: 'Achievements', label: '成就', icon: '🏆', path: '/achievements' },
+  { name: 'Leaderboard', label: '排行榜', icon: '🏆', path: '/leaderboard' },
+  { name: 'Achievements', label: '成就', icon: '🎖️', path: '/achievements' },
   { name: 'Settings', label: '设置', icon: '⚙️', path: '/settings' }
 ]
 

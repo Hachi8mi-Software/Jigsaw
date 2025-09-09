@@ -33,8 +33,15 @@ export class PuzzleBoardViewModel {
 
   // 添加对 game store 的依赖
   private gameStore = useGameStore()
+  // 游戏完成回调
+  private onGameCompletedCallback?: () => void
 
   constructor(private puzzleData: PuzzleData | null) {
+  }
+
+  // 设置游戏完成回调
+  setOnGameCompletedCallback(callback: () => void) {
+    this.onGameCompletedCallback = callback
   }
 
   // 计算属性
@@ -561,6 +568,10 @@ export class PuzzleBoardViewModel {
   private checkGameCompletion() {
     if (this.gameStore.checkGameCompletion()) {
       audioUtils.playPuzzleCompleted()
+      // 触发游戏完成回调
+      if (this.onGameCompletedCallback) {
+        this.onGameCompletedCallback()
+      }
     }
   }
 
