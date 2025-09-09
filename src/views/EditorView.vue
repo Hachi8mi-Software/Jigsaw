@@ -377,9 +377,13 @@ const containerDimensions = computed(() => {
     containerWidth = baseSize * aspectRatio
   }
   
-  // 应用窗口大小限制
-  const maxWidth = Math.min(containerWidth, windowSize.value.width * 0.8)
-  const maxHeight = Math.min(containerHeight, windowSize.value.height * 0.6)
+  // 应用窗口大小限制 - 针对竖屏优化
+  const isPortrait = windowSize.value.height > windowSize.value.width
+  const maxWidthRatio = isPortrait ? 0.9 : 0.8  // 竖屏时允许更宽的容器
+  const maxHeightRatio = isPortrait ? 0.5 : 0.6  // 竖屏时减少高度占用
+  
+  const maxWidth = Math.min(containerWidth, windowSize.value.width * maxWidthRatio)
+  const maxHeight = Math.min(containerHeight, windowSize.value.height * maxHeightRatio)
   
   if (containerWidth > maxWidth) {
     containerWidth = maxWidth
@@ -408,12 +412,17 @@ const gridCols = computed(() => gridConfig.value.cols)
 const imageContainerStyle = computed(() => {
   const { width, height } = containerDimensions.value
   
+  // 与containerDimensions保持一致的屏幕方向检测
+  const isPortrait = windowSize.value.height > windowSize.value.width
+  const maxWidthRatio = isPortrait ? 0.9 : 0.8
+  const maxHeightRatio = isPortrait ? 0.5 : 0.6
+  
   return {
     width: `${width}px`,
     height: `${height}px`,
     position: 'relative',
-    maxWidth: `${windowSize.value.width * 0.8}px`,
-    maxHeight: `${windowSize.value.height * 0.6}px`
+    maxWidth: `${windowSize.value.width * maxWidthRatio}px`,
+    maxHeight: `${windowSize.value.height * maxHeightRatio}px`
   }
 })
 
