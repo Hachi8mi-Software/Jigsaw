@@ -198,7 +198,7 @@
             <button @click="closeHint" class="close-btn">×</button>
           </div>
           <div class="hint-image-container">
-            <img :src="puzzleData.imageUrl" :alt="puzzleData.name" class="hint-image" />
+            <img :src="image?.src" :alt="puzzleData.name" class="hint-image" />
           </div>
           <div class="hint-footer">
             <button @click="closeHint" class="confirm-btn">确认</button>
@@ -220,6 +220,7 @@ import { PuzzleBoardViewModel } from '../viewModels/game/puzzleBoardViewModel'
 import type { PieceStatus, PuzzleData } from '../types'
 import { GameController } from '@/viewModels/game/gameController'
 import PuzzlePieceCanvas from './PuzzlePieceCanvas.vue'
+import { imageCache as imageCacheManager } from '../utils/imageCache'
 
 interface Props {
   controller: GameController,
@@ -379,6 +380,12 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   cachedGridRect = null
 }
 
+// 完整图片提示
+const image = ref<HTMLImageElement | null>(null)
+const loadImage = async (url: string) => {
+  image.value = await imageCacheManager.getImage(url)
+}
+
 const initializePuzzle = async (puzzleData: PuzzleData | null) => {
   if (puzzleData) {
     await nextTick()
@@ -407,6 +414,7 @@ const initializePuzzle = async (puzzleData: PuzzleData | null) => {
   } else {
     gameStore.clearPuzzleBoardPieces()
   }
+  loadImage(puzzleData?.imageUrl || '')
 }
 
 // 生命周期管理
