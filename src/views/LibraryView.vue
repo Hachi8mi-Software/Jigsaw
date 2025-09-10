@@ -27,7 +27,7 @@
         <input
           v-model="searchKeyword"
           type="text"
-          placeholder="搜索拼图名称或标签..."
+          placeholder="搜索拼图名称、标签或类别..."
           class="ark"
         />
       </div>

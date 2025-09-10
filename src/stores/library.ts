@@ -270,6 +270,7 @@ export const useLibraryStore = defineStore('library', () => {
       const keyword = searchKeyword.value.toLowerCase()
       filtered = filtered.filter(item => 
         item.name.toLowerCase().includes(keyword) ||
+        item.category.toLowerCase().includes(keyword) ||
         item.tags.some(tag => tag.toLowerCase().includes(keyword))
       )
     }
