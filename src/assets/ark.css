@@ -30,13 +30,6 @@
   line-height: normal;
 }
 
-@media (prefers-color-scheme: dark) {
-  .ark {
-    --theme-primary: #ffffff;
-    --theme-background: #0b1820;
-  }
-}
-
 [data-theme="dark"] .ark {
   --theme-primary: #ffffff;
   --theme-background: #0b1820;
