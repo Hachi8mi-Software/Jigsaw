@@ -63,6 +63,16 @@ export class PieceManager {
   }
 
   /**
+   * 更新拼图块翻转状态
+   */
+  updatePieceFlip(pieceId: string, flipped: boolean): void {
+    const piece = this.pieces.value.find(p => p.id === pieceId)
+    if (piece) {
+      piece.flipped = flipped
+    }
+  }
+
+  /**
    * 更新拼图块放置状态
    */
   updatePiecePlacement(pieceId: string, isPlaced: boolean, isCorrect?: boolean): void {

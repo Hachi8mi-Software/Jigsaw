@@ -38,7 +38,7 @@ const defaultSettings: AppSettings = {
     showBackground: true,
     showGrid: true,
     autoSnap: true,
-    enableRotation: false,
+    enableRotation: true,
     showNumbers: true
   },
   ui: {

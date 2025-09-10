@@ -99,6 +99,37 @@
                 @touchstart="(event) => startDrag(index, event)"
               />
             </div>
+            
+            <!-- 旋转控制区域 -->
+            <div v-if="enableRotation" class="rotation-controls">
+              <h5>旋转控制</h5>
+              <div class="rotation-zones">
+                <div 
+                  ref="rotateLeftZone"
+                  class="rotation-zone rotate-left"
+                  :class="{ 'zone-active': dragOverZone === 'left' }"
+                >
+                  <div class="zone-icon">↺</div>
+                  <div class="zone-label">左转90°</div>
+                </div>
+                <div 
+                  ref="rotateRightZone"
+                  class="rotation-zone rotate-right"
+                  :class="{ 'zone-active': dragOverZone === 'right' }"
+                >
+                  <div class="zone-icon">↻</div>
+                  <div class="zone-label">右转90°</div>
+                </div>
+                <div 
+                  ref="flipZone"
+                  class="rotation-zone flip"
+                  :class="{ 'zone-active': dragOverZone === 'flip' }"
+                >
+                  <div class="zone-icon">⇄</div>
+                  <div class="zone-label">左右翻转</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 右侧：目标拼图网格 -->
@@ -237,9 +268,19 @@ const settingsStore = useSettingsStore()
 // 计算是否显示数字
 const showNumbers = computed(() => settingsStore.settings.game.showNumbers)
 
+// 计算是否启用旋转功能
+const enableRotation = computed(() => settingsStore.settings.game.enableRotation)
+
 // 移动端状态
 const isMobile = ref(false)
 const showMobileControls = ref(false)
+
+// 旋转控制状态
+const dragOverZone = ref<'left' | 'right' | 'flip' | null>(null)
+const rotateLeftZone = ref<HTMLElement>()
+const rotateRightZone = ref<HTMLElement>()
+const flipZone = ref<HTMLElement>()
+const originalPiecePosition = ref<{ x: number, y: number } | null>(null)
 
 // 检测移动端
 const checkMobile = () => {
@@ -351,6 +392,12 @@ const startDrag = (index: number, event: MouseEvent | TouchEvent) => {
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
   const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
   
+  // 保存拼图块原始位置（用于旋转后返回）
+  const piece = viewModel.value.getPiece(index)
+  if (piece && enableRotation.value) {
+    originalPiecePosition.value = { x: piece.x, y: piece.y }
+  }
+  
   viewModel.value.startDrag(index, clientX, clientY)
   
   // 预缓存网格矩形
@@ -377,6 +424,11 @@ const handleDrag = (event: MouseEvent | TouchEvent) => {
   const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
   
   viewModel.value.handleDrag(clientX, clientY)
+  
+  // 检测是否拖拽到旋转区域
+  if (enableRotation.value) {
+    checkRotationZones(clientX, clientY)
+  }
 }
 
 const stopDrag = (event: MouseEvent | TouchEvent) => {
@@ -385,9 +437,17 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   const clientX = 'touches' in event ? (event.changedTouches?.[0]?.clientX ?? 0) : event.clientX
   const clientY = 'touches' in event ? (event.changedTouches?.[0]?.clientY ?? 0) : event.clientY
   
-  const gridRect = getCachedGridRect()
+  // 检查是否在旋转区域内释放
+  if (enableRotation.value && dragOverZone.value) {
+    handleRotationDrop(dragOverZone.value)
+  } else {
+    const gridRect = getCachedGridRect()
+    viewModel.value.stopDrag(clientX, clientY, gridRect)
+  }
   
-  viewModel.value.stopDrag(clientX, clientY, gridRect)
+  // 清理拖拽状态
+  dragOverZone.value = null
+  originalPiecePosition.value = null
   
   document.removeEventListener('mousemove', handleDrag)
   document.removeEventListener('mouseup', stopDrag)
@@ -397,6 +457,87 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
   // 清除缓存，下次拖拽时重新获取
   cachedGridRect = null
 }
+
+// 旋转区域检测方法
+const checkRotationZones = (clientX: number, clientY: number) => {
+  if (!rotateLeftZone.value || !rotateRightZone.value || !flipZone.value) return
+  
+  const zones = [
+    { element: rotateLeftZone.value, type: 'left' as const },
+    { element: rotateRightZone.value, type: 'right' as const },
+    { element: flipZone.value, type: 'flip' as const }
+  ]
+  
+  let currentZone: 'left' | 'right' | 'flip' | null = null
+  
+  for (const zone of zones) {
+    const rect = zone.element.getBoundingClientRect()
+    if (clientX >= rect.left && clientX <= rect.right && 
+        clientY >= rect.top && clientY <= rect.bottom) {
+      currentZone = zone.type
+      break
+    }
+  }
+  
+  dragOverZone.value = currentZone
+}
+
+// 处理旋转操作
+ const handleRotationDrop = (zoneType: 'left' | 'right' | 'flip') => {
+   const pieceIndex = draggingPieceIndex.value
+   if (pieceIndex === -1) return
+   
+   const piece = viewModel.value.getPiece(pieceIndex)
+   if (!piece) return
+   
+   // 保存原始位置
+   if (!originalPiecePosition.value) {
+     originalPiecePosition.value = { x: piece.x, y: piece.y }
+   }
+   
+   if (zoneType === 'flip') {
+     // 处理水平翻转
+     const currentFlipped = piece.flipped || false
+     const newFlipped = !currentFlipped
+     
+     // 执行翻转
+     if (props.controller) {
+       props.controller.flipPiece(piece.id || pieceIndex.toString(), newFlipped)
+     }
+     
+     console.log(`拼图块 ${pieceIndex} 执行水平翻转操作，翻转状态: ${newFlipped}`)
+   } else {
+     // 处理旋转
+     const currentRotation = piece.rotation || 0
+     let newRotation = currentRotation
+     
+     switch (zoneType) {
+       case 'left':
+         newRotation = (currentRotation - 90) % 360
+         break
+       case 'right':
+         newRotation = (currentRotation + 90) % 360
+         break
+     }
+     
+     // 标准化角度到0-360范围
+     if (newRotation < 0) newRotation += 360
+     
+     // 执行旋转
+     if (props.controller) {
+       props.controller.rotatePiece(piece.id || pieceIndex.toString(), newRotation)
+     }
+     
+     console.log(`拼图块 ${pieceIndex} 执行${zoneType === 'left' ? '左转' : '右转'}操作，新角度: ${newRotation}°`)
+   }
+   
+   // 将拼图块返回原位
+   setTimeout(() => {
+     if (originalPiecePosition.value) {
+       gameStore.updatePiecePosition(pieceIndex, originalPiecePosition.value.x, originalPiecePosition.value.y)
+     }
+   }, 100)
+ }
 
 // 完整图片提示
 const image = ref<HTMLImageElement | null>(null)
@@ -807,5 +948,100 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 .no-puzzle {
   @apply text-center text-gray-500 text-lg;
   color: var(--settings-text-secondary);
+}
+
+/* 旋转控制区域样式 */
+.rotation-controls {
+  @apply mt-6 p-4 border-t;
+  border-color: var(--settings-border);
+}
+
+.rotation-controls h5 {
+  @apply text-sm font-semibold mb-3 text-center;
+  color: var(--settings-text-primary);
+}
+
+.rotation-zones {
+  @apply flex space-x-2;
+}
+
+.rotation-zone {
+  @apply flex-1 p-3 border-2 border-dashed rounded-lg transition-all duration-200;
+  @apply flex flex-col items-center justify-center cursor-pointer;
+  border-color: var(--settings-border);
+  background-color: var(--settings-card-bg);
+  min-height: 80px;
+}
+
+.rotation-zone:hover {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-hover);
+  transform: translateY(-2px);
+}
+
+.rotation-zone.zone-active {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-accent);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.zone-icon {
+  @apply text-2xl mb-1;
+  font-weight: bold;
+}
+
+.zone-label {
+  @apply text-xs font-medium text-center;
+  color: inherit;
+}
+
+.rotation-zone.rotate-left:hover .zone-icon {
+  animation: rotateLeft 0.6s ease-in-out;
+}
+
+.rotation-zone.rotate-right:hover .zone-icon {
+  animation: rotateRight 0.6s ease-in-out;
+}
+
+.rotation-zone.flip:hover .zone-icon {
+  animation: flip 0.6s ease-in-out;
+}
+
+@keyframes rotateLeft {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-90deg); }
+}
+
+@keyframes rotateRight {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(90deg); }
+}
+
+@keyframes flip {
+   0% { transform: scaleX(1); }
+   50% { transform: scaleX(0); }
+   100% { transform: scaleX(-1); }
+ }
+
+/* 移动端旋转控制适配 */
+@media (max-width: 767px) {
+  .rotation-zones {
+    @apply flex-col space-x-0 space-y-2;
+  }
+  
+  .rotation-zone {
+    @apply flex-row space-x-3;
+    min-height: 60px;
+  }
+  
+  .zone-icon {
+    @apply text-xl mb-0;
+  }
+  
+  .zone-label {
+    @apply text-sm;
+  }
 }
 </style>

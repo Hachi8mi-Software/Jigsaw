@@ -35,6 +35,7 @@ export interface PieceStatus {
   y: number                // Y坐标
 
   rotation?: number        // 旋转角度 (用于drag&drop系统)
+  flipped?: boolean        // 是否水平翻转
   
   originalIndex: number      // 原始索引（正确位置）
   isPlaced: boolean         // 是否已放置

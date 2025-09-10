@@ -140,6 +140,10 @@ export const useGameStore = defineStore('game', () => {
     pieceManager.updatePieceRotation(pieceId, rotation)
   }
 
+  const updatePieceFlip = (pieceId: string, flipped: boolean) => {
+    pieceManager.updatePieceFlip(pieceId, flipped)
+  }
+
   const updatePiecePlacement = (pieceId: string, isPlaced: boolean, isCorrect?: boolean) => {
     pieceManager.updatePiecePlacement(pieceId, isPlaced, isCorrect)
     gameCompletionChecker.updatePieces(pieceManager.piecesValue)
@@ -366,6 +370,7 @@ export const useGameStore = defineStore('game', () => {
     // 拼图块管理
     updatePiecePosition,
     updatePieceRotation,
+    updatePieceFlip,
     updatePiecePlacement,
     initializePuzzleBoardPieces,
     updatePuzzleBoardPiecePosition,

@@ -156,6 +156,16 @@ export class GameController {
   }
 
   /**
+   * 翻转拼图块
+   */
+  flipPiece(pieceId: string, flipped: boolean): void {
+    if (this.gameStore.isGameActive) {
+      this.gameStore.updatePieceFlip(pieceId, flipped)
+      this.saveGameState()
+    }
+  }
+
+  /**
    * 放置拼图块
    */
   placePiece(pieceId: string, isPlaced: boolean, isCorrect?: boolean): void {
