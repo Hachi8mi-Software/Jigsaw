@@ -189,12 +189,12 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
         <li
           v-for="item in navItems"
           :key="item.name"
-          class="nav-item"
+          class="ark button"
+          :class="{ 'primary': currentRouteName === item.name }"
         >
           <button
             @click="navigateTo(item.path)"
             class="nav-link"
-            :class="{ 'active': currentRouteName === item.name }"
           >
             <span class="nav-icon">{{ item.icon }}</span>
             <span class="nav-label">{{ item.label }}</span>
@@ -264,36 +264,8 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
   color: var(--text-secondary);
 }
 
-.nav-menu {
-  @apply flex-1 py-4;
-}
-
-.nav-item {
-  @apply mb-1;
-}
-
-.nav-link {
-  @apply w-full flex items-center px-6 py-3 text-left;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
-}
-
-.nav-link:hover {
-  background-color: var(--bg-secondary);
-}
-
-.nav-link.active {
-  background-color: var(--bg-secondary);
-  color: var(--text-accent);
-  border-right: 2px solid var(--text-accent);
-}
-
 .nav-icon {
   @apply text-xl mr-3;
-}
-
-.nav-label {
-  @apply font-medium;
 }
 
 .sidebar-footer {

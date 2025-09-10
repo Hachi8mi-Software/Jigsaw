@@ -92,7 +92,7 @@ body {
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.3s ease;
+  transition: transark0.3s ease;
 }
 
 .slide-enter-from {
@@ -105,30 +105,34 @@ body {
 
 /* 移动端优化样式 */
 @media (max-width: 767px) {
+
   /* 防止移动端双击缩放 */
   * {
     touch-action: manipulation;
   }
-  
+
   /* 优化按钮触摸体验 */
   button {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* 优化输入框触摸体验 */
-  input, textarea, select {
+  input,
+  textarea,
+  select {
     min-height: 44px;
-    font-size: 16px; /* 防止iOS缩放 */
+    font-size: 16px;
+    /* 防止iOS缩放 */
   }
-  
+
   /* 优化链接触摸体验 */
   a {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
   }
-  
+
   /* 禁用移动端hover效果 */
   *:hover {
     /* 在移动端禁用hover效果，避免触摸后状态残留 */
@@ -137,22 +141,23 @@ body {
 
 /* 移动端竖屏优化 */
 @media (max-width: 767px) and (orientation: portrait) {
+
   /* 确保游戏视图正确使用视口高度 */
   .game-view {
     height: 100vh;
     height: 100dvh;
   }
-  
+
   /* 优化拼图板在竖屏下的显示 */
   .puzzle-board {
     padding: 1rem;
   }
-  
+
   /* 确保拼图块区域不会过高 */
   .mobile-scattered {
     max-height: 40vh;
   }
-  
+
   /* 优化状态栏在竖屏下的显示 */
   .mobile-status-bar {
     max-height: 30vh;
@@ -165,22 +170,22 @@ body {
   .mobile-header {
     height: 50px;
   }
-  
+
   .main-content.mobile-main {
     padding-top: 50px;
   }
-  
+
   /* 横屏时优化拼图板布局 */
   .puzzle-board {
     padding: 0.5rem;
   }
-  
+
   /* 横屏时减少拼图块区域高度 */
   .mobile-scattered {
     height: 200px;
     max-height: 30vh;
   }
-  
+
   /* 横屏时优化状态栏 */
   .mobile-status-bar {
     max-height: 25vh;
@@ -190,7 +195,7 @@ body {
 @font-face {
   font-family: "Gotham Pro";
   src: url("./fonts/GothamPro-Bold.woff2") format("woff2"),
-       url("./fonts/GothamPro-Bold.otf") format("opentype");
+    url("./fonts/GothamPro-Bold.otf") format("opentype");
   font-weight: bold;
   font-style: normal;
 }
@@ -198,7 +203,73 @@ body {
 @font-face {
   font-family: "Gotham Pro";
   src: url("./fonts/GothamPro-Black.woff2") format("woff2"),
-       url("./fonts/GothamPro-Black.otf") format("opentype");
+    url("./fonts/GothamPro-Black.otf") format("opentype");
   font-weight: 800;
   font-style: normal;
+}
+
+@keyframes spreadBg {
+  0% {
+    background-position: 100%;
+  }
+
+  100% {
+    background-position: 0%;
+  }
+}
+
+.ark {
+  --theme-primary: #0b1820;
+}
+
+.ark.button {
+  padding: 0.5rem 5rem 0.5rem 2rem;
+  text-align: start;
+  font-weight: 800;
+  background: #ffffff;
+  color: var(--theme-primary);
+  border: unset;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.ark.button.primary {
+  color: #ffffff;
+  background: var(--theme-primary);
+  border: 1px solid #ffffff;
+}
+
+.ark.button::before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 0.25rem;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  background: var(--theme-primary);
+}
+
+.ark.button.primary::before {
+  background: #ffffff;
+}
+
+.ark.button:hover {
+  color: #ffffff;
+  animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  background: linear-gradient(90deg, var(--theme-primary) 0 50%, #ffffff 50% 100%);
+  background-size: 200% 100%;
+}
+
+.ark.button.primary:hover {
+  color: var(--theme-primary);
+  animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  background: linear-gradient(90deg, #ffffff 0 50%, var(--theme-primary) 50% 100%);
+  background-size: 200% 100%;
 }
