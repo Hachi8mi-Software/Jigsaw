@@ -44,14 +44,26 @@ export class PieceManager {
       
       // 如果启用了旋转功能，添加随机旋转和翻转
       if (isRotationEnabled) {
-        // 随机旋转：0°, 90°, 180°, 270°
-        const rotations = [0, 90, 180, 270]
+        // 检查拼图块是否为方形
+        const isSquare = this.puzzleData && 
+          this.puzzleData.gridConfig.pieceWidth === this.puzzleData.gridConfig.pieceHeight
+        
+        // 根据拼图块形状决定可用的旋转角度
+        let rotations: number[]
+        if (isSquare) {
+          // 方形拼图块：可以使用所有角度
+          rotations = [0, 90, 180, 270]
+        } else {
+          // 非方形拼图块：只使用0°和180°，避免90°和270°旋转
+          rotations = [0, 180]
+        }
+        
         piece.rotation = rotations[Math.floor(Math.random() * rotations.length)]
         
         // 随机翻转：50%概率翻转
         piece.flipped = Math.random() < 0.5
         
-        console.log(`拼图块 ${i} 初始化: 旋转${piece.rotation}°, 翻转${piece.flipped}`)
+        console.log(`拼图块 ${i} 初始化: 旋转${piece.rotation}°, 翻转${piece.flipped} (${isSquare ? '方形' : '非方形'})`)
       }
       
       return piece

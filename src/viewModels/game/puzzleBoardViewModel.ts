@@ -208,8 +208,20 @@ export class PuzzleBoardViewModel {
         if (isRotationEnabled) {
           const piece = this.gameStore.getPuzzleBoardPiece(index)
           if (piece) {
-            // 随机旋转：0°, 90°, 180°, 270°
-            const rotations = [0, 90, 180, 270]
+            // 检查拼图块是否为方形
+            const isSquare = this.puzzleData && 
+              this.puzzleData.gridConfig.pieceWidth === this.puzzleData.gridConfig.pieceHeight
+            
+            // 根据拼图块形状决定可用的旋转角度
+            let rotations: number[]
+            if (isSquare) {
+              // 方形拼图块：可以使用所有角度
+              rotations = [0, 90, 180, 270]
+            } else {
+              // 非方形拼图块：只使用0°和180°，避免90°和270°旋转
+              rotations = [0, 180]
+            }
+            
             const newRotation = rotations[Math.floor(Math.random() * rotations.length)]
             this.gameStore.updatePieceRotation(piece.id || index.toString(), newRotation)
             
@@ -217,7 +229,7 @@ export class PuzzleBoardViewModel {
             const newFlipped = Math.random() < 0.5
             this.gameStore.updatePieceFlip(piece.id || index.toString(), newFlipped)
             
-            console.log(`拼图块 ${index} 打乱: 旋转${newRotation}°, 翻转${newFlipped}`)
+            console.log(`拼图块 ${index} 打乱: 旋转${newRotation}°, 翻转${newFlipped} (${isSquare ? '方形' : '非方形'})`)
           }
         }
       }
