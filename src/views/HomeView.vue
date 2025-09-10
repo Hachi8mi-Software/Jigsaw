@@ -254,6 +254,26 @@ onMounted(async () => {
   max-height: 40vh;
 }
 
+/* 白天模式优化 */
+@media (prefers-color-scheme: light) {
+  .hero-section {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  }
+  
+  .hero-title {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .hero-subtitle {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+  }
+  
+  .card-stats {
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.5);
+    text-stroke: 0.5px rgba(0, 0, 0, 0.5);
+  }
+}
+
 .hero-content {
   @apply max-w-7xl mx-auto;
 }
@@ -308,6 +328,7 @@ onMounted(async () => {
   color: var(--theme-color-primary);
   background-color: #000000;
   padding: 0rem 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 
   position: absolute;
   top: calc(var(--font-size) * 0.6);
@@ -321,6 +342,7 @@ onMounted(async () => {
   margin: 0.5rem 0;
   font-weight: 600;
   font-size: 1.1rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .hero-description {
@@ -463,6 +485,8 @@ onMounted(async () => {
 .card-stats {
   @apply text-xs font-medium;
   color: var(--settings-accent);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
+  text-stroke: 0.5px rgba(0, 0, 0, 0.3);
 }
 
 .card-arrow {
