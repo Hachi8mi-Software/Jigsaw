@@ -623,6 +623,12 @@ const initializePuzzle = async (puzzleData: PuzzleData | null) => {
     try {
       isInitializing.value = true
 
+      // 清理所有拖拽相关状态
+      dragOverZone.value = null
+      originalPiecePosition.value = null
+      cachedGridRect = null
+      gridRectCacheTime = 0
+
       const restored = viewModel.value.pieces.length == viewModel.value.totalPieces
       if (restored) {
         console.log('成功恢复拼图块位置')
@@ -658,6 +664,17 @@ onMounted(async () => {
 
 // 监听拼图数据变化
 watch(() => props.puzzleData, async (newPuzzleData) => {
+  // 清理旧ViewModel的状态
+  if (viewModel.value) {
+    viewModel.value.cleanup()
+  }
+  
+  // 清理所有缓存状态
+  cachedGridRect = null
+  gridRectCacheTime = 0
+  dragOverZone.value = null
+  originalPiecePosition.value = null
+  
   // 重新创建 ViewModel 实例以更新 puzzleData
   viewModel.value = new PuzzleBoardViewModel(newPuzzleData)
   // 重新设置游戏完成回调

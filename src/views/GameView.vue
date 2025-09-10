@@ -320,6 +320,8 @@ const openSettingsModal = () => {
 const loadPuzzleFromRoute = async () => {
   const puzzleId = route.params.puzzleId as string
   if (puzzleId) {
+    // 在加载新拼图前，先清理当前游戏状态
+    gameViewModel.clearCurrentGame()
     await gameViewModel.loadPuzzleFromRoute(puzzleId)
   }
 }
@@ -354,8 +356,9 @@ onMounted(() => {
 })
 
 // 监听路由变化
-watch(() => route.params.puzzleId, (newId) => {
-  if (newId) {
+watch(() => route.params.puzzleId, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    // 只有在拼图ID真正变化时才重新加载
     loadPuzzleFromRoute()
   }
 })

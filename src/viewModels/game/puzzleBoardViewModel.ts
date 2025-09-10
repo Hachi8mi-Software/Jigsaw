@@ -45,6 +45,14 @@ export class PuzzleBoardViewModel {
     this.onGameCompletedCallback = callback
   }
 
+  // 清理资源
+  cleanup(): void {
+    // 清理拖拽状态
+    this.gameStore.clearDragging()
+    // 清理游戏完成回调
+    this.onGameCompletedCallback = undefined
+  }
+
   // 计算属性
   get totalPieces() {
     return this.puzzleData ? 
