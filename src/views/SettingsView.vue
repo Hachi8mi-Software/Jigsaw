@@ -48,6 +48,18 @@
               </label>
               <p class="setting-description">允许旋转拼图块增加难度</p>
             </div>
+            
+            <div class="setting-item">
+              <label class="setting-label">
+                <input 
+                  v-model="viewModel.gameSettings.value.showNumbers"
+                  type="checkbox"
+                  class="setting-checkbox"
+                />
+                显示数字提示
+              </label>
+              <p class="setting-description">在拼图块上显示数字标识帮助识别位置</p>
+            </div>
           </div>
         </div>
 

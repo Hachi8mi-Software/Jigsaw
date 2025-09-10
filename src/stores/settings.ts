@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export interface GameSettings {
   showBackground: boolean
   showGrid: boolean
   autoSnap: boolean
   enableRotation: boolean
+  showNumbers: boolean
 }
 
 export interface UiSettings {
@@ -37,7 +38,8 @@ const defaultSettings: AppSettings = {
     showBackground: true,
     showGrid: true,
     autoSnap: true,
-    enableRotation: false
+    enableRotation: false,
+    showNumbers: true
   },
   ui: {
     theme: 'light',
@@ -114,6 +116,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
   // 初始化时加载设置
   loadSettings()
+
+  // 监听设置变化并自动保存
+  watch(settings, () => {
+    saveSettings()
+  }, { deep: true })
 
   return {
     settings,

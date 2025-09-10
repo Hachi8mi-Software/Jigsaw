@@ -26,7 +26,7 @@
                 class="grid-slot"
                 :class="{ 'occupied': isSlotOccupied(index - 1) }"
               >
-                <span class="slot-number">{{ index }}</span>
+                <span v-if="showNumbers" class="slot-number">{{ index }}</span>
               </div>
               
               <!-- 已放置的拼图块 -->
@@ -42,7 +42,7 @@
                 :piece-height="viewModel.pieceHeight"
                 :is-dragging="draggingPieceIndex === index"
                 :is-placed="true"
-                :show-number="true"
+                :show-number="showNumbers"
                 :number-display-mode="'minimal'"
                 @mousedown="(event) => startDrag(index, event)"
                 @touchstart="(event) => startDrag(index, event)"
@@ -66,7 +66,7 @@
                 :piece-height="viewModel.pieceHeight"
                 :is-dragging="draggingPieceIndex === index"
                 :is-placed="false"
-                :show-number="true"
+                :show-number="showNumbers"
                 :number-display-mode="'minimal'"
                 @mousedown="(event) => startDrag(index, event)"
                 @touchstart="(event) => startDrag(index, event)"
@@ -93,7 +93,7 @@
                 :piece-height="viewModel.pieceHeight"
                 :is-dragging="draggingPieceIndex === index"
                 :is-placed="false"
-                :show-number="true"
+                :show-number="showNumbers"
                 :number-display-mode="'minimal'"
                 @mousedown="(event) => startDrag(index, event)"
                 @touchstart="(event) => startDrag(index, event)"
@@ -112,7 +112,7 @@
                 class="grid-slot"
                 :class="{ 'occupied': isSlotOccupied(index - 1) }"
               >
-                <span class="slot-number">{{ index }}</span>
+                <span v-if="showNumbers" class="slot-number">{{ index }}</span>
               </div>
               
               <!-- 已放置的拼图块 -->
@@ -128,7 +128,7 @@
                 :piece-height="viewModel.pieceHeight"
                 :is-dragging="draggingPieceIndex === index"
                 :is-placed="true"
-                :show-number="true"
+                :show-number="showNumbers"
                 :number-display-mode="'minimal'"
                 @mousedown="(event) => startDrag(index, event)"
                 @touchstart="(event) => startDrag(index, event)"
@@ -216,6 +216,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch, nextTick, ref } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useSettingsStore } from '../stores/settings'
 import { PuzzleBoardViewModel } from '../viewModels/game/puzzleBoardViewModel'
 import type { PieceStatus, PuzzleData } from '../types'
 import { GameController } from '@/viewModels/game/gameController'
@@ -231,6 +232,10 @@ const props = defineProps<Props>()
 
 // 获取store实例
 const gameStore = useGameStore()
+const settingsStore = useSettingsStore()
+
+// 计算是否显示数字
+const showNumbers = computed(() => settingsStore.settings.game.showNumbers)
 
 // 移动端状态
 const isMobile = ref(false)
