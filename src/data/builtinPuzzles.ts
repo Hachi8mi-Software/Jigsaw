@@ -10,7 +10,7 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
   {
     id: 'builtin_1',
     name: '美丽的日落',
-    imageUrl: getImagePath('sunset.svg'),
+    imageUrl: getImagePath('sunset.png'),
     category: '自然风光',
     tags: ['日落', '天空', '美景'],
     difficulty: 3,
@@ -18,19 +18,20 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
     puzzleData: {
       id: 'builtin_1',
       name: '美丽的日落',
-      imageUrl: getImagePath('sunset.svg'),
+      imageUrl: getImagePath('sunset.png'),
       gridConfig: {
         rows: 3,
         cols: 4,
-        pieceWidth: 150,
-        pieceHeight: 100
+        pieceWidth: 153,
+        pieceHeight: 120
       },
-      boundaries: BoundaryManager.generateInitialBoundaries({
-        rows: 3,
-        cols: 4,
-        pieceWidth: 150,
-        pieceHeight: 100
-      }),
+      // boundaries: BoundaryManager.generateInitialBoundaries({
+      //   rows: 3,
+      //   cols: 4,
+      //   pieceWidth: 153,
+      //   pieceHeight: 120
+      // }),
+      boundaries: createCustomBoundaries(),
       createdAt: new Date(),
       difficulty: 3
     }
@@ -38,7 +39,7 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
   {
     id: 'builtin_2',
     name: '城市夜景',
-    imageUrl: getImagePath('city-night.svg'),
+    imageUrl: getImagePath('city-night.png'),
     category: '城市建筑',
     tags: ['城市', '夜景', '灯光'],
     difficulty: 4,
@@ -46,18 +47,18 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
     puzzleData: {
       id: 'builtin_2',
       name: '城市夜景',
-      imageUrl: getImagePath('city-night.svg'),
+      imageUrl: getImagePath('city-night.png'),
       gridConfig: {
-        rows: 3,
+        rows: 4,
         cols: 4,
-        pieceWidth: 150,
-        pieceHeight: 100
+        pieceWidth: 140,
+        pieceHeight: 200
       },
       boundaries: BoundaryManager.generateInitialBoundaries({
-        rows: 3,
+        rows: 4,
         cols: 4,
-        pieceWidth: 150,
-        pieceHeight: 100
+        pieceWidth: 140,
+        pieceHeight: 200
       }),
       createdAt: new Date(),
       difficulty: 4
@@ -66,7 +67,7 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
   {
     id: 'builtin_3',
     name: '可爱的猫咪',
-    imageUrl: getImagePath('cat.svg'),
+    imageUrl: getImagePath('cat.png'),
     category: '可爱动物',
     tags: ['猫', '宠物', '可爱'],
     difficulty: 2,
@@ -74,44 +75,21 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
     puzzleData: {
       id: 'builtin_3',
       name: '可爱的猫咪',
-      imageUrl: getImagePath('cat.svg'),
-      gridConfig: {
-        rows: 3,
-        cols: 4,
-        pieceWidth: 150,
-        pieceHeight: 100
-      },
-      boundaries: BoundaryManager.generateInitialBoundaries({
-        rows: 3,
-        cols: 4,
-        pieceWidth: 150,
-        pieceHeight: 100
-      }),
-      createdAt: new Date(),
-      difficulty: 2
-    }
-  },
-  {
-    id: 'builtin_4',
-    name: '凹凸拼图实验',
-    imageUrl: getImagePath('sunset.svg'),
-    category: '实验',
-    tags: ['实验', '凹凸', '特殊形状'],
-    difficulty: 3,
-    isBuiltIn: true,
-    puzzleData: {
-      id: 'builtin_4',
-      name: '凹凸拼图实验',
-      imageUrl: getImagePath('sunset.svg'),
+      imageUrl: getImagePath('cat.png'),
       gridConfig: {
         rows: 3,
         cols: 3,
-        pieceWidth: 150,
-        pieceHeight: 100
+        pieceWidth: 120,
+        pieceHeight: 120
       },
-      boundaries: createCustomBoundaries(),
+      boundaries: BoundaryManager.generateInitialBoundaries({
+        rows: 3,
+        cols: 3,
+        pieceWidth: 120,
+        pieceHeight: 120
+      }),
       createdAt: new Date(),
-      difficulty: 3
+      difficulty: 2
     }
   }
 ]
@@ -145,8 +123,8 @@ function createCustomBoundaries() {
   // 创建一个3x3的网格配置
   const gridConfig = {
     rows: 3,
-    cols: 3,
-    pieceWidth: 150,
+    cols: 4,
+    pieceWidth: 128,
     pieceHeight: 100
   }
   
