@@ -193,7 +193,7 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
         >
           <button
             @click="navigateTo(item.path)"
-            class="ark button"
+            class="ark button borderless"
             :class="{ 'primary': currentRouteName === item.name }"
           >
             <span class="nav-icon">{{ item.icon }}</span>
@@ -271,6 +271,11 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
 .sidebar-footer {
   @apply p-4;
   border-top: 1px solid var(--border-color);
+}
+
+.nav-menu > li,
+.nav-menu > li > button {
+  width: 100%;
 }
 
 /* 主题切换按钮样式 */

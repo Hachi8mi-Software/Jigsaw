@@ -24,44 +24,32 @@
     <!-- 搜索和筛选栏 -->
     <div class="filter-bar">
       <div class="search-box">
-        <input
-          v-model="searchKeyword"
-          type="text"
-          placeholder="搜索拼图名称、标签或类别..."
-          class="ark"
-        />
+        <input v-model="searchKeyword" type="text" placeholder="搜索拼图名称、标签或类别..." class="ark" />
       </div>
-      
+
       <div class="filter-controls">
         <select v-model="selectedCategory" class="category-select ark">
           <option v-for="category in availableCategories" :key="category" :value="category">
             {{ category }}
           </option>
         </select>
-        
+
         <select v-model="selectedDifficulty" class="difficulty-select ark">
           <option :value="null">全部难度</option>
           <option v-for="difficulty in availableDifficulties" :key="difficulty" :value="difficulty">
             {{ getDifficultyLabel(difficulty) }}
           </option>
         </select>
-        
-        <button 
-          @click="setSortBy('name')"
-          class="sort-btn"
-          :class="{ 'active': sortBy === 'name' }"
-        >
-          名称 {{ sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
-        </button>
-        
-        <button 
-          @click="setSortBy('difficulty')"
-          class="sort-btn"
-          :class="{ 'active': sortBy === 'difficulty' }"
-        >
-          难度 {{ sortBy === 'difficulty' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
-        </button>
       </div>
+      <div class="filter-controls">
+          <button @click="setSortBy('name')" class="ark" :class="{ 'primary': sortBy === 'name' }">
+            名称 {{ sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+          </button>
+
+          <button @click="setSortBy('difficulty')" class="ark" :class="{ 'primary': sortBy === 'difficulty' }">
+            难度 {{ sortBy === 'difficulty' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+          </button>
+        </div>
     </div>
 
     <!-- 拼图网格 -->
@@ -70,7 +58,7 @@
         <div class="loading-spinner"></div>
         <p>加载中...</p>
       </div>
-      
+
       <div v-else-if="filteredItems.length === 0" class="empty-state">
         <div class="empty-icon">🧩</div>
         <h3>没有找到拼图</h3>
@@ -81,25 +69,12 @@
           素材库为空
         </p>
       </div>
-      
+
       <div v-else class="puzzle-grid">
-        <div
-          v-for="item in filteredItems"
-          :key="item.id"
-          class="puzzle-card"
-          @click="handleCardClick(item)"
-        >
+        <div v-for="item in filteredItems" :key="item.id" class="puzzle-card" @click="handleCardClick(item)">
           <div class="card-image">
-            <img 
-              v-if="imageUrlCache[item.imageUrl]"
-              :src="imageUrlCache[item.imageUrl]" 
-              :alt="item.name" 
-            />
-            <div 
-              v-else 
-              class="image-placeholder"
-              @click="loadItemImage(item.imageUrl)"
-            >
+            <img v-if="imageUrlCache[item.imageUrl]" :src="imageUrlCache[item.imageUrl]" :alt="item.name" />
+            <div v-else class="image-placeholder" @click="loadItemImage(item.imageUrl)">
               <div class="placeholder-content">
                 <div class="placeholder-icon">🖼️</div>
                 <div class="placeholder-text">加载中...</div>
@@ -119,31 +94,22 @@
               </div>
             </div>
           </div>
-          
+
           <div class="card-content">
             <h3 class="card-title">{{ item.name }}</h3>
             <div class="card-meta">
               <span class="card-category">{{ item.category }}</span>
               <div class="card-difficulty">
-                <span 
-                  v-for="star in 5" 
-                  :key="star"
-                  class="difficulty-star"
-                  :class="{ 
+                <span v-for="star in 5" :key="star" class="difficulty-star" :class="{ 
                     'filled': star <= getItemDifficulty(item),
                     [`difficulty-${getItemDifficulty(item)}`]: star <= getItemDifficulty(item)
-                  }"
-                >
+                  }">
                   ⭐
                 </span>
               </div>
             </div>
             <div class="card-tags">
-              <span 
-                v-for="tag in item.tags.slice(0, 3)" 
-                :key="tag"
-                class="tag"
-              >
+              <span v-for="tag in item.tags.slice(0, 3)" :key="tag" class="tag">
                 {{ tag }}
               </span>
               <span v-if="item.tags.length > 3" class="tag more">
@@ -191,21 +157,15 @@
               <span class="action-icon">🎮</span>
               <span class="action-text">开始游戏</span>
             </button>
-            
-            <button 
-              v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" 
-              @click="editPuzzleFromDialog" 
-              class="mobile-action-btn"
-            >
+
+            <button v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" @click="editPuzzleFromDialog"
+              class="mobile-action-btn">
               <span class="action-icon">✏️</span>
               <span class="action-text">编辑拼图</span>
             </button>
-            
-            <button 
-              v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" 
-              @click="deletePuzzleFromDialog" 
-              class="mobile-action-btn danger"
-            >
+
+            <button v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" @click="deletePuzzleFromDialog"
+              class="mobile-action-btn danger">
               <span class="action-icon">🗑️</span>
               <span class="action-text">删除拼图</span>
             </button>
@@ -570,15 +530,23 @@ onMounted(() => {
   
   .search-box {
     @apply w-full max-w-none;
+    max-width: unset !important;
   }
   
   .filter-controls {
-    @apply w-full justify-end;
+    @apply w-full;
+    justify-content: space-between;
+    margin-left: 0 !important;
+    flex-wrap: wrap;
   }
-  
-  .category-select,
-  .difficulty-select {
-    @apply mr-auto;
+  .filter-controls select {
+    flex-grow: 1;
+  }
+  .filter-controls button.ark {
+    transition-duration: 0.422s;
+  }
+  .filter-controls .primary {
+    flex-grow: 1;
   }
 }
 
@@ -593,10 +561,6 @@ onMounted(() => {
 .filter-controls {
   @apply flex items-center space-x-3;
   margin-left: 2rem;
-}
-
-.filter-controls > button {
-  flex-shrink: 0;
 }
 
 .category-select option,

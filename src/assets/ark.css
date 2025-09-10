@@ -35,28 +35,31 @@
   --theme-background: #0b1820;
 }
 
-.ark.button {
-  padding: 0.5rem 5rem 0.5rem 2rem;
+button.ark {
+  padding: 0.5rem 2rem 0.5rem 2rem;
   text-align: start;
   font-weight: 800;
   background: var(--theme-background);
   color: var(--theme-primary);
-  border: unset;
+  border: 3px solid var(--theme-primary);
 
   position: relative;
   display: flex;
   align-items: center;
   cursor: pointer;
-
-  width: 100%;
+  box-sizing: border-box;
 }
 
-.ark.button.primary {
+button.ark.borderless {
+  border: unset;
+}
+
+button.ark.primary {
   color: var(--theme-background);
   background: var(--theme-primary);
 }
 
-.ark.button::before {
+button.ark::before {
   content: '';
   display: block;
   position: absolute;
@@ -67,18 +70,18 @@
   background: var(--theme-primary);
 }
 
-.ark.button.primary::before {
+button.ark.primary::before {
   background: var(--theme-background);
 }
 
-.ark.button:hover {
+button.ark:hover {
   color: var(--theme-background);
   animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
   background: linear-gradient(90deg, var(--theme-primary) 0 50%, var(--theme-background) 50% 100%);
   background-size: 200% 100%;
 }
 
-.ark.button.primary:hover {
+button.ark.primary:hover {
   color: var(--theme-primary);
   animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
   background: linear-gradient(90deg, var(--theme-background) 0 50%, var(--theme-primary) 50% 100%);
@@ -121,7 +124,6 @@ input[type="text"].ark:focus {
 select.ark {
   display: block;
   padding: 0.5rem 1rem;
-  width: 100%;
   box-sizing: border-box;
 
   font-size: 1.2rem;
