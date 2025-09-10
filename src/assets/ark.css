@@ -1,0 +1,80 @@
+
+@font-face {
+  font-family: "Gotham Pro";
+  src: url("./fonts/GothamPro-Bold.woff2") format("woff2"),
+    url("./fonts/GothamPro-Bold.otf") format("opentype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Gotham Pro";
+  src: url("./fonts/GothamPro-Black.woff2") format("woff2"),
+    url("./fonts/GothamPro-Black.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+}
+
+@keyframes spreadBg {
+  0% {
+    background-position: 100%;
+  }
+
+  100% {
+    background-position: 0%;
+  }
+}
+
+.ark {
+  --theme-primary: #0b1820;
+}
+
+.ark.button {
+  padding: 0.5rem 5rem 0.5rem 2rem;
+  text-align: start;
+  font-weight: 800;
+  background: #ffffff;
+  color: var(--theme-primary);
+  border: unset;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  width: 100%;
+}
+
+.ark.button.primary {
+  color: #ffffff;
+  background: var(--theme-primary);
+}
+
+.ark.button::before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 0.25rem;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  background: var(--theme-primary);
+}
+
+.ark.button.primary::before {
+  background: #ffffff;
+}
+
+.ark.button:hover {
+  color: #ffffff;
+  animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  background: linear-gradient(90deg, var(--theme-primary) 0 50%, #ffffff 50% 100%);
+  background-size: 200% 100%;
+}
+
+.ark.button.primary:hover {
+  color: var(--theme-primary);
+  animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  background: linear-gradient(90deg, #ffffff 0 50%, var(--theme-primary) 50% 100%);
+  background-size: 200% 100%;
+}

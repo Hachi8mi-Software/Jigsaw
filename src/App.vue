@@ -9,6 +9,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useLibraryStore } from './stores/library'
 import { useSettingsStore } from './stores/settings'
 import NotificationSystem from './components/NotificationSystem.vue'
+import "@/assets/ark.css"
 
 const router = useRouter()
 const route = useRoute()
@@ -189,12 +190,11 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
         <li
           v-for="item in navItems"
           :key="item.name"
-          class="ark button"
-          :class="{ 'primary': currentRouteName === item.name }"
         >
           <button
             @click="navigateTo(item.path)"
-            class="nav-link"
+            class="ark button"
+            :class="{ 'primary': currentRouteName === item.name }"
           >
             <span class="nav-icon">{{ item.icon }}</span>
             <span class="nav-label">{{ item.label }}</span>
