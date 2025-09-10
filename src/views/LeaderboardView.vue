@@ -43,11 +43,21 @@
           <div class="game-header">
             <div class="game-info">
               <img 
-                :src="gameBoard.gameInfo.imageUrl" 
+                v-if="imageUrlCache[gameBoard.gameInfo.imageUrl]"
+                :src="imageUrlCache[gameBoard.gameInfo.imageUrl]" 
                 :alt="gameBoard.gameInfo.name"
                 class="game-icon"
                 @error="handleImageError"
               />
+              <div 
+                v-else 
+                class="image-placeholder game-icon"
+                @click="loadItemImage(gameBoard.gameInfo.imageUrl)"
+              >
+                <div class="placeholder-content">
+                  <span class="placeholder-text">📷</span>
+                </div>
+              </div>
               <div class="game-details">
                 <h3 class="game-name">{{ gameBoard.gameInfo.name }}</h3>
                 <div class="game-meta">
@@ -145,9 +155,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, reactive, watch } from 'vue'
 import { useLibraryStore } from '../stores/library'
 import { useNotificationStore } from '../stores/notification'
+import { imageStorage } from '../utils/imageStorage'
 import type { LeaderboardEntry, LibraryItem } from '../types'
 
 // Store
@@ -158,6 +169,9 @@ const notificationStore = useNotificationStore()
 const isLoading = ref(false)
 const showDetailModal = ref(false)
 const selectedGame = ref<GameLeaderboard | null>(null)
+
+// 图片URL缓存
+const imageUrlCache = reactive<Record<string, string>>({})
 
 // 游戏排行榜数据结构
 interface GameLeaderboard {
@@ -224,9 +238,62 @@ const formatDate = (timestamp: number): string => {
   }).format(new Date(timestamp))
 }
 
+// 异步获取图片URL的函数
+const getImageUrl = async (imageUrl: string): Promise<string> => {
+  if (!imageUrl) return ''
+
+  // 如果不是fs URL，直接返回
+  if (!imageUrl.startsWith('fs://')) {
+    return imageUrl
+  }
+  const filename = imageUrl.replace('fs://', '')
+  
+  // 检查缓存
+  if (imageUrlCache[imageUrl]) {
+    return imageUrlCache[imageUrl]
+  }
+  
+  try {
+    // 获取实际的图片URL
+    const blobUrl = await imageStorage.getImageURL(filename)
+    imageUrlCache[imageUrl] = blobUrl
+    return blobUrl
+  } catch (error) {
+    console.error('获取图片URL失败:', error)
+    return ''
+  }
+}
+
+// 为排行榜准备图片URL
+const prepareImageUrls = async () => {
+  const leaderboards = gameLeaderboards.value
+  for (const board of leaderboards) {
+    if (board.gameInfo.imageUrl && !imageUrlCache[board.gameInfo.imageUrl]) {
+      const url = await getImageUrl(board.gameInfo.imageUrl)
+      if (url) {
+        imageUrlCache[board.gameInfo.imageUrl] = url
+      }
+    }
+  }
+}
+
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
   img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyNkM5IDI2IDkgMTQgMjAgMTRTMzEgMjYgMjAgMjZaIiBmaWxsPSIjOUI5QkEzIi8+CjwvZz4KPC9zdmc+'
+}
+
+
+const loadItemImage = async (imageUrl: string) => {
+  if (!imageUrl || imageUrlCache[imageUrl]) return
+  
+  try {
+    const blobUrl = await getImageUrl(imageUrl)
+    if (blobUrl) {
+      imageUrlCache[imageUrl] = blobUrl
+    }
+  } catch (error) {
+    console.error('加载图片失败:', imageUrl, error)
+  }
 }
 
 const clearGameRecords = async (puzzleId: string, gameName: string) => {
@@ -259,7 +326,15 @@ onMounted(() => {
   console.log('当前排行榜记录:', libraryStore.leaderboardRecords)
   console.log('排行榜记录数量:', libraryStore.leaderboardRecords.length)
   console.log('localStorage中的排行榜记录:', localStorage.getItem('puzzle_leaderboard'))
+  
+  // 预加载图片
+  prepareImageUrls()
 })
+
+// 监听gameLeaderboards变化，预加载图片
+watch(gameLeaderboards, () => {
+  prepareImageUrls()
+}, { immediate: true })
 </script>
 
 <style scoped>
@@ -357,6 +432,18 @@ onMounted(() => {
 
 .game-icon {
   @apply w-12 h-12 rounded-lg object-cover;
+}
+
+.image-placeholder {
+  @apply w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors;
+}
+
+.placeholder-content {
+  @apply flex items-center justify-center w-full h-full;
+}
+
+.placeholder-text {
+  @apply text-gray-500 text-lg;
 }
 
 .game-details {
