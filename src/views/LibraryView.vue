@@ -43,6 +43,13 @@
           </option>
         </select>
         
+        <select v-model="selectedDifficulty" class="difficulty-select">
+          <option :value="null">全部难度</option>
+          <option v-for="difficulty in availableDifficulties" :key="difficulty" :value="difficulty">
+            {{ getDifficultyLabel(difficulty) }}
+          </option>
+        </select>
+        
         <button 
           @click="setSortBy('name')"
           class="sort-btn"
@@ -274,6 +281,7 @@ const prepareImageUrls = async () => {
 const filteredItems = computed(() => libraryStore.filteredItems)
 const userItems = computed(() => libraryStore.userItems)
 const availableCategories = computed(() => libraryStore.availableCategories)
+const availableDifficulties = computed(() => libraryStore.availableDifficulties)
 const categories = computed(() => libraryStore.categories)
 const isLoading = computed(() => libraryStore.isLoading)
 const sortBy = computed(() => libraryStore.sortBy)
@@ -287,6 +295,11 @@ const searchKeyword = computed({
 const selectedCategory = computed({
   get: () => libraryStore.selectedCategory,
   set: (value) => libraryStore.setSelectedCategory(value)
+})
+
+const selectedDifficulty = computed({
+  get: () => libraryStore.selectedDifficulty,
+  set: (value) => libraryStore.setSelectedDifficulty(value)
 })
 
 // 监听filteredItems变化，预加载图片
@@ -387,12 +400,17 @@ const deletePuzzleFromDialog = () => {
 }
 
 const getItemDifficulty = (item: LibraryItem) => {
-  // 如果有puzzleData，使用完整的难度计算
+  // 优先使用预设的难度值
+  if (item.difficulty) {
+    return item.difficulty
+  }
+  
+  // 如果没有预设难度但有puzzleData，使用完整的难度计算
   if (item.puzzleData) {
     return calculatePuzzleDifficulty(item.puzzleData)
   }
   
-  // 如果没有puzzleData，使用基础难度计算（假设为3x3网格）
+  // 如果都没有，使用基础难度计算（假设为3x3网格）
   const defaultGridConfig = {
     rows: 3,
     cols: 3,
@@ -401,6 +419,11 @@ const getItemDifficulty = (item: LibraryItem) => {
   }
   
   return calculateBasicDifficulty(defaultGridConfig)
+}
+
+const getDifficultyLabel = (difficulty: number) => {
+  const labels = ['', '简单', '容易', '中等', '困难', '极难']
+  return `${difficulty}星 ${labels[difficulty] || ''}`
 }
 
 // 生命周期
@@ -509,7 +532,8 @@ onMounted(() => {
     @apply w-full justify-end;
   }
   
-  .category-select {
+  .category-select,
+  .difficulty-select {
     @apply mr-auto;
   }
 }
@@ -539,7 +563,8 @@ onMounted(() => {
   @apply flex items-center space-x-3;
 }
 
-.category-select {
+.category-select,
+.difficulty-select {
   @apply px-3 py-2 border rounded-md;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
   background-color: var(--settings-card-bg);
@@ -547,11 +572,13 @@ onMounted(() => {
   border-color: var(--settings-border);
 }
 
-.category-select:focus {
+.category-select:focus,
+.difficulty-select:focus {
   border-color: var(--settings-accent);
 }
 
-.category-select option {
+.category-select option,
+.difficulty-select option {
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
 }
