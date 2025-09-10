@@ -889,25 +889,56 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 }
 
 .mobile-control-btn {
-  @apply flex flex-col items-center justify-center p-4 rounded-lg transition-colors duration-200;
-  background-color: var(--settings-hover);
-  color: var(--settings-text-primary);
+  @apply flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-300;
+  background: #fae925;
+  color: #111827;
   min-height: 80px;
-  border: none;
+  border: 2px solid #d4c41a;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-control-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(212, 196, 26, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(212, 196, 26, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(212, 196, 26, 0.25) 0%, transparent 50%);
+  background-size: 30px 30px, 40px 40px, 35px 35px;
+  background-position: 0 0, 15px 15px, 8px 25px;
+  opacity: 0.6;
 }
 
 .mobile-control-btn:hover {
-  background-color: var(--settings-border);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(212, 196, 26, 0.3);
+  border-color: #b8a817;
+  background: #fae925;
+}
+
+.mobile-control-btn:hover::before {
+  opacity: 0.8;
+  background-size: 25px 25px, 35px 35px, 30px 30px;
 }
 
 .mobile-control-btn.hint-btn {
-  background-color: var(--settings-accent);
-  color: white;
+  background: #d4c41a;
+  color: #111827;
+  border-color: #b8a817;
+  box-shadow: 0 3px 12px rgba(212, 196, 26, 0.3);
 }
 
 .mobile-control-btn.hint-btn:hover {
-  background-color: var(--settings-accent-hover);
+  background: #b8a817;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(212, 196, 26, 0.4);
 }
 
 .mobile-control-btn .control-icon {
@@ -919,22 +950,54 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 }
 
 .control-btn {
-  @apply px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
-  @apply transition-colors duration-200 font-medium;
-  background-color: var(--settings-accent);
-  color: white;
+  @apply px-6 py-2 rounded-xl transition-all duration-300 font-medium;
+  background: #fae925;
+  color: #111827;
+  border: 2px solid #d4c41a;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.control-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(212, 196, 26, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(212, 196, 26, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(212, 196, 26, 0.25) 0%, transparent 50%);
+  background-size: 40px 40px, 50px 50px, 45px 45px;
+  background-position: 0 0, 20px 20px, 10px 30px;
+  opacity: 0.6;
 }
 
 .control-btn:hover {
-  background-color: var(--settings-accent-hover, #2563eb);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(212, 196, 26, 0.3);
+  border-color: #b8a817;
+  background: #fae925;
+}
+
+.control-btn:hover::before {
+  opacity: 0.8;
+  background-size: 35px 35px, 45px 45px, 40px 40px;
 }
 
 .hint-btn {
-  background-color: var(--settings-accent, #3b82f6);
+  background: #d4c41a;
+  color: #111827;
+  border-color: #b8a817;
+  box-shadow: 0 4px 15px rgba(212, 196, 26, 0.3);
 }
 
 .hint-btn:hover {
-  background-color: var(--settings-accent-hover, #2563eb);
+  background: #b8a817;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(212, 196, 26, 0.4);
 }
 
 .hint-modal {
