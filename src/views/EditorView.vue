@@ -372,7 +372,7 @@
               ref="cropperRef"
               :src="cropImageUrl"
               :stencil-props="{
-                aspectRatio: gridConfig.cols / gridConfig.rows
+                aspectRatio: (gridConfig.cols * gridConfig.pieceWidth) / (gridConfig.rows * gridConfig.pieceHeight)
               }"
               :canvas="{
                 background: false
@@ -486,7 +486,17 @@ const canExport = computed(() => editorStore.canExport)
 const actualPuzzleRatio = computed(() => {
   const totalWidth = gridConfig.value.cols * gridConfig.value.pieceWidth
   const totalHeight = gridConfig.value.rows * gridConfig.value.pieceHeight
-  return `${totalWidth}:${totalHeight}`
+  
+  // 计算最大公约数来简化比例
+  const gcd = (a: number, b: number): number => {
+    return b === 0 ? a : gcd(b, a % b)
+  }
+  
+  const divisor = gcd(totalWidth, totalHeight)
+  const simplifiedWidth = totalWidth / divisor
+  const simplifiedHeight = totalHeight / divisor
+  
+  return `${simplifiedWidth}:${simplifiedHeight}`
 })
 
 // 计算容器的实际尺寸（用于SVG网格）
