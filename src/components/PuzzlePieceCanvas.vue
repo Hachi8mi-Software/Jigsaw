@@ -272,6 +272,21 @@ const renderPiece = async () => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
+  // 获取设备像素比，支持高DPI显示
+  const devicePixelRatio = window.devicePixelRatio || 1
+  const canvasSize = actualCanvasSize.value
+  
+  // 设置Canvas的实际尺寸（考虑设备像素比）
+  canvas.width = canvasSize.width * devicePixelRatio
+  canvas.height = canvasSize.height * devicePixelRatio
+  
+  // 缩放上下文以匹配设备像素比
+  ctx.scale(devicePixelRatio, devicePixelRatio)
+  
+  // 设置Canvas的CSS尺寸
+  canvas.style.width = canvasSize.width + 'px'
+  canvas.style.height = canvasSize.height + 'px'
+
   try {
     // 获取缓存的图片
     const img = await imageCacheManager.getImage(props.puzzleData.imageUrl)
@@ -290,6 +305,10 @@ const renderPiece = async () => {
 
     // 清除画布
     ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
+    
+    // 启用图像平滑，减少像素感
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high' // 使用高质量的平滑算法
     
     // 计算拼图块的实际尺寸（不含凸出部分）
     const actualPieceWidth = props.isPlaced ? getActualGridCellSize().width : props.pieceWidth
@@ -318,6 +337,16 @@ const renderPiece = async () => {
     const sourceTabSizeY = (tabSize * EXPANSION_RATIO / actualPieceHeight) * sourceHeight
     
     // 绘制图片，源区域和目标区域都相应扩展
+    // 使用更精确的缩放比例来减少像素化
+    const scaleX = (actualPieceWidth + tabSize * 5) / (sourceWidth + sourceTabSizeX * 2)
+    const scaleY = (actualPieceHeight + tabSize * 5) / (sourceHeight + sourceTabSizeY * 2)
+    
+    // 如果缩放比例过大，启用额外的抗锯齿处理
+    if (scaleX > 2 || scaleY > 2) {
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+    }
+    
     ctx.drawImage(
       img,
       sourceX - sourceTabSizeX, sourceY - sourceTabSizeY, 
@@ -334,6 +363,9 @@ const renderPiece = async () => {
     ctx.translate(offsetX, offsetY)
     
     // 绘制拼图块边框 - 恢复明显的边框效果
+    // 启用抗锯齿渲染，使边框更平滑
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
     ctx.strokeStyle = props.isPlaced 
       ? (props.piece.isCorrect ? '#27ae60' : '#e74c3c')
       : '#666'
@@ -460,9 +492,7 @@ watch(() => [
 watch(() => [props.pieceWidth, props.pieceHeight, actualCanvasSize.value], () => {
   nextTick(() => {
     if (canvasRef.value) {
-      const canvasSize = actualCanvasSize.value
-      canvasRef.value.width = canvasSize.width
-      canvasRef.value.height = canvasSize.height
+      // 重新渲染时会自动应用高DPI设置
       renderPiece()
     }
   })
@@ -487,6 +517,13 @@ watch(() => [props.pieceWidth, props.pieceHeight, actualCanvasSize.value], () =>
   -webkit-touch-callout: none;
   cursor: pointer;
   transition: transform 0.2s ease, filter 0.2s ease;
+  /* 图像渲染优化 */
+  image-rendering: -webkit-optimize-contrast; /* Safari */
+  image-rendering: crisp-edges; /* 标准 */
+  image-rendering: pixelated; /* Firefox */
+  /* 抗锯齿和平滑渲染 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .drag-mask {
