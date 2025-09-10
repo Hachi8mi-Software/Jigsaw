@@ -42,11 +42,11 @@
         </select>
       </div>
       <div class="filter-controls">
-          <button @click="setSortBy('name')" class="ark" :class="{ 'highlight': sortBy === 'name' }">
+          <button @click="setSortBy('name')" class="ark" :class="{ 'primary': sortBy === 'name' }">
             名称 {{ sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
           </button>
 
-          <button @click="setSortBy('difficulty')" class="ark" :class="{ 'highlight': sortBy === 'difficulty' }">
+          <button @click="setSortBy('difficulty')" class="ark" :class="{ 'primary': sortBy === 'difficulty' }">
             难度 {{ sortBy === 'difficulty' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
           </button>
         </div>

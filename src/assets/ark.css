@@ -27,14 +27,12 @@
 .ark {
   --theme-primary: #0b1820;
   --theme-background: #ffffff;
-  --theme-highlight: #fae925;
   line-height: normal;
 }
 
 [data-theme="dark"] .ark {
-  --theme-primary: #ffffff;
+  --theme-primary: #fae925;
   --theme-background: #0b1820;
-  --theme-highlight: #fae925;
 }
 
 button.ark {
@@ -61,11 +59,6 @@ button.ark.primary {
   background: var(--theme-primary);
 }
 
-button.ark.highlight {
-  color: var(--theme-highlight);
-  background: var(--theme-primary);
-}
-
 button.ark::before {
   content: '';
   display: block;
@@ -81,10 +74,6 @@ button.ark.primary::before {
   background: var(--theme-background);
 }
 
-button.ark.highlight::before {
-  background: var(--theme-highlight);
-}
-
 button.ark:hover {
   color: var(--theme-background);
   animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
@@ -96,13 +85,6 @@ button.ark.primary:hover {
   color: var(--theme-primary);
   animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
   background: linear-gradient(90deg, var(--theme-background) 0 50%, var(--theme-primary) 50% 100%);
-  background-size: 200% 100%;
-}
-
-button.ark.highlight:hover {
-  color: var(--theme-primary);
-  animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
-  background: linear-gradient(90deg, var(--theme-highlight) 0 50%, var(--theme-primary) 50% 100%);
   background-size: 200% 100%;
 }
 
