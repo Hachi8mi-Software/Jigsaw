@@ -295,10 +295,31 @@ const renderPiece = async () => {
     const correctRow = Math.floor(props.piece.originalIndex / props.gridCols)
     const correctCol = props.piece.originalIndex % props.gridCols
     
-    const sourceX = (correctCol / props.gridCols) * img.naturalWidth
-    const sourceY = (correctRow / props.gridRows) * img.naturalHeight
-    const sourceWidth = img.naturalWidth / props.gridCols
-    const sourceHeight = img.naturalHeight / props.gridRows
+    // 支持矩形拼图块：根据拼图块的实际尺寸比例计算源图片区域
+    const pieceAspectRatio = props.pieceWidth / props.pieceHeight
+    const imageAspectRatio = img.naturalWidth / img.naturalHeight
+    
+    let sourceX, sourceY, sourceWidth, sourceHeight
+    
+    if (Math.abs(pieceAspectRatio - imageAspectRatio) < 0.01) {
+      // 如果拼图块比例与图片比例基本一致，使用标准分割
+      sourceX = (correctCol / props.gridCols) * img.naturalWidth
+      sourceY = (correctRow / props.gridRows) * img.naturalHeight
+      sourceWidth = img.naturalWidth / props.gridCols
+      sourceHeight = img.naturalHeight / props.gridRows
+    } else {
+      // 如果拼图块是矩形，需要根据拼图块的实际尺寸比例调整源图片区域
+      const totalPieceWidth = props.gridCols * props.pieceWidth
+      const totalPieceHeight = props.gridRows * props.pieceHeight
+      
+      // 计算源图片中对应区域的尺寸
+      sourceWidth = (props.pieceWidth / totalPieceWidth) * img.naturalWidth
+      sourceHeight = (props.pieceHeight / totalPieceHeight) * img.naturalHeight
+      
+      // 计算源图片中对应区域的位置
+      sourceX = (correctCol * props.pieceWidth / totalPieceWidth) * img.naturalWidth
+      sourceY = (correctRow * props.pieceHeight / totalPieceHeight) * img.naturalHeight
+    }
 
     // 获取实际的Canvas尺寸
     const canvasSize = actualCanvasSize.value

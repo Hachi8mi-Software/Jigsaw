@@ -78,7 +78,7 @@ export class GameViewModel {
           rows: 3,
           cols: 4,
           pieceWidth: 150,
-          pieceHeight: 100
+          pieceHeight: 150 // 默认使用方形拼图块
         },
         boundaries: libraryItem.puzzleData?.boundaries || [], // 使用自定义边界数据或默认空数组
         createdAt: new Date(),

@@ -73,12 +73,24 @@ export class PuzzleBoardViewModel {
 
   // 计算网格样式
   getGridStyle(): StyleValue {
-    return createGridStyle(this.gridCols, this.gridRows, 300)
+    // 检查是否有自定义的拼图块尺寸
+    const customPieceSize = this.gameStore.currentPuzzle?.gridConfig ? {
+      width: this.gameStore.currentPuzzle.gridConfig.pieceWidth,
+      height: this.gameStore.currentPuzzle.gridConfig.pieceHeight
+    } : undefined
+    
+    return createGridStyle(this.gridCols, this.gridRows, undefined, customPieceSize)
   }
 
   // 计算拼图块尺寸
   getPieceSize() {
-    return calculatePieceSize(this.gridCols, this.gridRows, 300)
+    // 检查是否有自定义的拼图块尺寸
+    const customPieceSize = this.gameStore.currentPuzzle?.gridConfig ? {
+      width: this.gameStore.currentPuzzle.gridConfig.pieceWidth,
+      height: this.gameStore.currentPuzzle.gridConfig.pieceHeight
+    } : undefined
+    
+    return calculatePieceSize(this.gridCols, this.gridRows, undefined, customPieceSize)
   }
 
   // 获取拼图块宽度

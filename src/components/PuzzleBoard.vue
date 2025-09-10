@@ -285,6 +285,7 @@ import { GameController } from '@/viewModels/game/gameController'
 import PuzzlePieceCanvas from './PuzzlePieceCanvas.vue'
 import { imageCache as imageCacheManager } from '../utils/imageCache'
 import { getGridPos } from '@/utils/gridUtils'
+import { useResponsiveSize } from '../utils/responsiveSizeManager'
 
 interface Props {
   controller: GameController,
@@ -296,6 +297,9 @@ const props = defineProps<Props>()
 // 获取store实例
 const gameStore = useGameStore()
 const settingsStore = useSettingsStore()
+
+// 响应式尺寸管理
+const { isResizing } = useResponsiveSize()
 
 // 计算是否显示数字
 const showNumbers = computed(() => settingsStore.settings.game.showNumbers)
@@ -379,7 +383,14 @@ const gridRows = computed(() => viewModel.value.gridRows)
 const gridCols = computed(() => viewModel.value.gridCols)
 const pieces = computed(() => viewModel.value.pieces)
 const draggingPieceIndex = computed(() => viewModel.value.draggingPieceIndex)
-const gridStyle = computed(() => viewModel.value.getGridStyle())
+const gridStyle = computed(() => {
+  // 当窗口大小变化时，重新计算网格样式
+  if (isResizing.value) {
+    // 在调整大小期间，返回当前样式避免闪烁
+    return viewModel.value.getGridStyle()
+  }
+  return viewModel.value.getGridStyle()
+})
 
 // 视图方法 - 委托给ViewModel
 const getPieceImageStyle = (piece: PieceStatus) => viewModel.value.getPieceImageStyle(piece)
