@@ -146,4 +146,12 @@ select.ark {
   outline: none;
 }
 
-
+.dash.ark {
+  border: 3px solid transparent;
+  background: linear-gradient(var(--theme-background), var(--theme-background)) padding-box,
+    repeating-linear-gradient(45deg,
+      var(--theme-primary) 0,
+      var(--theme-primary) 0.5em,
+      var(--theme-background) 0,
+      var(--theme-background) 1em);
+}

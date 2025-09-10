@@ -25,7 +25,7 @@
     <div v-if="!currentImage" class="upload-state">
       <div class="upload-container">
         <div 
-          class="upload-area"
+          class="upload-area ark dash"
           @click="triggerImageUpload"
           @drop.prevent="handleImageDrop"
           @dragover.prevent
@@ -38,8 +38,8 @@
         </div>
         
         <div class="upload-actions">
-          <button @click="openImportDialog" class="action-btn secondary">
-            📁 导入拼图数据
+          <button @click="openImportDialog" class="ark primary">
+            💾 导入拼图数据
           </button>
         </div>
       </div>
@@ -356,7 +356,7 @@
     </div>
 
     <!-- 图片裁剪对话框 -->
-    <div v-if="showCropDialog" class="modal-overlay">
+    <div v-if="showCropDialog" class="modal-overlay ark">
       <div class="modal-dialog crop-dialog" @click.stop>
         <div class="modal-header">
           <h3>裁剪图片</h3>
@@ -1268,10 +1268,9 @@ onUnmounted(() => {
 }
 
 .upload-area {
-  @apply w-full h-64 border-2 border-dashed rounded-lg;
+  @apply w-full h-64;
   @apply flex flex-col items-center justify-center cursor-pointer;
   @apply transition-all duration-200 mb-6;
-  border-color: var(--settings-border);
   background-color: var(--settings-card-bg);
 }
 
