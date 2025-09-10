@@ -136,11 +136,11 @@ onMounted(async () => {
             创建自定义拼图，与朋友分享，享受无尽的拼图乐趣！
           </p>
           <div class="hero-actions">
-            <button @click="startQuickGame" class="hero-btn primary">
+            <button @click="startQuickGame" class="ark primary">
               <span class="btn-icon">🎮</span>
               开始游戏
             </button>
-            <button @click="navigateTo('/library')" class="hero-btn secondary">
+            <button @click="navigateTo('/library')" class="ark">
               <span class="btn-icon">📚</span>
               浏览素材库
             </button>
