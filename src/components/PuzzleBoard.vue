@@ -126,7 +126,7 @@
                   :class="{ 'zone-active': dragOverZone === 'flip' }"
                 >
                   <div class="zone-icon">⇄</div>
-                  <div class="zone-label">左右翻转</div>
+                  <div class="zone-label">翻转</div>
                 </div>
               </div>
             </div>
