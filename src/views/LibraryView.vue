@@ -28,9 +28,8 @@
           v-model="searchKeyword"
           type="text"
           placeholder="搜索拼图名称或标签..."
-          class="search-input"
+          class="ark"
         />
-        <div class="search-icon">🔍</div>
       </div>
       
       <div class="filter-controls">
@@ -224,6 +223,7 @@ import { useLibraryStore } from '../stores/library'
 import { calculatePuzzleDifficulty, calculateBasicDifficulty } from '../utils/difficultyUtils'
 import type { LibraryItem } from '../types'
 import { imageStorage } from '../utils/imageStorage'
+import "@/assets/ark.css"
 
 // Store和路由
 const libraryStore = useLibraryStore()
@@ -586,21 +586,8 @@ onMounted(() => {
   @apply relative flex-1 max-w-md;
 }
 
-.search-input {
-  @apply w-full pl-4 pr-10 py-2 border rounded-lg;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-  background-color: var(--settings-card-bg);
-  color: var(--settings-text-primary);
-  border-color: var(--settings-border);
-}
-
 .search-input:focus {
   border-color: var(--settings-accent);
-}
-
-.search-icon {
-  @apply absolute right-3 top-1/2 transform -translate-y-1/2;
-  color: var(--settings-text-secondary);
 }
 
 .filter-controls {

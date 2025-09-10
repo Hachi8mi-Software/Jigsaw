@@ -78,3 +78,36 @@
   background: linear-gradient(90deg, #ffffff 0 50%, var(--theme-primary) 50% 100%);
   background-size: 200% 100%;
 }
+
+input[type="text"].ark {
+  display: block;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  font-size: 1.2rem;
+  font-weight: 800;
+
+  color: var(--theme-primary);
+  background-color: transparent;
+
+  border: 3px solid transparent;
+  --border-length: 1rem;
+  background: linear-gradient(white,white) padding-box,
+    linear-gradient(90deg,
+      var(--theme-primary) 0, 
+      var(--theme-primary) var(--border-length),
+      transparent var(--border-length),
+      transparent calc(100% - var(--border-length)),
+      var(--theme-primary) calc(100% - var(--border-length)),
+      var(--theme-primary) 100%) border-box;
+
+  outline: none;
+}
+
+input[type="text"].ark:focus {
+  color: var(--theme-primary);
+  border: 3px solid transparent;
+
+  outline: none;
+}
