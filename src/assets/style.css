@@ -242,7 +242,6 @@ body {
 .ark.button.primary {
   color: #ffffff;
   background: var(--theme-primary);
-  border: 1px solid #ffffff;
 }
 
 .ark.button::before {
