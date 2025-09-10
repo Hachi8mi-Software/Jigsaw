@@ -366,7 +366,7 @@ watch(gameLeaderboards, () => {
 }
 
 .stat-card {
-  @apply bg-white rounded-lg shadow-md p-4 text-center min-w-20;
+  @apply rounded-lg shadow-md p-4 text-center min-w-20;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
   border: 1px solid var(--settings-border);
@@ -416,7 +416,7 @@ watch(gameLeaderboards, () => {
 }
 
 .game-leaderboard-card {
-  @apply bg-white rounded-lg shadow-md overflow-hidden;
+  @apply rounded-lg shadow-md overflow-hidden;
   background-color: var(--settings-card-bg);
   border: 1px solid var(--settings-border);
 }
@@ -435,7 +435,12 @@ watch(gameLeaderboards, () => {
 }
 
 .image-placeholder {
-  @apply w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors;
+  @apply w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors;
+  background-color: var(--settings-hover);
+}
+
+.image-placeholder:hover {
+  background-color: var(--settings-border);
 }
 
 .placeholder-content {
@@ -443,7 +448,8 @@ watch(gameLeaderboards, () => {
 }
 
 .placeholder-text {
-  @apply text-gray-500 text-lg;
+  @apply text-lg;
+  color: var(--settings-text-secondary);
 }
 
 .game-details {
@@ -462,7 +468,7 @@ watch(gameLeaderboards, () => {
 .difficulty-star {
   @apply text-xs;
   opacity: 0.3;
-  color: #d1d5db;
+  color: var(--settings-text-secondary);
 }
 
 .difficulty-star.filled {
@@ -483,6 +489,11 @@ watch(gameLeaderboards, () => {
 .clear-btn:hover {
   background-color: #fee2e2;
   color: #dc2626;
+}
+
+[data-theme="dark"] .clear-btn:hover {
+  background-color: #7f1d1d;
+  color: #fca5a5;
 }
 
 .leaderboard-records {
@@ -511,13 +522,28 @@ watch(gameLeaderboards, () => {
   border: 1px solid #f59e0b;
 }
 
+[data-theme="dark"] .record-item.rank-1 {
+  background-color: #451a03;
+  border: 1px solid #f59e0b;
+}
+
 .record-item.rank-2 {
   background-color: #f3f4f6;
   border: 1px solid #9ca3af;
 }
 
+[data-theme="dark"] .record-item.rank-2 {
+  background-color: #374151;
+  border: 1px solid #6b7280;
+}
+
 .record-item.rank-3 {
   background-color: #fef2f2;
+  border: 1px solid #f87171;
+}
+
+[data-theme="dark"] .record-item.rank-3 {
+  background-color: #7f1d1d;
   border: 1px solid #f87171;
 }
 
@@ -583,7 +609,12 @@ watch(gameLeaderboards, () => {
 }
 
 .close-btn {
-  @apply text-2xl text-gray-400 hover:text-gray-600 cursor-pointer;
+  @apply text-2xl cursor-pointer;
+  color: var(--settings-text-secondary);
+}
+
+.close-btn:hover {
+  color: var(--settings-text-primary);
 }
 
 .modal-body {
