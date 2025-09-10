@@ -238,6 +238,7 @@ export const useLibraryStore = defineStore('library', () => {
   const items = ref<LibraryItem[]>([])
   const categories = ref<string[]>(['全部', '自然风光', '城市建筑', '艺术画作', '可爱动物', '卡通动漫'])
   const selectedCategory = ref('全部')
+  const selectedDifficulty = ref<number | null>(null) // 新增：选中的难度等级，null表示全部
   const searchKeyword = ref('')
   const sortBy = ref<'name' | 'difficulty' | 'date'>('name')
   const sortOrder = ref<'asc' | 'desc'>('asc')
@@ -257,6 +258,11 @@ export const useLibraryStore = defineStore('library', () => {
     // 分类过滤
     if (selectedCategory.value !== '全部') {
       filtered = filtered.filter(item => item.category === selectedCategory.value)
+    }
+
+    // 难度过滤
+    if (selectedDifficulty.value !== null) {
+      filtered = filtered.filter(item => item.difficulty === selectedDifficulty.value)
     }
 
     // 关键词搜索
@@ -306,6 +312,11 @@ export const useLibraryStore = defineStore('library', () => {
   const availableCategories = computed(() => {
     const itemCategories = [...new Set(items.value.map(item => item.category))]
     return ['全部', ...itemCategories]
+  })
+
+  const availableDifficulties = computed(() => {
+    const difficulties = [...new Set(items.value.map(item => item.difficulty))].sort((a, b) => a - b)
+    return difficulties
   })
 
   // Actions
@@ -398,6 +409,10 @@ export const useLibraryStore = defineStore('library', () => {
 
   const setSelectedCategory = (category: string) => {
     selectedCategory.value = category
+  }
+
+  const setSelectedDifficulty = (difficulty: number | null) => {
+    selectedDifficulty.value = difficulty
   }
 
   const setSearchKeyword = (keyword: string) => {
@@ -631,6 +646,7 @@ export const useLibraryStore = defineStore('library', () => {
     items,
     categories,
     selectedCategory,
+    selectedDifficulty,
     searchKeyword,
     sortBy,
     sortOrder,
@@ -645,6 +661,7 @@ export const useLibraryStore = defineStore('library', () => {
     userItems,
     unlockedAchievements,
     availableCategories,
+    availableDifficulties,
     
     // Actions
     initializeLibrary,
@@ -652,6 +669,7 @@ export const useLibraryStore = defineStore('library', () => {
     removeLibraryItem,
     updateLibraryItem,
     setSelectedCategory,
+    setSelectedDifficulty,
     setSearchKeyword,
     setSortBy,
     checkAchievements,
