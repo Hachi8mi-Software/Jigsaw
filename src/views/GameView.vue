@@ -22,7 +22,7 @@
     />
 
     <!-- 游戏主内容 -->
-    <div class="game-content" v-if="currentPuzzle">
+    <div class="game-content" v-if="currentPuzzle && !showDifficultySelection">
       <PuzzleBoard
         :controller="gameViewModel.gameController"
         :puzzle-data="currentPuzzle"
@@ -41,12 +41,84 @@
       </div>
     </div>
 
+    <!-- 难度选择状态 -->
+    <div v-else-if="showDifficultySelection" class="difficulty-selection-state">
+      <div class="difficulty-selection-message">
+        <div class="difficulty-selection-icon">🎯</div>
+        <h2>选择游戏难度</h2>
+        <p>请选择适合您的难度等级开始游戏</p>
+        
+        <!-- 难度选择 -->
+        <div class="difficulty-selection">
+          <div class="difficulty-options">
+            <div 
+              v-for="(config, difficulty) in difficultyConfigs" 
+              :key="difficulty"
+              class="difficulty-option"
+              :class="{ active: selectedDifficulty === difficulty }"
+              @click="selectDifficulty(difficulty)"
+            >
+              <div class="difficulty-icon">
+                {{ getDifficultyIcon(difficulty) }}
+              </div>
+              <div class="difficulty-info">
+                <h4>{{ config.name }}</h4>
+                <p>{{ config.description }}</p>
+                <div class="difficulty-features">
+                  <span v-if="config.showNumbers" class="feature">📝 数字提示</span>
+                  <span v-if="config.enableRotation" class="feature">🔄 旋转</span>
+                  <span v-if="config.enableFlip" class="feature">🔀 翻转</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="difficulty-actions">
+          <button @click="startGameWithDifficulty" class="action-btn primary" :disabled="!selectedDifficulty">
+            开始游戏
+          </button>
+          <button @click="goToLibrary" class="action-btn">
+            返回素材库
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 无游戏状态 -->
     <div v-else class="no-game-state">
       <div class="no-game-message">
         <div class="no-game-icon">🧩</div>
         <h2>选择一个拼图开始游戏</h2>
         <p>从素材库中选择一个拼图，或者使用编辑器创建自定义拼图</p>
+        
+        <!-- 难度选择 -->
+        <div class="difficulty-selection">
+          <h3>选择游戏难度</h3>
+          <div class="difficulty-options">
+            <div 
+              v-for="(config, difficulty) in difficultyConfigs" 
+              :key="difficulty"
+              class="difficulty-option"
+              :class="{ active: selectedDifficulty === difficulty }"
+              @click="selectDifficulty(difficulty)"
+            >
+              <div class="difficulty-icon">
+                {{ getDifficultyIcon(difficulty) }}
+              </div>
+              <div class="difficulty-info">
+                <h4>{{ config.name }}</h4>
+                <p>{{ config.description }}</p>
+                <div class="difficulty-features">
+                  <span v-if="config.showNumbers" class="feature">📝 数字提示</span>
+                  <span v-if="config.enableRotation" class="feature">🔄 旋转</span>
+                  <span v-if="config.enableFlip" class="feature">🔀 翻转</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <div class="no-game-actions">
           <button @click="goToLibrary" class="action-btn primary">
             浏览素材库
@@ -188,10 +260,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch, onUnmounted } from 'vue'
+import { computed, onMounted, watch, onUnmounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
-import type { PuzzleData, Achievement } from '../types'
+import type { PuzzleData, Achievement, DifficultyConfig } from '../types'
+import { GameDifficulty } from '../types'
 import PuzzleBoard from '../components/PuzzleBoard.vue'
 import GameStatusBar from '../components/GameStatusBar.vue'
 import { GameViewModel } from '../viewModels/game/gameViewModel'
@@ -220,6 +293,36 @@ const completionPercentage = computed(() => gameViewModel.completionPercentage)
 const elapsedTime = computed(() => gameViewModel.elapsedTime)
 const moveCount = computed(() => gameViewModel.moveCount)
 const currentDifficulty = computed(() => gameViewModel.currentDifficulty)
+
+// 难度选择相关
+const selectedDifficulty = ref<GameDifficulty>(GameDifficulty.EASY)
+const showDifficultySelection = ref(false)
+const pendingPuzzleId = ref<string | null>(null)
+
+// 难度配置
+const difficultyConfigs: Record<GameDifficulty, DifficultyConfig> = {
+  [GameDifficulty.EASY]: {
+    showNumbers: true,
+    enableRotation: false,
+    enableFlip: false,
+    name: '简单',
+    description: '显示数字提示，适合新手'
+  },
+  [GameDifficulty.MEDIUM]: {
+    showNumbers: false,
+    enableRotation: false,
+    enableFlip: false,
+    name: '中等',
+    description: '不显示数字提示，需要更多观察'
+  },
+  [GameDifficulty.HARD]: {
+    showNumbers: false,
+    enableRotation: true,
+    enableFlip: true,
+    name: '困难',
+    description: '开启旋转和翻转，极具挑战性'
+  }
+}
 
 // 拼图相关计算属性
 const totalPieces = computed(() => {
@@ -301,6 +404,42 @@ const closeCompletionModal = () => {
   gameViewModel.closeCompletionModal()
 }
 
+// 难度选择相关方法
+const selectDifficulty = (difficulty: GameDifficulty) => {
+  selectedDifficulty.value = difficulty
+  // 应用难度设置到游戏设置中
+  const config = difficultyConfigs[difficulty]
+  gameViewModel.applyDifficultySettings(config)
+}
+
+const getDifficultyIcon = (difficulty: GameDifficulty): string => {
+  switch (difficulty) {
+    case GameDifficulty.EASY:
+      return '🟢'
+    case GameDifficulty.MEDIUM:
+      return '🟡'
+    case GameDifficulty.HARD:
+      return '🔴'
+    default:
+      return '⚪'
+  }
+}
+
+const startGameWithDifficulty = async () => {
+  if (!pendingPuzzleId.value || !selectedDifficulty.value) return
+  
+  // 应用选择的难度设置
+  const config = difficultyConfigs[selectedDifficulty.value]
+  gameViewModel.applyDifficultySettings(config)
+  
+  // 加载拼图并开始游戏
+  await gameViewModel.loadPuzzleFromRoute(pendingPuzzleId.value)
+  
+  // 隐藏难度选择界面
+  showDifficultySelection.value = false
+  pendingPuzzleId.value = null
+}
+
 const closeSettingsModal = () => {
   gameViewModel.closeSettingsModal()
 }
@@ -326,9 +465,10 @@ const loadPuzzleFromRoute = async () => {
 
 // 生命周期
 onMounted(() => {
-  // 如果路由中有拼图ID，加载对应拼图
+  // 如果路由中有拼图ID，显示难度选择界面
   if (route.params.puzzleId) {
-    loadPuzzleFromRoute()
+    pendingPuzzleId.value = route.params.puzzleId as string
+    showDifficultySelection.value = true
   }
   
   // 监听游戏完成事件
@@ -729,4 +869,116 @@ onUnmounted(() => {
 .resume-btn:hover {
   background-color: var(--settings-accent-hover, #2563eb);
 }
+
+/* 难度选择样式 */
+.difficulty-selection {
+  @apply mt-8 mb-6;
+}
+
+.difficulty-selection h3 {
+  @apply text-xl font-semibold mb-4 text-center;
+  color: var(--settings-text-primary);
+}
+
+.difficulty-options {
+  @apply space-y-3;
+}
+
+.difficulty-option {
+  @apply flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200;
+  border-color: var(--settings-border);
+  background-color: var(--settings-card-bg);
+}
+
+.difficulty-option:hover {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.difficulty-option.active {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-accent-light, rgba(59, 130, 246, 0.1));
+}
+
+.difficulty-icon {
+  @apply text-3xl mr-4;
+}
+
+.difficulty-info {
+  @apply flex-1;
+}
+
+.difficulty-info h4 {
+  @apply text-lg font-semibold mb-1;
+  color: var(--settings-text-primary);
+}
+
+.difficulty-info p {
+  @apply text-sm mb-2;
+  color: var(--settings-text-secondary);
+}
+
+.difficulty-features {
+  @apply flex flex-wrap gap-2;
+}
+
+.feature {
+  @apply text-xs px-2 py-1 rounded-full;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-secondary);
+}
+
+.difficulty-option.active .feature {
+  background-color: var(--settings-accent);
+  color: white;
+}
+
+/* 难度选择状态样式 */
+.difficulty-selection-state {
+  @apply h-full flex items-center justify-center;
+  background-color: var(--settings-bg);
+}
+
+.difficulty-selection-message {
+  @apply max-w-2xl mx-auto p-8 text-center;
+  background-color: var(--settings-card-bg);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.difficulty-selection-icon {
+  @apply text-6xl mb-4;
+}
+
+.difficulty-selection-message h2 {
+  @apply text-3xl font-bold mb-2;
+  color: var(--settings-text-primary);
+}
+
+.difficulty-selection-message p {
+  @apply text-lg mb-8;
+  color: var(--settings-text-secondary);
+}
+
+.difficulty-actions {
+  @apply flex justify-center space-x-4 mt-8;
+}
+
+.difficulty-actions .action-btn {
+  @apply px-8 py-3 text-lg font-medium rounded-lg transition-all duration-200;
+}
+
+.difficulty-actions .action-btn.primary {
+  @apply bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed;
+}
+
+.difficulty-actions .action-btn:not(.primary) {
+  @apply border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50;
+  background-color: var(--settings-card-bg);
+  border-color: var(--settings-border);
+  color: var(--settings-text-primary);
+}
+
 </style>

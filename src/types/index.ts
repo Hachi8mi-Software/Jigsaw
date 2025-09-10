@@ -119,7 +119,23 @@ export interface LibraryItem {
 
 export type DateValue = number
 
-// 成就系统接口
+// 游戏难度枚举
+export enum GameDifficulty {
+  EASY = 'easy',     // 简单：带数字提示
+  MEDIUM = 'medium', // 中等：不带数字
+  HARD = 'hard'      // 困难：开启旋转和翻转
+}
+
+// 难度配置接口
+export interface DifficultyConfig {
+  showNumbers: boolean      // 是否显示数字提示
+  enableRotation: boolean   // 是否启用旋转
+  enableFlip: boolean       // 是否启用翻转
+  name: string             // 难度名称
+  description: string      // 难度描述
+}
+
+// 成就接口
 export interface Achievement {
   id: string
   name: string

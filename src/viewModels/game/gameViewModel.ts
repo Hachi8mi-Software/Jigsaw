@@ -4,8 +4,9 @@
  */
 
 import { ref } from 'vue'
-import type { PuzzleData, Achievement } from '../../types'
+import type { PuzzleData, Achievement, DifficultyConfig } from '../../types'
 import { useLibraryStore } from '../../stores/library'
+import { useSettingsStore } from '../../stores/settings'
 import { GameController } from './gameController'
 
 /**
@@ -200,6 +201,21 @@ export class GameViewModel {
       showTimer: true,
       soundVolume: 70
     }
+  }
+
+  /**
+   * 应用难度设置
+   */
+  applyDifficultySettings(config: DifficultyConfig): void {
+    const settingsStore = useSettingsStore()
+    
+    // 更新设置store中的游戏设置
+    settingsStore.updateGameSettings({
+      showNumbers: config.showNumbers,
+      enableRotation: config.enableRotation
+    })
+    
+    console.log('应用难度设置:', config)
   }
 
   /**
