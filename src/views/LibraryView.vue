@@ -114,14 +114,6 @@
                   🗑️ 删除
                 </button>
               </div>
-              
-              <!-- 移动端点击整个卡片显示操作dialog -->
-              <div class="mobile-overlay md:hidden" @click.stop="showMobileActionDialog(item)">
-                <div class="mobile-overlay-hint">
-                  <div class="hint-icon">⚡</div>
-                  <div class="hint-text">点击操作</div>
-                </div>
-              </div>
             </div>
           </div>
           
@@ -688,6 +680,13 @@ onMounted(() => {
 
 .overlay-actions {
   @apply flex flex-col space-y-2;
+  display: none;
+  visibility: hidden;
+}
+
+.card-overlay:hover .overlay-actions {
+  display: flex;
+  visibility: visible;
 }
 
 .overlay-btn {
