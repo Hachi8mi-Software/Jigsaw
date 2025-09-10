@@ -33,13 +33,13 @@
       </div>
       
       <div class="filter-controls">
-        <select v-model="selectedCategory" class="category-select">
+        <select v-model="selectedCategory" class="category-select ark">
           <option v-for="category in availableCategories" :key="category" :value="category">
             {{ category }}
           </option>
         </select>
         
-        <select v-model="selectedDifficulty" class="difficulty-select">
+        <select v-model="selectedDifficulty" class="difficulty-select ark">
           <option :value="null">全部难度</option>
           <option v-for="difficulty in availableDifficulties" :key="difficulty" :value="difficulty">
             {{ getDifficultyLabel(difficulty) }}
@@ -523,7 +523,7 @@ onMounted(() => {
 .library-stats {
   color: #ffffff;
   background-color: #000000;
-  padding: 0rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   margin: 0.5rem 0;
   font-weight: 600;
 }
@@ -592,20 +592,11 @@ onMounted(() => {
 
 .filter-controls {
   @apply flex items-center space-x-3;
+  margin-left: 2rem;
 }
 
-.category-select,
-.difficulty-select {
-  @apply px-3 py-2 border rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
-  background-color: var(--settings-card-bg);
-  color: var(--settings-text-primary);
-  border-color: var(--settings-border);
-}
-
-.category-select:focus,
-.difficulty-select:focus {
-  border-color: var(--settings-accent);
+.filter-controls > button {
+  flex-shrink: 0;
 }
 
 .category-select option,

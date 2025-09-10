@@ -1,4 +1,3 @@
-
 @font-face {
   font-family: "Gotham Pro";
   src: url("./fonts/GothamPro-Bold.woff2") format("woff2"),
@@ -27,13 +26,27 @@
 
 .ark {
   --theme-primary: #0b1820;
+  --theme-background: #ffffff;
+  line-height: normal;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ark {
+    --theme-primary: #ffffff;
+    --theme-background: #0b1820;
+  }
+}
+
+[data-theme="dark"] .ark {
+  --theme-primary: #ffffff;
+  --theme-background: #0b1820;
 }
 
 .ark.button {
   padding: 0.5rem 5rem 0.5rem 2rem;
   text-align: start;
   font-weight: 800;
-  background: #ffffff;
+  background: var(--theme-background);
   color: var(--theme-primary);
   border: unset;
 
@@ -46,7 +59,7 @@
 }
 
 .ark.button.primary {
-  color: #ffffff;
+  color: var(--theme-background);
   background: var(--theme-primary);
 }
 
@@ -62,20 +75,20 @@
 }
 
 .ark.button.primary::before {
-  background: #ffffff;
+  background: var(--theme-background);
 }
 
 .ark.button:hover {
-  color: #ffffff;
+  color: var(--theme-background);
   animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
-  background: linear-gradient(90deg, var(--theme-primary) 0 50%, #ffffff 50% 100%);
+  background: linear-gradient(90deg, var(--theme-primary) 0 50%, var(--theme-background) 50% 100%);
   background-size: 200% 100%;
 }
 
 .ark.button.primary:hover {
   color: var(--theme-primary);
   animation: 0.5s spreadBg cubic-bezier(0.23, 1, 0.32, 1) forwards;
-  background: linear-gradient(90deg, #ffffff 0 50%, var(--theme-primary) 50% 100%);
+  background: linear-gradient(90deg, var(--theme-background) 0 50%, var(--theme-primary) 50% 100%);
   background-size: 200% 100%;
 }
 
@@ -93,9 +106,9 @@ input[type="text"].ark {
 
   border: 3px solid transparent;
   --border-length: 1rem;
-  background: linear-gradient(white,white) padding-box,
+  background: linear-gradient(var(--theme-background), var(--theme-background)) padding-box,
     linear-gradient(90deg,
-      var(--theme-primary) 0, 
+      var(--theme-primary) 0,
       var(--theme-primary) var(--border-length),
       transparent var(--border-length),
       transparent calc(100% - var(--border-length)),
@@ -108,6 +121,32 @@ input[type="text"].ark {
 input[type="text"].ark:focus {
   color: var(--theme-primary);
   border: 3px solid transparent;
+
+  outline: none;
+}
+
+select.ark {
+  display: block;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  font-size: 1.2rem;
+  font-weight: 800;
+
+  color: var(--theme-primary);
+  background-color: transparent;
+
+  border: 3px solid transparent;
+  --border-length: 1rem;
+  background: linear-gradient(var(--theme-background), var(--theme-background)) padding-box,
+    linear-gradient(90deg,
+      var(--theme-primary) 0,
+      var(--theme-primary) var(--border-length),
+      transparent var(--border-length),
+      transparent calc(100% - var(--border-length)),
+      var(--theme-primary) calc(100% - var(--border-length)),
+      var(--theme-primary) 100%) border-box;
 
   outline: none;
 }
