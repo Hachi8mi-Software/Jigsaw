@@ -72,6 +72,37 @@
                 @touchstart="(event) => startDrag(index, event)"
               />
             </div>
+            
+            <!-- 移动端旋转控制区域 -->
+            <div v-if="enableRotation" class="mobile-rotation-controls">
+              <h5>旋转控制</h5>
+              <div class="mobile-rotation-zones">
+                <div 
+                  ref="mobileRotateLeftZone"
+                  class="mobile-rotation-zone rotate-left"
+                  :class="{ 'zone-active': dragOverZone === 'left' }"
+                >
+                  <div class="zone-icon">↺</div>
+                  <div class="zone-label">左转90°</div>
+                </div>
+                <div 
+                  ref="mobileRotateRightZone"
+                  class="mobile-rotation-zone rotate-right"
+                  :class="{ 'zone-active': dragOverZone === 'right' }"
+                >
+                  <div class="zone-icon">↻</div>
+                  <div class="zone-label">右转90°</div>
+                </div>
+                <div 
+                  ref="mobileFlipZone"
+                  class="mobile-rotation-zone flip"
+                  :class="{ 'zone-active': dragOverZone === 'flip' }"
+                >
+                  <div class="zone-icon">⇄</div>
+                  <div class="zone-label">翻转</div>
+                </div>
+              </div>
+            </div>
           </div>
         </template>
 
@@ -281,6 +312,10 @@ const dragOverZone = ref<'left' | 'right' | 'flip' | null>(null)
 const rotateLeftZone = ref<HTMLElement>()
 const rotateRightZone = ref<HTMLElement>()
 const flipZone = ref<HTMLElement>()
+// 移动端旋转区域引用
+const mobileRotateLeftZone = ref<HTMLElement>()
+const mobileRotateRightZone = ref<HTMLElement>()
+const mobileFlipZone = ref<HTMLElement>()
 const originalPiecePosition = ref<{ x: number, y: number } | null>(null)
 
 // 检测移动端
@@ -461,18 +496,24 @@ const stopDrag = (event: MouseEvent | TouchEvent) => {
 
 // 旋转区域检测方法
 const checkRotationZones = (clientX: number, clientY: number) => {
-  if (!rotateLeftZone.value || !rotateRightZone.value || !flipZone.value) return
-  
-  const zones = [
+  // 根据当前是否为移动端选择对应的旋转区域
+  const zones = isMobile.value ? [
+    { element: mobileRotateLeftZone.value, type: 'left' as const },
+    { element: mobileRotateRightZone.value, type: 'right' as const },
+    { element: mobileFlipZone.value, type: 'flip' as const }
+  ] : [
     { element: rotateLeftZone.value, type: 'left' as const },
     { element: rotateRightZone.value, type: 'right' as const },
     { element: flipZone.value, type: 'flip' as const }
   ]
   
+  // 检查所有区域是否都已加载
+  if (zones.some(zone => !zone.element)) return
+  
   let currentZone: 'left' | 'right' | 'flip' | null = null
   
   for (const zone of zones) {
-    const rect = zone.element.getBoundingClientRect()
+    const rect = zone.element!.getBoundingClientRect()
     if (clientX >= rect.left && clientX <= rect.right && 
         clientY >= rect.top && clientY <= rect.bottom) {
       currentZone = zone.type
@@ -1042,6 +1083,65 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
    50% { transform: scaleX(0); }
    100% { transform: scaleX(-1); }
  }
+
+/* 移动端旋转控制样式 */
+.mobile-rotation-controls {
+  @apply mt-4 p-3 border-t;
+  border-color: var(--settings-border);
+}
+
+.mobile-rotation-controls h5 {
+  @apply text-sm font-semibold mb-3 text-center;
+  color: var(--settings-text-primary);
+}
+
+.mobile-rotation-zones {
+  @apply flex space-x-2;
+}
+
+.mobile-rotation-zone {
+  @apply flex-1 p-2 border-2 border-dashed rounded-lg transition-all duration-200;
+  @apply flex flex-col items-center justify-center cursor-pointer;
+  border-color: var(--settings-border);
+  background-color: var(--settings-card-bg);
+  min-height: 60px;
+}
+
+.mobile-rotation-zone:hover {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-hover);
+  transform: translateY(-1px);
+}
+
+.mobile-rotation-zone.zone-active {
+  border-color: var(--settings-accent);
+  background-color: var(--settings-accent);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.mobile-rotation-zone .zone-icon {
+  @apply text-lg mb-1;
+  font-weight: bold;
+}
+
+.mobile-rotation-zone .zone-label {
+  @apply text-xs font-medium text-center;
+  color: inherit;
+}
+
+.mobile-rotation-zone.rotate-left:hover .zone-icon {
+  animation: rotateLeft 0.6s ease-in-out;
+}
+
+.mobile-rotation-zone.rotate-right:hover .zone-icon {
+  animation: rotateRight 0.6s ease-in-out;
+}
+
+.mobile-rotation-zone.flip:hover .zone-icon {
+  animation: flip 0.6s ease-in-out;
+}
 
 /* 移动端旋转控制适配 */
 @media (max-width: 767px) {
