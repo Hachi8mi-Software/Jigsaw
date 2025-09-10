@@ -253,6 +253,7 @@ import type { PieceStatus, PuzzleData } from '../types'
 import { GameController } from '@/viewModels/game/gameController'
 import PuzzlePieceCanvas from './PuzzlePieceCanvas.vue'
 import { imageCache as imageCacheManager } from '../utils/imageCache'
+import { getGridPos } from '@/utils/gridUtils'
 
 interface Props {
   controller: GameController,
@@ -533,7 +534,24 @@ const checkRotationZones = (clientX: number, clientY: number) => {
    
    // 将拼图块返回原位
    setTimeout(() => {
-     if (originalPiecePosition.value) {
+     if (piece.isPlaced && piece.gridPosition !== undefined) {
+       // 如果是已放置的拼图块，返回到网格位置
+       const gridContainer = document.querySelector('.puzzle-grid') as HTMLElement
+       if (gridContainer) {
+         const gridSlots = gridContainer.querySelectorAll('.grid-slot')
+         const targetSlot = gridSlots[piece.gridPosition] as HTMLElement
+         
+         if (targetSlot) {
+           // 使用DOM元素的实际位置
+           gameStore.updatePiecePosition(pieceIndex, targetSlot.offsetLeft, targetSlot.offsetTop)
+         } else {
+           // 降级到计算位置
+           const { x, y } = getGridPos(piece.gridPosition, viewModel.value.getPieceSize(), gridCols.value)
+           gameStore.updatePiecePosition(pieceIndex, x, y)
+         }
+       }
+     } else if (originalPiecePosition.value) {
+       // 如果是未放置的拼图块，返回到原始位置
        gameStore.updatePiecePosition(pieceIndex, originalPiecePosition.value.x, originalPiecePosition.value.y)
      }
    }, 100)
