@@ -24,6 +24,16 @@
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+
 .ark {
   --theme-primary: #0b1820;
   --theme-background: #ffffff;
@@ -154,4 +164,15 @@ select.ark {
       var(--theme-primary) 0.5em,
       var(--theme-background) 0,
       var(--theme-background) 1em);
+}
+
+.modal-overlay.ark {
+  backdrop-filter: blur(20px) saturate(200%) brightness(120%);
+  animation: fadeIn 0.333s forwards;
+}
+
+.modal-dialog.ark {
+  @apply shadow-xl mx-4;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
 }

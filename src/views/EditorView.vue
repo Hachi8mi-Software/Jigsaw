@@ -258,7 +258,7 @@
     </div>
 
     <!-- 导入对话框 -->
-    <div v-if="showImportDialog" class="modal-overlay" @click="closeImportDialog">
+    <div v-if="showImportDialog" class="modal-overlay ark" @click="closeImportDialog">
       <div class="modal-dialog" @click.stop>
         <div class="modal-header">
           <h3>导入拼图数据</h3>
@@ -300,7 +300,7 @@
     </div>
 
     <!-- 添加到素材库对话框 -->
-    <div v-if="showAddToLibraryDialog" class="modal-overlay" @click="closeAddToLibraryDialog">
+    <div v-if="showAddToLibraryDialog" class="modal-overlay ark" @click="closeAddToLibraryDialog">
       <div class="modal-dialog" @click.stop>
         <div class="modal-header">
           <h3>添加到素材库</h3>

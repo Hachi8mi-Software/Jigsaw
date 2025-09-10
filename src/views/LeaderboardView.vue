@@ -126,7 +126,7 @@
     </div>
 
     <!-- 详细记录模态框 -->
-    <div v-if="showDetailModal" class="modal-overlay" @click="closeDetailModal">
+    <div v-if="showDetailModal" class="modal-overlay ark" @click="closeDetailModal">
       <div class="modal-dialog" @click.stop>
         <div class="modal-header">
           <h3>{{ selectedGame?.gameInfo.name }} - 完整排行榜</h3>

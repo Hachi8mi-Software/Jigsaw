@@ -59,7 +59,7 @@
     </div>
 
     <!-- 游戏完成对话框 -->
-    <div v-if="showCompletionModal" class="modal-overlay" @click="closeCompletionModal">
+    <div v-if="showCompletionModal" class="modal-overlay ark" @click="closeCompletionModal">
       <div class="modal-dialog completion-modal" @click.stop>
         <div class="completion-content">
           <div class="completion-icon">🎉</div>
@@ -113,7 +113,7 @@
     </div>
 
     <!-- 设置对话框 -->
-    <div v-if="showSettingsModal" class="modal-overlay" @click="closeSettingsModal">
+    <div v-if="showSettingsModal" class="modal-overlay ark" @click="closeSettingsModal">
       <div class="modal-dialog settings-modal" @click.stop>
         <div class="modal-header">
           <h3>游戏设置</h3>

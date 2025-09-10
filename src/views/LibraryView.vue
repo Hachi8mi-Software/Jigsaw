@@ -123,7 +123,7 @@
 
 
     <!-- 删除确认对话框 -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click="closeDeleteModal">
+    <div v-if="showDeleteModal" class="modal-overlay ark" @click="closeDeleteModal">
       <div class="modal-dialog delete-modal" @click.stop>
         <div class="modal-header">
           <h3>确认删除</h3>
@@ -145,27 +145,27 @@
     </div>
 
     <!-- 移动端操作对话框 -->
-    <div v-if="showMobileActions" class="modal-overlay" @click="closeMobileActionDialog">
-      <div class="modal-dialog mobile-actions-modal" @click.stop>
+    <div v-if="showMobileActions" class="modal-overlay ark" @click="closeMobileActionDialog">
+      <div class="modal-dialog mobile-actions-modal ark" @click.stop>
         <div class="modal-header">
           <h3>{{ selectedMobileItem?.name }}</h3>
-          <button @click="closeMobileActionDialog" class="close-btn">×</button>
+          <button @click="closeMobileActionDialog" class="ark close-btn">×</button>
         </div>
         <div class="modal-body">
           <div class="mobile-action-buttons">
-            <button @click="playPuzzleFromDialog" class="mobile-action-btn primary">
+            <button @click="playPuzzleFromDialog" class="mobile-action-btn primary ark">
               <span class="action-icon">🎮</span>
               <span class="action-text">开始游戏</span>
             </button>
 
             <button v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" @click="editPuzzleFromDialog"
-              class="mobile-action-btn">
+              class="mobile-action-btn ark">
               <span class="action-icon">✏️</span>
               <span class="action-text">编辑拼图</span>
             </button>
 
             <button v-if="selectedMobileItem && !selectedMobileItem.isBuiltIn" @click="deletePuzzleFromDialog"
-              class="mobile-action-btn danger">
+              class="mobile-action-btn danger ark">
               <span class="action-icon">🗑️</span>
               <span class="action-text">删除拼图</span>
             </button>
@@ -415,7 +415,7 @@ onMounted(() => {
   @apply flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shadow-sm border-b;
   background: linear-gradient(0deg, #00000000, #000000ff);
   border-bottom-color: var(--settings-border);
-  min-height: 15rem;
+  min-height: 10rem;
   max-height: 40vh;
 }
 
@@ -816,6 +816,10 @@ onMounted(() => {
   .card-tags .tag {
     @apply text-xs px-1.5 py-0.5;
   }
+
+  .library-header {
+    --font-size: 2.5rem;
+  }
 }
 
 .tag {
@@ -835,7 +839,7 @@ onMounted(() => {
 }
 
 .modal-dialog {
-  @apply bg-white rounded-lg shadow-xl mx-4;
+  @apply shadow-xl mx-4;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
 }
@@ -855,10 +859,6 @@ onMounted(() => {
 .close-btn {
   @apply text-2xl cursor-pointer;
   color: var(--settings-text-secondary);
-}
-
-.close-btn:hover {
-  color: var(--settings-text-primary);
 }
 
 .modal-body {
@@ -903,47 +903,14 @@ onMounted(() => {
   @apply w-full max-w-xs;
 }
 
-.mobile-action-buttons {
-  @apply space-y-3;
-}
-
 .mobile-action-btn {
-  @apply w-full flex items-center justify-start px-4 py-3 rounded-lg;
-  @apply text-left font-medium transition-all duration-200;
-  background-color: var(--settings-hover);
-  color: var(--settings-text-primary);
-}
-
-.mobile-action-btn:hover {
-  background-color: var(--settings-border);
-}
-
-.mobile-action-btn:active {
-  background-color: var(--settings-border);
-}
-
-.mobile-action-btn:hover {
-  background-color: var(--settings-border);
-}
-
-.mobile-action-btn.primary {
-  @apply bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-200;
-  background-color: var(--settings-accent);
-  color: #ffffff;
-}
-
-.mobile-action-btn.primary:hover {
-  background-color: var(--settings-accent-hover);
+  width: 100%;
 }
 
 .mobile-action-btn.danger {
   @apply bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200;
   background-color: #fef2f2;
   color: #dc2626;
-}
-
-.mobile-action-btn.danger:hover {
-  background-color: #fee2e2;
 }
 
 .action-icon {
