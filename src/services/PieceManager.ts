@@ -114,11 +114,15 @@ export class PieceManager {
       piece.isPlaced = isPlaced
       piece.gridPosition = gridPosition
       
-      // 如果isCorrect未提供，根据originalIndex和gridPosition计算
+      // 如果isCorrect未提供，根据originalIndex、gridPosition、rotation和flipped计算
       if (isCorrect !== undefined) {
         piece.isCorrect = isCorrect
       } else if (gridPosition !== undefined) {
-        piece.isCorrect = piece.originalIndex === gridPosition
+        // 检查位置、旋转角度和翻转状态是否都正确
+        const isPositionCorrect = piece.originalIndex === gridPosition
+        const isRotationCorrect = (piece.rotation || 0) % 360 === 0  // 必须是0度
+        const isFlipCorrect = !piece.flipped  // 必须没有翻转
+        piece.isCorrect = isPositionCorrect && isRotationCorrect && isFlipCorrect
       } else {
         piece.isCorrect = undefined
       }
@@ -191,7 +195,11 @@ export class PieceManager {
   recalculateCorrectness(): void {
     this.pieces.value.forEach(piece => {
       if (piece.isPlaced && piece.gridPosition !== undefined) {
-        piece.isCorrect = piece.originalIndex === piece.gridPosition
+        // 检查位置、旋转角度和翻转状态是否都正确
+        const isPositionCorrect = piece.originalIndex === piece.gridPosition
+        const isRotationCorrect = (piece.rotation || 0) % 360 === 0  // 必须是0度
+        const isFlipCorrect = !piece.flipped  // 必须没有翻转
+        piece.isCorrect = isPositionCorrect && isRotationCorrect && isFlipCorrect
       }
     })
   }

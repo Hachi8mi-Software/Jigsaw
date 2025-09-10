@@ -241,10 +241,18 @@ export class PuzzleBoardViewModel {
         correctY = correctPos.y
       }
       
+      // 重置旋转和翻转状态到正确状态
+      this.gameStore.updatePieceRotation(piece.id || index.toString(), 0)
+      this.gameStore.updatePieceFlip(piece.id || index.toString(), false)
+      
       this.gameStore.updatePiecePosition(index, correctX, correctY)
-      this.gameStore.setPuzzleBoardPiecePlaced(index, true, piece.originalIndex, true)
+      // 不直接设置isCorrect，让系统自动计算（会考虑旋转和翻转状态）
+      this.gameStore.setPuzzleBoardPiecePlaced(index, true, piece.originalIndex, undefined)
       console.log(`Piece ${index} snapped to grid position:`, { x: correctX, y: correctY })
     })
+    
+    // 重新计算所有拼图块的正确性状态
+    this.gameStore.recalculateAllCorrectness()
     
     // 检查游戏是否完成并触发完成事件
     this.checkGameCompletion()
