@@ -122,23 +122,6 @@ export const useSettingsStore = defineStore('settings', () => {
     saveSettings()
   }, { deep: true })
 
-  // 更新游戏设置的便捷方法
-  const updateGameSettings = (updates: Partial<GameSettings>) => {
-    settings.value.game = { ...settings.value.game, ...updates }
-  }
-
-  const updateUiSettings = (updates: Partial<UiSettings>) => {
-    settings.value.ui = { ...settings.value.ui, ...updates }
-  }
-
-  const updateAudioSettings = (updates: Partial<AudioSettings>) => {
-    settings.value.audio = { ...settings.value.audio, ...updates }
-  }
-
-  const updatePerformanceSettings = (updates: Partial<PerformanceSettings>) => {
-    settings.value.performance = { ...settings.value.performance, ...updates }
-  }
-
   return {
     settings,
     loadSettings,
@@ -146,10 +129,6 @@ export const useSettingsStore = defineStore('settings', () => {
     resetToDefaults,
     exportSettings,
     importSettings,
-    clearAllData,
-    updateGameSettings,
-    updateUiSettings,
-    updateAudioSettings,
-    updatePerformanceSettings
+    clearAllData
     }
 })
