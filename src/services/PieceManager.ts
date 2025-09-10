@@ -7,6 +7,7 @@ import { ref } from 'vue'
 import type { PieceStatus, PuzzleData } from '../types'
 import { getGridPos } from '@/utils/gridUtils'
 import { generateRandomPosition } from '@/utils/positionUtils'
+import { useSettingsStore } from '../stores/settings'
 
 export class PieceManager {
   private pieces = ref<PieceStatus[]>([])
@@ -26,16 +27,37 @@ export class PieceManager {
    * 初始化拼图块
    */
   initializePieces(totalPieces: number): void {
-    this.pieces.value = Array.from({ length: totalPieces }, (_, i) => ({
-      id: `piece_${i}`,
-      x: 0,
-      y: 0,
-      rotation: 0,
-      originalIndex: i,
-      currentX: 0,
-      currentY: 0,
-      isPlaced: false
-    }))
+    const settingsStore = useSettingsStore()
+    const isRotationEnabled = settingsStore.settings.game.enableRotation
+    
+    this.pieces.value = Array.from({ length: totalPieces }, (_, i) => {
+      // 基础拼图块数据
+      const piece: PieceStatus = {
+        id: `piece_${i}`,
+        x: 0,
+        y: 0,
+        rotation: 0,
+        flipped: false,
+        originalIndex: i,
+        currentX: 0,
+        currentY: 0,
+        isPlaced: false
+      }
+      
+      // 如果启用了旋转功能，添加随机旋转和翻转
+      if (isRotationEnabled) {
+        // 随机旋转：0°, 90°, 180°, 270°
+        const rotations = [0, 90, 180, 270]
+        piece.rotation = rotations[Math.floor(Math.random() * rotations.length)]
+        
+        // 随机翻转：50%概率翻转
+        piece.flipped = Math.random() < 0.5
+        
+        console.log(`拼图块 ${i} 初始化: 旋转${piece.rotation}°, 翻转${piece.flipped}`)
+      }
+      
+      return piece
+    })
   }
 
   /**
@@ -180,10 +202,29 @@ export class PieceManager {
    * 重置所有拼图块状态
    */
   resetAllStates(): void {
+    const settingsStore = useSettingsStore()
+    const isRotationEnabled = settingsStore.settings.game.enableRotation
+    
     this.pieces.value.forEach(piece => {
       piece.isPlaced = false
       piece.isCorrect = undefined
       piece.gridPosition = undefined
+      
+      // 如果启用了旋转功能，重新随机旋转和翻转
+      if (isRotationEnabled) {
+        // 随机旋转：0°, 90°, 180°, 270°
+        const rotations = [0, 90, 180, 270]
+        piece.rotation = rotations[Math.floor(Math.random() * rotations.length)]
+        
+        // 随机翻转：50%概率翻转
+        piece.flipped = Math.random() < 0.5
+        
+        console.log(`拼图块 ${piece.originalIndex} 重置: 旋转${piece.rotation}°, 翻转${piece.flipped}`)
+      } else {
+        // 如果未启用旋转功能，重置为默认状态
+        piece.rotation = 0
+        piece.flipped = false
+      }
     })
   }
 
@@ -246,11 +287,26 @@ export class PieceManager {
     const piecesAreaWidth = 320
     const piecesAreaHeight = 420
 
+    const settingsStore = useSettingsStore()
+    const isRotationEnabled = settingsStore.settings.game.enableRotation
+    
     this.pieces.value.forEach((piece, index) => {
       const randomPos = generateRandomPosition(piecesAreaWidth, piecesAreaHeight, pieceSize.width, pieceSize.height, 10)
       piece.x = randomPos.x
       piece.y = randomPos.y
       piece.originalIndex = index
+      
+      // 如果启用了旋转功能，同时随机设置旋转和翻转
+      if (isRotationEnabled) {
+        // 随机旋转：0°, 90°, 180°, 270°
+        const rotations = [0, 90, 180, 270]
+        piece.rotation = rotations[Math.floor(Math.random() * rotations.length)]
+        
+        // 随机翻转：50%概率翻转
+        piece.flipped = Math.random() < 0.5
+        
+        console.log(`拼图块 ${index} 打乱: 旋转${piece.rotation}°, 翻转${piece.flipped}`)
+      }
     })
   }
 

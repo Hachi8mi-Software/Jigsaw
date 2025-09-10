@@ -28,6 +28,7 @@ import {
 } from '@/utils/puzzleStyleUtils'
 import { audioUtils } from '@/utils/audioUtils'
 import { useGameStore } from '@/stores/game'
+import { useSettingsStore } from '@/stores/settings'
 
 export class PuzzleBoardViewModel {
 
@@ -165,6 +166,9 @@ export class PuzzleBoardViewModel {
   shufflePieces() {
     if (!this.puzzleData) return
     
+    const settingsStore = useSettingsStore()
+    const isRotationEnabled = settingsStore.settings.game.enableRotation
+    
     const areaSize = this.getScatteredPiecesAreaSize()
     const pieceSize = this.getPieceSize()
     
@@ -179,6 +183,23 @@ export class PuzzleBoardViewModel {
       pieceSize.height,
       (index: number, x: number, y: number) => {
         this.gameStore.updatePiecePosition(index, x, y)
+        
+        // 如果启用了旋转功能，同时随机设置旋转和翻转
+        if (isRotationEnabled) {
+          const piece = this.gameStore.getPuzzleBoardPiece(index)
+          if (piece) {
+            // 随机旋转：0°, 90°, 180°, 270°
+            const rotations = [0, 90, 180, 270]
+            const newRotation = rotations[Math.floor(Math.random() * rotations.length)]
+            this.gameStore.updatePieceRotation(piece.id || index.toString(), newRotation)
+            
+            // 随机翻转：50%概率翻转
+            const newFlipped = Math.random() < 0.5
+            this.gameStore.updatePieceFlip(piece.id || index.toString(), newFlipped)
+            
+            console.log(`拼图块 ${index} 打乱: 旋转${newRotation}°, 翻转${newFlipped}`)
+          }
+        }
       }
     )
   }
