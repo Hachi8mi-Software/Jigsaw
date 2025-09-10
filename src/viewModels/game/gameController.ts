@@ -151,6 +151,21 @@ export class GameController {
   rotatePiece(pieceId: string, rotation: number): void {
     if (this.gameStore.isGameActive) {
       this.gameStore.updatePieceRotation(pieceId, rotation)
+      // 重新计算正确性状态
+      this.gameStore.recalculateAllCorrectness()
+      
+      // 检查游戏是否完成
+      const isCompleted = this.gameStore.checkGameCompletion()
+      if (isCompleted) {
+        this.stopRealTimeTimer()
+        if (this.gameStore.startTime && this.gameStore.currentPuzzle) {
+          const gameTime = this.gameStore.calculateElapsedTime(this.gameStore.startTime, new Date())
+          this.updateUserStats(this.gameStore.currentPuzzle, gameTime)
+        }
+        this.saveGameState()
+        console.log('旋转操作完成游戏！')
+      }
+      
       this.saveGameState()
     }
   }
@@ -161,6 +176,21 @@ export class GameController {
   flipPiece(pieceId: string, flipped: boolean): void {
     if (this.gameStore.isGameActive) {
       this.gameStore.updatePieceFlip(pieceId, flipped)
+      // 重新计算正确性状态
+      this.gameStore.recalculateAllCorrectness()
+      
+      // 检查游戏是否完成
+      const isCompleted = this.gameStore.checkGameCompletion()
+      if (isCompleted) {
+        this.stopRealTimeTimer()
+        if (this.gameStore.startTime && this.gameStore.currentPuzzle) {
+          const gameTime = this.gameStore.calculateElapsedTime(this.gameStore.startTime, new Date())
+          this.updateUserStats(this.gameStore.currentPuzzle, gameTime)
+        }
+        this.saveGameState()
+        console.log('翻转操作完成游戏！')
+      }
+      
       this.saveGameState()
     }
   }

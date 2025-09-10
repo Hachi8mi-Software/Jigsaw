@@ -426,11 +426,17 @@ export class PuzzleBoardViewModel {
       newY = y
     }
     
-    const isCorrect = piece.originalIndex === gridIndex
     console.log("x: ", newX, "y: ", newY)
+    console.log('拼图块放置到网格位置:', {
+      pieceIndex: this.draggingPieceIndex,
+      gridIndex: gridIndex,
+      currentRotation: piece.rotation || 0,
+      currentFlipped: piece.flipped || false
+    })
     
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
-    this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, isCorrect)
+    // 不传入isCorrect，让setPuzzleBoardPiecePlaced自己计算（会考虑最新的旋转和翻转状态）
+    this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, undefined)
     
     // 播放拼图块放置音效
     audioUtils.playPiecePlaced()
@@ -444,7 +450,7 @@ export class PuzzleBoardViewModel {
     // 检查游戏完成
     this.checkGameCompletion()
     
-    console.log(isCorrect ? '正确放置！' : '位置不正确')
+    console.log('拼图块已放置到网格，等待正确性计算')
   }
 
   // 与占用格子的拼图块对换
@@ -487,10 +493,16 @@ export class PuzzleBoardViewModel {
         newY = y
       }
       
-      const isCorrect = draggingPiece.originalIndex === targetGridIndex
+      console.log('拼图块对换操作:', {
+        draggingPieceIndex: this.draggingPieceIndex,
+        targetGridIndex: targetGridIndex,
+        currentRotation: draggingPiece.rotation || 0,
+        currentFlipped: draggingPiece.flipped || false
+      })
       
       this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
-      this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, targetGridIndex, isCorrect)
+      // 不传入isCorrect，让setPuzzleBoardPiecePlaced自己计算
+      this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, targetGridIndex, undefined)
       
       // 将原来占用该位置的拼图块移出网格
       this.gameStore.setPuzzleBoardPiecePlaced(occupiedPieceIndex, false, undefined, undefined)
