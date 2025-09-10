@@ -32,17 +32,15 @@ export class PieceManager {
     
     this.pieces.value = Array.from({ length: totalPieces }, (_, i) => {
       // 基础拼图块数据
-      const piece: PieceStatus = {
-        id: `piece_${i}`,
-        x: 0,
-        y: 0,
-        rotation: 0,
-        flipped: false,
-        originalIndex: i,
-        currentX: 0,
-        currentY: 0,
-        isPlaced: false
-      }
+       const piece: PieceStatus = {
+         id: `piece_${i}`,
+         x: 0,
+         y: 0,
+         rotation: 0,
+         flipped: false,
+         originalIndex: i,
+         isPlaced: false
+       }
       
       // 如果启用了旋转功能，添加随机旋转和翻转
       if (isRotationEnabled) {
