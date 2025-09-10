@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <!-- 通知系统 -->
-    <div class="notification-container fixed top-4 right-4 z-50 space-y-2">
+    <div class="notification-container fixed top-4 right-4 z-50 space-y-2 mobile-notification-container">
       <TransitionGroup name="notification" tag="div">
         <div
           v-for="notification in notifications"
@@ -200,5 +200,26 @@ const getNotificationClasses = (type: string) => {
 .dialog-enter-active .relative,
 .dialog-leave-active .relative {
   transition: transform 0.3s ease;
+}
+
+/* 移动端通知位置调整 */
+@media (max-width: 767px) {
+  .mobile-notification-container {
+    top: 5rem; /* 为移动端header预留空间 */
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+  
+  .mobile-notification-container .notification-item {
+    max-width: none;
+  }
+}
+
+/* 移动端横屏时的通知位置 */
+@media (max-width: 767px) and (orientation: landscape) {
+  .mobile-notification-container {
+    top: 4rem; /* 横屏时header较矮 */
+  }
 }
 </style>
