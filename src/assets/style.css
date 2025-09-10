@@ -186,3 +186,19 @@ body {
     max-height: 25vh;
   }
 }
+
+@font-face {
+  font-family: "Gotham Pro";
+  src: url("./fonts/GothamPro-Bold.woff2") format("woff2"),
+       url("./fonts/GothamPro-Bold.otf") format("opentype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Gotham Pro";
+  src: url("./fonts/GothamPro-Black.woff2") format("woff2"),
+       url("./fonts/GothamPro-Black.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+}

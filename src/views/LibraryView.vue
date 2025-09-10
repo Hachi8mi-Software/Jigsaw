@@ -11,16 +11,13 @@
   <div class="library-view">
     <!-- 顶部工具栏 -->
     <div class="library-header">
-      <div class="header-left">
+      <div class="header-title-container">
+        <h1 class="library-style-title">JIGSAW</h1>
+        <h1 class="library-style-title">LIBRARY</h1>
         <h1 class="library-title">拼图素材库</h1>
         <div class="library-stats">
-          <span class="stat-item">{{ filteredItems.length }} 个拼图</span>
-          <span class="stat-item">{{ userItems.length }} 个自定义</span>
+          {{ filteredItems.length }} 个拼图, {{ userItems.length }} 个自定义
         </div>
-      </div>
-      
-      <div class="header-right">
-        <!-- 按钮已移除 -->
       </div>
     </div>
 
@@ -450,15 +447,22 @@ onMounted(() => {
 }
 
 .library-header {
+  --theme-color-primary: #fae925; 
+  --theme-color-secondary: #e8d620;
+
+  --font-size: 4.2rem;
+
   @apply flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shadow-sm border-b;
-  background-color: var(--settings-card-bg);
+  background: linear-gradient(0deg, #00000000, #000000ff);
   border-bottom-color: var(--settings-border);
+  min-height: 15rem;
+  max-height: 40vh;
 }
 
 /* 移动端头部优化 */
 @media (max-width: 640px) {
   .library-header {
-    @apply flex-col space-y-3;
+    @apply space-y-3;
   }
   
   .header-left {
@@ -474,14 +478,54 @@ onMounted(() => {
   @apply flex items-center space-x-6;
 }
 
+.header-title-container {
+  @apply flex items-baseline space-x-3;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+}
+
+.library-style-title {
+  font-size: var(--font-size);
+  line-height: calc(var(--font-size) * 0.9);
+  font-weight: 800;
+  font-family: 'Gotham Pro', sans-serif;
+  background: linear-gradient(45deg,
+    var(--theme-color-primary) 0 15%,
+    var(--theme-color-secondary) 15% 20%,
+    var(--theme-color-primary) 20% 35%,
+    var(--theme-color-secondary) 35% 40%,
+    var(--theme-color-primary) 40% 55%,
+    var(--theme-color-secondary) 55% 60%,
+    var(--theme-color-primary) 60% 75%,
+    var(--theme-color-secondary) 75% 80%,
+    var(--theme-color-primary) 80% 95%,
+    var(--theme-color-secondary) 95% 100%);
+
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+
+  letter-spacing: -0.02em;
+}
+
 .library-title {
   @apply text-2xl font-bold;
-  color: var(--settings-text-primary);
+  color: var(--theme-color-primary);
+  background-color: #000000;
+  padding: 0rem 0.5rem;
+
+  position: absolute;
+  top: calc(var(--font-size) * 0.6);
+  left: min(calc(var(--font-size) * 2.6), 50vw);
 }
 
 .library-stats {
-  @apply flex items-center space-x-4 text-sm;
-  color: var(--settings-text-secondary);
+  color: #ffffff;
+  background-color: #000000;
+  padding: 0rem 0.5rem;
+  margin: 0.5rem 0;
+  font-weight: 600;
 }
 
 .stat-item {
