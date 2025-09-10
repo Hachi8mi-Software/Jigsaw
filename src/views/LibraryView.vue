@@ -543,9 +543,10 @@ onMounted(() => {
     flex-grow: 1;
   }
   .filter-controls button.ark {
-    transition-duration: 0.422s;
+    transition-duration: 0.333s;
   }
-  .filter-controls .primary {
+  .filter-controls .primary,
+  .filter-controls .highlight {
     flex-grow: 1;
   }
 }
