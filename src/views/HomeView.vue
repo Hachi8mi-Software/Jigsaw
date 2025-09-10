@@ -116,11 +116,12 @@ onMounted(async () => {
     <section class="hero-section">
       <div class="hero-content">
         <div class="hero-text">
-          <h1 class="hero-title">
-            <span class="hero-emoji">🧩</span>
-            拼图乐
-          </h1>
-          <p class="hero-subtitle">Puzzle Fun</p>
+          <div class="hero-title-container">
+            <h1 class="hero-style-title">PUZZLE</h1>
+            <h1 class="hero-style-title">FUN</h1>
+            <h1 class="hero-title">拼图乐</h1>
+            <div class="hero-subtitle">Puzzle Fun</div>
+          </div>
           <p class="hero-description">
             体验最有趣的拼图游戏，挑战你的逻辑思维和空间想象力。
             创建自定义拼图，与朋友分享，享受无尽的拼图乐趣！
@@ -246,6 +247,9 @@ onMounted(async () => {
 .hero-section {
   @apply py-12 px-4 sm:px-6 lg:px-8;
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  background: linear-gradient(0deg, #00000000, #000000ff), linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  min-height: 15rem;
+  max-height: 40vh;
 }
 
 .hero-content {
@@ -256,18 +260,60 @@ onMounted(async () => {
   @apply space-y-6;
 }
 
-.hero-title {
-  @apply text-4xl sm:text-5xl lg:text-6xl font-bold;
-  color: var(--text-primary);
+/* 英雄区域标题样式 */
+.hero-title-container {
+  --theme-color-primary: #fae925; 
+  --theme-color-secondary: #e8d620;
+  --font-size: 4.2rem;
+
+  @apply flex items-baseline space-x-3;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  margin-bottom: 1rem;
 }
 
-.hero-emoji {
-  @apply text-5xl sm:text-6xl lg:text-7xl;
+.hero-style-title {
+  font-size: var(--font-size);
+  line-height: calc(var(--font-size) * 0.9);
+  font-weight: 800;
+  font-family: 'Gotham Pro', sans-serif;
+  background: linear-gradient(45deg,
+    var(--theme-color-primary) 0 15%,
+    var(--theme-color-secondary) 15% 20%,
+    var(--theme-color-primary) 20% 35%,
+    var(--theme-color-secondary) 35% 40%,
+    var(--theme-color-primary) 40% 55%,
+    var(--theme-color-secondary) 55% 60%,
+    var(--theme-color-primary) 60% 75%,
+    var(--theme-color-secondary) 75% 80%,
+    var(--theme-color-primary) 80% 95%,
+    var(--theme-color-secondary) 95% 100%);
+
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.hero-title {
+  @apply text-2xl font-bold;
+  color: var(--theme-color-primary);
+  background-color: #000000;
+  padding: 0rem 0.5rem;
+
+  position: absolute;
+  top: calc(var(--font-size) * 0.6);
+  left: min(calc(var(--font-size) * 2.6), 50vw);
 }
 
 .hero-subtitle {
-  @apply text-xl sm:text-2xl font-medium;
-  color: var(--text-accent);
+  color: #ffffff;
+  background-color: #000000;
+  padding: 0.2rem 0.5rem;
+  margin: 0.5rem 0;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .hero-description {
@@ -485,12 +531,17 @@ onMounted(async () => {
     @apply py-8;
   }
   
+  .hero-title-container {
+    --font-size: 3rem;
+  }
+  
   .hero-title {
-    @apply text-3xl;
+    font-size: 1.5rem;
+    left: min(calc(var(--font-size) * 2.2), 40vw);
   }
   
   .hero-subtitle {
-    @apply text-lg;
+    font-size: 1rem;
   }
   
   .hero-description {
