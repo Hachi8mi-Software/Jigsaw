@@ -381,6 +381,25 @@ const renderPiece = async () => {
     ctx.save()
     ctx.translate(offsetX, offsetY)
     
+    // 重新应用变换（旋转和翻转）以确保边框也跟随旋转
+    if (props.piece.rotation || props.piece.flipped) {
+      // 移动到拼图块中心点
+      ctx.translate(actualPieceWidth / 2, actualPieceHeight / 2)
+      
+      // 应用旋转
+      if (props.piece.rotation) {
+        ctx.rotate((props.piece.rotation * Math.PI) / 180)
+      }
+      
+      // 应用水平翻转
+      if (props.piece.flipped) {
+        ctx.scale(-1, 1)
+      }
+      
+      // 移回原点
+      ctx.translate(-actualPieceWidth / 2, -actualPieceHeight / 2)
+    }
+    
     // 绘制拼图块边框 - 恢复明显的边框效果
     // 启用抗锯齿渲染，使边框更平滑
     ctx.lineCap = 'round'
