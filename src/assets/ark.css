@@ -31,7 +31,7 @@
 }
 
 [data-theme="dark"] .ark {
-  --theme-primary: #ffffff;
+  --theme-primary: #fae925;
   --theme-background: #0b1820;
 }
 
@@ -143,3 +143,5 @@ select.ark {
 
   outline: none;
 }
+
+

@@ -287,7 +287,7 @@ onMounted(async () => {
 .hero-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
   background-color: var(--settings-accent);
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .hero-btn.primary:hover {
@@ -341,7 +341,7 @@ onMounted(async () => {
 
 .piece-inner {
   @apply w-full h-full rounded-lg;
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+  background: linear-gradient(45deg, #fae925, #e8d620, #d4c41a);
   opacity: 0.8;
 }
 
@@ -517,18 +517,18 @@ onMounted(async () => {
 
 /* 卡片颜色主题 */
 .card-blue:hover {
-  border-color: #3b82f6;
+  border-color: #fae925;
 }
 
 .card-green:hover {
-  border-color: #10b981;
+  border-color: #e8d620;
 }
 
 .card-purple:hover {
-  border-color: #8b5cf6;
+  border-color: #d4c41a;
 }
 
 .card-yellow:hover {
-  border-color: #f59e0b;
+  border-color: #fae925;
 }
 </style>

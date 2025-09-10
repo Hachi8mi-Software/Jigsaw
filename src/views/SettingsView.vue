@@ -498,7 +498,7 @@ const viewModel = new SettingsViewModel()
 .link-btn {
   @apply px-3 py-1 text-sm rounded;
   background-color: var(--settings-accent);
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .link-btn:hover {
@@ -517,11 +517,12 @@ const viewModel = new SettingsViewModel()
 
 .theme-btn:hover {
   background-color: var(--settings-border);
+  color: #1f2937;
 }
 
 .theme-btn.active {
   background-color: var(--settings-accent);
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .theme-btn.active:hover {
@@ -545,7 +546,7 @@ const viewModel = new SettingsViewModel()
 
 .footer-btn.primary {
   background-color: var(--settings-accent);
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .footer-btn.primary:hover {

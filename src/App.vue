@@ -287,7 +287,7 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
 
 .theme-toggle-btn:hover {
   background-color: var(--text-accent);
-  color: #ffffff;
+  color: #1f2937;
   border-color: var(--text-accent);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

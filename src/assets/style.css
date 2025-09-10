@@ -10,7 +10,7 @@
   --bg-sidebar: #ffffff;
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
-  --text-accent: #2563eb;
+  --text-accent: #fae925;
   --border-color: #e5e7eb;
   --shadow-color: rgba(0, 0, 0, 0.1);
   --settings-bg: #f9fafb;
@@ -19,8 +19,11 @@
   --settings-text-secondary: #6b7280;
   --settings-border: #e5e7eb;
   --settings-hover: #f3f4f6;
-  --settings-accent: #2563eb;
-  --settings-accent-hover: #1d4ed8;
+  --settings-accent: #fae925;
+  --settings-accent-hover: #e8d620;
+  --theme-primary: #fae925;
+  --theme-secondary: #e8d620;
+  --theme-dark: #d4c41a;
 }
 
 [data-theme="dark"] {
@@ -29,7 +32,7 @@
   --bg-sidebar: #1f2937;
   --text-primary: #f9fafb;
   --text-secondary: #9ca3af;
-  --text-accent: #3b82f6;
+  --text-accent: #fae925;
   --border-color: #374151;
   --shadow-color: rgba(0, 0, 0, 0.3);
   --settings-bg: #111827;
@@ -38,8 +41,11 @@
   --settings-text-secondary: #9ca3af;
   --settings-border: #374151;
   --settings-hover: #374151;
-  --settings-accent: #3b82f6;
-  --settings-accent-hover: #2563eb;
+  --settings-accent: #fae925;
+  --settings-accent-hover: #e8d620;
+  --theme-primary: #fae925;
+  --theme-secondary: #e8d620;
+  --theme-dark: #d4c41a;
 }
 
 /* 全局样式 */

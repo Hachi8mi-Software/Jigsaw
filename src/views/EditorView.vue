@@ -1306,7 +1306,7 @@ onUnmounted(() => {
 .action-btn.secondary {
   @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
 }
 
 .action-btn.secondary:hover {
@@ -1490,7 +1490,7 @@ onUnmounted(() => {
 .bottom-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
 }
 
 .bottom-btn.primary:hover {
@@ -1748,6 +1748,8 @@ onUnmounted(() => {
 
 .modal-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: #1f2937;
 }
 
 .modal-btn:disabled {
@@ -1802,7 +1804,7 @@ onUnmounted(() => {
   @apply bg-blue-500 text-white hover:bg-blue-600;
   @apply transition-colors duration-200 shadow-sm;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
 }
 
 .file-select-btn:hover {
@@ -1819,7 +1821,7 @@ onUnmounted(() => {
   @apply w-14 h-14 rounded-full shadow-lg transition-all duration-300;
   @apply flex items-center justify-center;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
   border: none;
   cursor: pointer;
 }

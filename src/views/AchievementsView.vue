@@ -198,15 +198,15 @@ onMounted(() => {
 .achievement-card.unlocked {
   @apply ring-2;
   background-color: var(--settings-accent);
-  color: #ffffff;
+  color: #1f2937;
   border-color: var(--settings-accent);
-  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(250, 233, 37, 0.3);
 }
 
 .achievement-card.unlocked:hover {
   background-color: var(--settings-accent-hover);
   border-color: var(--settings-accent-hover);
-  box-shadow: 0 8px 12px -1px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 12px -1px rgba(250, 233, 37, 0.4);
 }
 
 .achievement-icon {
@@ -229,7 +229,7 @@ onMounted(() => {
 }
 
 .achievement-card.unlocked .achievement-name {
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .achievement-description {
@@ -239,7 +239,7 @@ onMounted(() => {
 }
 
 .achievement-card.unlocked .achievement-description {
-  color: rgba(255, 255, 255, 0.9);
+  color: #374151;
 }
 
 .achievement-date {
@@ -249,7 +249,7 @@ onMounted(() => {
 }
 
 .achievement-card.unlocked .achievement-date {
-  color: #a7f3d0;
+  color: #059669;
 }
 
 .achievement-locked {
@@ -303,10 +303,10 @@ onMounted(() => {
 }
 
 [data-theme="dark"] .achievement-card.unlocked {
-  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(250, 233, 37, 0.4);
 }
 
 [data-theme="dark"] .achievement-card.unlocked:hover {
-  box-shadow: 0 8px 12px -1px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 8px 12px -1px rgba(250, 233, 37, 0.5);
 }
 </style>

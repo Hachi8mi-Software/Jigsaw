@@ -482,6 +482,8 @@ onUnmounted(() => {
 
 .action-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: #1f2937;
 }
 
 .modal-overlay {
@@ -601,7 +603,7 @@ onUnmounted(() => {
 .completion-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
 }
 
 .completion-btn.primary:hover {
@@ -670,6 +672,8 @@ onUnmounted(() => {
 
 .modal-btn.primary {
   @apply bg-blue-500 text-white hover:bg-blue-600;
+  background-color: var(--settings-accent);
+  color: #1f2937;
 }
 
 /* 暂停遮罩样式 */
@@ -701,7 +705,7 @@ onUnmounted(() => {
   @apply px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600;
   @apply transition-colors duration-200 font-medium;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
 }
 
 .resume-btn:hover {
@@ -723,7 +727,7 @@ onUnmounted(() => {
   @apply px-8 py-4 text-lg font-medium bg-blue-500 text-white rounded-lg;
   @apply hover:bg-blue-600 transition-colors duration-200;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
 }
 
 .resume-btn:hover {

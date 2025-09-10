@@ -617,7 +617,7 @@ onMounted(() => {
 
 .sort-btn.active {
   background-color: var(--settings-accent);
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .library-content {

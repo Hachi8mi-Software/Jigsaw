@@ -581,7 +581,7 @@ watch(gameLeaderboards, () => {
 .show-more-btn {
   @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
 }
 
 .show-more-btn:hover {
