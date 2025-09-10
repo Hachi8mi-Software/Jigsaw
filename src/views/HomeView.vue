@@ -483,10 +483,9 @@ onMounted(async () => {
 }
 
 .card-stats {
-  @apply text-xs font-medium;
+  @apply text-sm font-medium;
   color: var(--settings-accent);
-  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
-  text-stroke: 0.5px rgba(0, 0, 0, 0.3);
+  font-weight: 800;
 }
 
 .card-arrow {
