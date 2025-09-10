@@ -117,10 +117,19 @@ onMounted(async () => {
       <div class="hero-content">
         <div class="hero-text">
           <div class="hero-title-container">
-            <h1 class="hero-style-title">PUZZLE</h1>
-            <h1 class="hero-style-title">FUN</h1>
-            <h1 class="hero-title">拼图乐</h1>
-            <div class="hero-subtitle">Puzzle Fun</div>
+            <div class="title-content">
+              <h1 class="hero-style-title">PUZZLE</h1>
+              <h1 class="hero-style-title">FUN</h1>
+              <h1 class="hero-title">拼图乐</h1>
+              <div class="hero-subtitle">Puzzle Fun</div>
+            </div>
+            <div class="hero-visual">
+              <div class="puzzle-preview">
+                <div class="puzzle-piece" v-for="i in 9" :key="i" :class="`piece-${i}`">
+                  <div class="piece-inner"></div>
+                </div>
+              </div>
+            </div>
           </div>
           <p class="hero-description">
             体验最有趣的拼图游戏，挑战你的逻辑思维和空间想象力。
@@ -135,13 +144,6 @@ onMounted(async () => {
               <span class="btn-icon">📚</span>
               浏览素材库
             </button>
-          </div>
-        </div>
-        <div class="hero-visual">
-          <div class="puzzle-preview">
-            <div class="puzzle-piece" v-for="i in 9" :key="i" :class="`piece-${i}`">
-              <div class="piece-inner"></div>
-            </div>
           </div>
         </div>
       </div>
@@ -253,7 +255,7 @@ onMounted(async () => {
 }
 
 .hero-content {
-  @apply max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center;
+  @apply max-w-7xl mx-auto;
 }
 
 .hero-text {
@@ -266,11 +268,16 @@ onMounted(async () => {
   --theme-color-secondary: #e8d620;
   --font-size: 4.2rem;
 
+  @apply flex items-center justify-between;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.title-content {
   @apply flex items-baseline space-x-3;
   flex-direction: column;
   position: relative;
-  width: 100%;
-  margin-bottom: 1rem;
+  flex: 1;
 }
 
 .hero-style-title {
@@ -361,17 +368,19 @@ onMounted(async () => {
 /* 拼图预览动画 */
 .hero-visual {
   @apply flex justify-center items-center;
+  flex-shrink: 0;
+  margin-left: 2rem;
 }
 
 .puzzle-preview {
-  @apply grid grid-cols-3 gap-2 p-4;
+  @apply grid grid-cols-3 gap-1 p-2;
   background-color: var(--settings-card-bg);
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .puzzle-piece {
-  @apply w-16 h-16 relative;
+  @apply w-12 h-12 relative;
   animation: float 3s ease-in-out infinite;
 }
 
@@ -529,27 +538,45 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .hero-section {
     @apply py-8;
+    min-height: auto;
+    max-height: none;
   }
   
   .hero-title-container {
-    --font-size: 3rem;
+    --font-size: 2.5rem;
+    @apply flex-col items-start space-y-4;
+  }
+  
+  .title-content {
+    @apply w-full;
   }
   
   .hero-title {
-    font-size: 1.5rem;
-    left: min(calc(var(--font-size) * 2.2), 40vw);
+    font-size: 1.25rem;
+    left: min(calc(var(--font-size) * 2.0), 35vw);
   }
   
   .hero-subtitle {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   
-  .hero-description {
-    @apply text-base;
+  .hero-visual {
+    @apply w-full justify-center;
+    margin-left: 0;
   }
   
   .puzzle-preview {
-    @apply scale-75;
+    @apply grid-cols-3 gap-1 p-2;
+    transform: scale(0.8);
+    max-width: 120px;
+  }
+  
+  .puzzle-piece {
+    @apply w-8 h-8;
+  }
+  
+  .hero-description {
+    @apply text-base mb-4;
   }
   
   /* 移动端保持双栏布局 */
