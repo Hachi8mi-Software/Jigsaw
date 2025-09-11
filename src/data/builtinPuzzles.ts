@@ -3,124 +3,128 @@ import { getImagePath } from '../utils/imageUtils'
 import { BoundaryManager } from '../utils/boundaryUtils'
 
 /**
- * 内置拼图库数据
- * 包含应用预置的拼图素材
+ * 拼图配置接口
  */
-export const BUILTIN_PUZZLES: LibraryItem[] = [
+interface PuzzleConfig {
+  id: string
+  name: string
+  imageFile: string
+  category: string
+  tags: string[]
+  difficulty: number
+  gridConfig: {
+    rows: number
+    cols: number
+    pieceWidth: number
+    pieceHeight: number
+  }
+  customBoundaries?: boolean
+}
+
+/**
+ * 创建拼图数据
+ */
+function createPuzzleData(config: PuzzleConfig) {
+  const imageUrl = getImagePath(config.imageFile)
+  const boundaries = config.customBoundaries 
+    ? createCustomBoundaries(config.gridConfig)
+    : BoundaryManager.generateInitialBoundaries(config.gridConfig)
+
+  return {
+    id: config.id,
+    name: config.name,
+    imageUrl,
+    gridConfig: config.gridConfig,
+    boundaries,
+    createdAt: new Date(),
+    difficulty: config.difficulty
+  }
+}
+
+/**
+ * 创建库项目
+ */
+function createLibraryItem(config: PuzzleConfig): LibraryItem {
+  return {
+    id: config.id,
+    name: config.name,
+    imageUrl: getImagePath(config.imageFile),
+    category: config.category,
+    tags: config.tags,
+    difficulty: config.difficulty,
+    isBuiltIn: true,
+    puzzleData: createPuzzleData(config)
+  }
+}
+
+/**
+ * 内置拼图配置
+ */
+const PUZZLE_CONFIGS: PuzzleConfig[] = [
   {
     id: 'builtin_1',
     name: '美丽的日落',
-    imageUrl: getImagePath('sunset.png'),
+    imageFile: 'sunset.png',
     category: '自然风光',
     tags: ['日落', '天空', '美景'],
     difficulty: 3,
-    isBuiltIn: true,
-    puzzleData: {
-      id: 'builtin_1',
-      name: '美丽的日落',
-      imageUrl: getImagePath('sunset.png'),
-      gridConfig: {
-        rows: 3,
-        cols: 4,
-        pieceWidth: 153,
-        pieceHeight: 120
-      },
-      // boundaries: BoundaryManager.generateInitialBoundaries({
-      //   rows: 3,
-      //   cols: 4,
-      //   pieceWidth: 153,
-      //   pieceHeight: 120
-      // }),
-      boundaries: createCustomBoundaries(),
-      createdAt: new Date(),
-      difficulty: 3
-    }
+    gridConfig: {
+      rows: 3,
+      cols: 4,
+      pieceWidth: 153,
+      pieceHeight: 120
+    },
+    customBoundaries: true
   },
   {
     id: 'builtin_2',
     name: '城市夜景',
-    imageUrl: getImagePath('city-night.png'),
+    imageFile: 'city-night.png',
     category: '城市建筑',
     tags: ['城市', '夜景', '灯光'],
     difficulty: 4,
-    isBuiltIn: true,
-    puzzleData: {
-      id: 'builtin_2',
-      name: '城市夜景',
-      imageUrl: getImagePath('city-night.png'),
-      gridConfig: {
-        rows: 4,
-        cols: 4,
-        pieceWidth: 140,
-        pieceHeight: 200
-      },
-      boundaries: BoundaryManager.generateInitialBoundaries({
-        rows: 4,
-        cols: 4,
-        pieceWidth: 140,
-        pieceHeight: 200
-      }),
-      createdAt: new Date(),
-      difficulty: 4
+    gridConfig: {
+      rows: 4,
+      cols: 4,
+      pieceWidth: 140,
+      pieceHeight: 200
     }
   },
   {
     id: 'builtin_3',
     name: '可爱的猫咪',
-    imageUrl: getImagePath('cat.png'),
+    imageFile: 'cat.png',
     category: '可爱动物',
     tags: ['猫', '宠物', '可爱'],
     difficulty: 2,
-    isBuiltIn: true,
-    puzzleData: {
-      id: 'builtin_3',
-      name: '可爱的猫咪',
-      imageUrl: getImagePath('cat.png'),
-      gridConfig: {
-        rows: 3,
-        cols: 3,
-        pieceWidth: 120,
-        pieceHeight: 120
-      },
-      boundaries: BoundaryManager.generateInitialBoundaries({
-        rows: 3,
-        cols: 3,
-        pieceWidth: 120,
-        pieceHeight: 120
-      }),
-      createdAt: new Date(),
-      difficulty: 2
+    gridConfig: {
+      rows: 3,
+      cols: 3,
+      pieceWidth: 120,
+      pieceHeight: 120
     }
   },
   {
     id: 'builtin_4',
     name: '空洞骑士：丝之歌',
-    imageUrl: getImagePath('hks.png'),
+    imageFile: 'hks.png',
     category: '游戏角色',
     tags: ['空洞骑士', '丝之歌', '动作游戏'],
     difficulty: 3,
-    isBuiltIn: true,
-    puzzleData: {
-      id: 'builtin_4',
-      name: '空洞骑士：丝之歌',
-      imageUrl: getImagePath('hks.png'),
-      gridConfig: {
-        rows: 3,
-        cols: 5,
-        pieceWidth: 100,
-        pieceHeight: 100
-      },
-      boundaries: BoundaryManager.generateInitialBoundaries({
-        rows: 3,
-        cols: 5,
-        pieceWidth: 100,
-        pieceHeight: 100
-      }),
-      createdAt: new Date(),
-      difficulty: 3
+    gridConfig: {
+      rows: 3,
+      cols: 5,
+      pieceWidth: 100,
+      pieceHeight: 100
     }
   }
 ]
+
+/**
+ * 内置拼图库数据
+ * 包含应用预置的拼图素材
+ */
+export const BUILTIN_PUZZLES: LibraryItem[] = PUZZLE_CONFIGS.map(createLibraryItem)
 
 /**
  * 根据ID获取内置拼图
@@ -147,15 +151,7 @@ export function getBuiltinPuzzlesByDifficulty(difficulty: number): LibraryItem[]
  * 创建自定义边界数组，用于凹凸拼图实验
  * 特别设置了某两个相邻拼图块的连接形状为凹凸
  */
-function createCustomBoundaries() {
-  // 创建一个3x3的网格配置
-  const gridConfig = {
-    rows: 3,
-    cols: 4,
-    pieceWidth: 128,
-    pieceHeight: 100
-  }
-  
+function createCustomBoundaries(gridConfig: { rows: number; cols: number; pieceWidth: number; pieceHeight: number }) {
   // 生成初始边界
   const boundaries = BoundaryManager.generateInitialBoundaries(gridConfig)
   
