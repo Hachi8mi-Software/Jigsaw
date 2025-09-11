@@ -344,10 +344,8 @@ export const useGameStore = defineStore('game', () => {
     pieceManager.restoreFromData(operation.beforeState)
     gameCompletionChecker.updatePieces(pieceManager.piecesValue)
     
-    // 减少步数（因为撤销了一个操作）
-    if (gameStateManager.moveCountValue > 0) {
-      gameStateManager.decrementMoveCount()
-    }
+    // 增加步数（因为撤销了一个操作）
+    gameStateManager.incrementMoveCount()
     
     return true
   }
