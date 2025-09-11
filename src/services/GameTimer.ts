@@ -1,6 +1,7 @@
 /**
  * 游戏计时器管理类
  * 负责处理游戏时间相关的所有逻辑
+ * 支持每个拼图独立计时，暂停时不计时
  */
 
 import { ref, computed } from 'vue'
@@ -12,16 +13,20 @@ export class GameTimer {
   private totalPauseTime = ref<number>(0)
   private updateTrigger = ref<number>(0)
   private updateInterval: NodeJS.Timeout | null = null
+  private isPaused = ref<boolean>(false)
+  private puzzleId = ref<string | null>(null)
 
   /**
    * 开始计时
    */
-  startTimer(): Date {
+  startTimer(puzzleId: string): Date {
     const now = new Date()
     this.startTime.value = now
     this.endTime.value = null
     this.totalPauseTime.value = 0
     this.pauseStartTime.value = null
+    this.isPaused.value = false
+    this.puzzleId.value = puzzleId
     this.startUpdateLoop()
     return now
   }
@@ -30,8 +35,11 @@ export class GameTimer {
    * 暂停计时
    */
   pauseTimer() {
-    if (this.startTime.value && !this.pauseStartTime.value) {
+    if (this.startTime.value && !this.pauseStartTime.value && !this.isPaused.value) {
       this.pauseStartTime.value = new Date()
+      this.isPaused.value = true
+      // 暂停时停止更新循环
+      this.stopUpdateLoop()
     }
   }
 
@@ -39,10 +47,13 @@ export class GameTimer {
    * 恢复计时
    */
   resumeTimer() {
-    if (this.pauseStartTime.value) {
+    if (this.pauseStartTime.value && this.isPaused.value) {
       const pauseDuration = Date.now() - this.pauseStartTime.value.getTime()
       this.totalPauseTime.value += pauseDuration
       this.pauseStartTime.value = null
+      this.isPaused.value = false
+      // 恢复时重新启动更新循环
+      this.startUpdateLoop()
     }
   }
 
@@ -55,7 +66,7 @@ export class GameTimer {
     const actualPlayTime = totalTime - this.totalPauseTime.value
     
     // 如果当前正在暂停，减去当前暂停时间
-    if (this.pauseStartTime.value) {
+    if (this.pauseStartTime.value && this.isPaused.value) {
       const currentPauseTime = Date.now() - this.pauseStartTime.value.getTime()
       return Math.max(0, (actualPlayTime - currentPauseTime) / 1000)
     }
@@ -110,6 +121,37 @@ export class GameTimer {
   }
 
   /**
+   * 获取当前拼图ID
+   */
+  get currentPuzzleId(): string | null {
+    return this.puzzleId.value
+  }
+
+  /**
+   * 获取暂停状态
+   */
+  get paused(): boolean {
+    return this.isPaused.value
+  }
+
+  /**
+   * 检查是否为指定拼图的计时器
+   */
+  isForPuzzle(puzzleId: string): boolean {
+    return this.puzzleId.value === puzzleId
+  }
+
+  /**
+   * 停止当前拼图的计时（退出拼图时调用）
+   */
+  stopCurrentPuzzle(): void {
+    this.stopUpdateLoop()
+    this.isPaused.value = false
+    this.pauseStartTime.value = null
+    // 注意：不重置 startTime 和 totalPauseTime，保持历史记录
+  }
+
+  /**
    * 设置结束时间
    */
   setEndTime(endTime: Date): void {
@@ -120,14 +162,16 @@ export class GameTimer {
   /**
    * 恢复计时器状态（用于页面刷新后恢复）
    */
-  restoreTimerState(startTime: Date, endTime?: Date | null, totalPauseTime: number = 0, pauseStartTime?: Date | null, isPaused: boolean = false): void {
+  restoreTimerState(startTime: Date, endTime?: Date | null, totalPauseTime: number = 0, pauseStartTime?: Date | null, isPaused: boolean = false, puzzleId?: string): void {
     this.startTime.value = startTime
     this.endTime.value = endTime || null
     this.totalPauseTime.value = totalPauseTime
     this.pauseStartTime.value = pauseStartTime || null
+    this.isPaused.value = isPaused
+    this.puzzleId.value = puzzleId || null
     
-    // 如果游戏还在进行中（没有结束时间），启动更新循环
-    if (!endTime) {
+    // 如果游戏还在进行中（没有结束时间）且未暂停，启动更新循环
+    if (!endTime && !isPaused) {
       this.startUpdateLoop()
     }
   }
@@ -142,8 +186,9 @@ export class GameTimer {
     }
     
     // 每秒更新一次触发器，触发响应式更新
+    // 只在游戏进行中且未暂停时更新
     this.updateInterval = setInterval(() => {
-      if (this.startTime.value && !this.endTime.value) {
+      if (this.startTime.value && !this.endTime.value && !this.isPaused.value) {
         this.updateTrigger.value = Date.now()
       }
     }, 1000)
@@ -168,5 +213,7 @@ export class GameTimer {
     this.endTime.value = null
     this.pauseStartTime.value = null
     this.totalPauseTime.value = 0
+    this.isPaused.value = false
+    this.puzzleId.value = null
   }
 }

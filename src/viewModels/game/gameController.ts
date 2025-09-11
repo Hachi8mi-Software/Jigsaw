@@ -13,9 +13,10 @@ import type { PieceStatus, PuzzleData, UserStats } from '../../types'
 export class GameController {
   // 移除构造函数中的store获取，改为在需要时获取
   
-  // 计时器管理
-  private timerInterval: number | null = null
+  // 页面可见性监听
   private visibilityChangeHandler: (() => void) | null = null
+  private blurHandler: (() => void) | null = null
+  private focusHandler: (() => void) | null = null
 
   /**
    * 获取gameStore实例
@@ -66,7 +67,7 @@ export class GameController {
       // this.gameStore.resetPauseTime()
       
       if (!existingState.isPaused) {
-        this.startRealTimeTimer()
+        // 游戏恢复，计时器由 GameTimer 自动管理
       }
       
       console.log('✅ 恢复现有游戏状态')
@@ -84,7 +85,7 @@ export class GameController {
         sessionId
       })
       
-      this.startRealTimeTimer()
+      // 计时器由 GameTimer 自动管理
       
       console.log('开始新游戏')
     }
@@ -104,7 +105,6 @@ export class GameController {
   pauseGame(autoPause: boolean = false): void {
     if (this.gameStore.isGameActive && !this.gameStore.isCompleted) {
       this.gameStore.pauseGameState(autoPause)
-      this.stopRealTimeTimer()
       this.saveGameState()
       console.log(autoPause ? '游戏已自动暂停' : '游戏已暂停')
     }
@@ -116,7 +116,6 @@ export class GameController {
   resumeGame(): void {
     if (this.gameStore.isPaused && !this.gameStore.isCompleted) {
       this.gameStore.resumeGameState()
-      this.startRealTimeTimer()
       this.saveGameState()
       console.log('游戏已恢复')
     }
@@ -157,7 +156,6 @@ export class GameController {
       // 检查游戏是否完成
       const isCompleted = this.gameStore.checkGameCompletion()
       if (isCompleted) {
-        this.stopRealTimeTimer()
         if (this.gameStore.startTime && this.gameStore.currentPuzzle) {
           const gameTime = this.gameStore.calculateElapsedTime(this.gameStore.startTime, new Date())
           this.updateUserStats(this.gameStore.currentPuzzle, gameTime)
@@ -182,7 +180,6 @@ export class GameController {
       // 检查游戏是否完成
       const isCompleted = this.gameStore.checkGameCompletion()
       if (isCompleted) {
-        this.stopRealTimeTimer()
         if (this.gameStore.startTime && this.gameStore.currentPuzzle) {
           const gameTime = this.gameStore.calculateElapsedTime(this.gameStore.startTime, new Date())
           this.updateUserStats(this.gameStore.currentPuzzle, gameTime)
@@ -208,7 +205,6 @@ export class GameController {
     console.log('游戏完成检查结果:', isCompleted)
     if (isCompleted) {
       // checkGameCompletion 已经处理了游戏完成逻辑，不需要再次调用 completeGame
-      this.stopRealTimeTimer()
       
       // 更新用户统计
       console.log('准备更新用户统计:', {
@@ -238,7 +234,6 @@ export class GameController {
       const endTime = new Date()
       
       this.gameStore.completeGameState(endTime)
-      this.stopRealTimeTimer()
       
       // 更新用户统计
       if (this.gameStore.startTime && endTime) {
@@ -321,59 +316,65 @@ export class GameController {
     }
   }
 
-  /**
-   * 开始实时计时器
-   */
-  private startRealTimeTimer(): void {
-    if (this.timerInterval) return
-    
-    this.timerInterval = window.setInterval(() => {
-      // 时间更新现在由 GameTimer 自动管理
-    }, 1000)
-  }
 
   /**
-   * 停止实时计时器
-   */
-  private stopRealTimeTimer(): void {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval)
-      this.timerInterval = null
-    }
-  }
-
-  /**
-   * 设置页面可见性监听
+   * 设置页面可见性和失焦监听
    */
   private setupVisibilityListener(): void {
+    // 页面可见性变化监听
     this.visibilityChangeHandler = () => {
       if (document.hidden) {
-        if (this.gameStore.isGameActive && !this.gameStore.isCompleted) {
+        if (this.gameStore.isGameActive && !this.gameStore.isCompleted && !this.gameStore.isPaused) {
           console.log('页面隐藏，自动暂停游戏')
           this.pauseGame(true)
         }
       } else {
         console.log('页面重新可见')
         // 页面重新可见时，不自动恢复游戏，让用户手动恢复
-        // 这样可以避免状态同步导致的拼图块位置混乱
         if (this.gameStore.isAutoPaused) {
           console.log('页面重新可见，游戏保持暂停状态，等待用户手动恢复')
         }
       }
     }
     
+    // 窗口失焦监听
+    this.blurHandler = () => {
+      if (this.gameStore.isGameActive && !this.gameStore.isCompleted && !this.gameStore.isPaused) {
+        console.log('窗口失焦，自动暂停游戏')
+        this.pauseGame(true)
+      }
+    }
+    
+    // 窗口获得焦点监听
+    this.focusHandler = () => {
+      console.log('窗口获得焦点')
+      if (this.gameStore.isAutoPaused) {
+        console.log('窗口获得焦点，游戏保持暂停状态，等待用户手动恢复')
+      }
+    }
+    
+    // 添加事件监听器
     document.addEventListener('visibilitychange', this.visibilityChangeHandler)
+    window.addEventListener('blur', this.blurHandler)
+    window.addEventListener('focus', this.focusHandler)
   }
 
   /**
    * 清理资源
    */
   cleanup(): void {
-    this.stopRealTimeTimer()
-    
+    // 移除事件监听器
     if (this.visibilityChangeHandler) {
       document.removeEventListener('visibilitychange', this.visibilityChangeHandler)
       this.visibilityChangeHandler = null
+    }
+    if (this.blurHandler) {
+      window.removeEventListener('blur', this.blurHandler)
+      this.blurHandler = null
+    }
+    if (this.focusHandler) {
+      window.removeEventListener('focus', this.focusHandler)
+      this.focusHandler = null
     }
   }
 
@@ -381,8 +382,11 @@ export class GameController {
    * 清除当前游戏状态
    */
   clearCurrentGame(): void {
-    // 停止所有计时器
-    this.stopRealTimeTimer()
+    // 停止当前拼图的计时
+    this.gameStore.stopCurrentPuzzle()
+    
+    // 清理控制器资源
+    this.cleanup()
     
     // 重置游戏状态
     this.gameStore.resetGameState()

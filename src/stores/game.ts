@@ -72,7 +72,7 @@ export const useGameStore = defineStore('game', () => {
     pieceManager.setPuzzleData(data.puzzleData)
     pieceManager.restoreFromData(data.pieces)
     gameCompletionChecker.updatePieces(pieceManager.piecesValue)
-    gameTimer.startTimer()
+    gameTimer.startTimer(data.puzzleData.id)
   }
 
   const restoreGameState = (data: {
@@ -105,7 +105,8 @@ export const useGameStore = defineStore('game', () => {
       data.endTime,
       data.totalPauseTime || 0,
       data.pauseStartTime,
-      data.isPaused || false
+      data.isPaused || false,
+      data.puzzleData.id
     )
   }
 
@@ -129,6 +130,11 @@ export const useGameStore = defineStore('game', () => {
     pieceManager.clearPieces()
     gameTimer.cleanup()
     gameCompletionChecker.updatePieces([])
+  }
+
+  const stopCurrentPuzzle = () => {
+    // 停止当前拼图的计时（退出拼图时调用）
+    gameTimer.stopCurrentPuzzle()
   }
 
   // 拼图块管理方法
@@ -403,6 +409,9 @@ export const useGameStore = defineStore('game', () => {
     loadGameSnapshot,
     resetPauseTime,
     calculateElapsedTime,
+
+    // 拼图控制
+    stopCurrentPuzzle,
 
     // 其他方法
     generateInitialPieces,
