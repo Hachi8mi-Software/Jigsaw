@@ -91,6 +91,34 @@ export const BUILTIN_PUZZLES: LibraryItem[] = [
       createdAt: new Date(),
       difficulty: 2
     }
+  },
+  {
+    id: 'builtin_4',
+    name: '空洞骑士：丝之歌',
+    imageUrl: getImagePath('hks.png'),
+    category: '游戏角色',
+    tags: ['空洞骑士', '丝之歌', '动作游戏'],
+    difficulty: 3,
+    isBuiltIn: true,
+    puzzleData: {
+      id: 'builtin_4',
+      name: '空洞骑士：丝之歌',
+      imageUrl: getImagePath('hks.png'),
+      gridConfig: {
+        rows: 3,
+        cols: 5,
+        pieceWidth: 100,
+        pieceHeight: 100
+      },
+      boundaries: BoundaryManager.generateInitialBoundaries({
+        rows: 3,
+        cols: 5,
+        pieceWidth: 100,
+        pieceHeight: 100
+      }),
+      createdAt: new Date(),
+      difficulty: 3
+    }
   }
 ]
 
