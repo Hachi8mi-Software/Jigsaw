@@ -412,7 +412,8 @@ onMounted(() => {
 
   --font-size: 4.2rem;
 
-  @apply flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shadow-sm border-b;
+  @apply py-12 px-4 sm:px-6 lg:px-8;
+  @apply flex items-center justify-between shadow-sm border-b;
   background: linear-gradient(0deg, #00000000, #000000ff);
   border-bottom-color: var(--settings-border);
   min-height: 10rem;
@@ -422,7 +423,7 @@ onMounted(() => {
 /* 移动端头部优化 */
 @media (max-width: 640px) {
   .library-header {
-    @apply space-y-3;
+    @apply py-8;
   }
   
   .header-left {

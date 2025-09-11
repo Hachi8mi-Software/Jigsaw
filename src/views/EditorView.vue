@@ -241,16 +241,16 @@
         </div>
         
         <div class="bottom-actions">
-          <button @click="triggerImageUpload" class="bottom-btn">
+          <button @click="triggerImageUpload" class="ark bottom-btn">
             🔄 更换图片
           </button>
-          <button @click="reopenCropDialog" class="bottom-btn" v-if="currentImage">
+          <button @click="reopenCropDialog" class="ark bottom-btn" v-if="currentImage">
             ✂️ 重新裁剪
           </button>
-          <button @click="exportPuzzle" class="bottom-btn" :disabled="!canExport">
+          <button @click="exportPuzzle" class="ark bottom-btn" :disabled="!canExport">
             📤 导出
           </button>
-          <button @click="addToLibrary" class="bottom-btn primary" :disabled="!canExport">
+          <button @click="addToLibrary" class="ark bottom-btn primary" :disabled="!canExport">
             ➕ 添加到素材库
           </button>
         </div>
@@ -259,14 +259,14 @@
 
     <!-- 导入对话框 -->
     <div v-if="showImportDialog" class="modal-overlay ark" @click="closeImportDialog">
-      <div class="modal-dialog" @click.stop>
+      <div class="modal-dialog ark" @click.stop>
         <div class="modal-header">
           <h3>导入拼图数据</h3>
-          <button @click="closeImportDialog" class="close-btn">×</button>
+          <button @click="closeImportDialog" class="close-btn ark">×</button>
         </div>
         <div class="modal-body">
           <div 
-            class="import-drop-zone"
+            class="import-drop-zone ark dash"
             @drop.prevent="handleImportDrop"
             @dragover.prevent="handleDragOver"
             @dragenter.prevent="handleDragEnter"
@@ -277,7 +277,7 @@
               <div class="drop-icon">📁</div>
               <h4>拖拽文件到此处</h4>
               <p class="drop-hint">或者</p>
-              <button @click="triggerFileSelect" class="file-select-btn">
+              <button @click="triggerFileSelect" class="ark">
                 选择文件
               </button>
               <p>支持 .json 和 .puzzle 格式文件</p>
@@ -292,7 +292,7 @@
           />
         </div>
         <div class="modal-footer">
-          <button @click="closeImportDialog" class="modal-btn">
+          <button @click="closeImportDialog" class="ark">
             取消
           </button>
         </div>
@@ -301,10 +301,10 @@
 
     <!-- 添加到素材库对话框 -->
     <div v-if="showAddToLibraryDialog" class="modal-overlay ark" @click="closeAddToLibraryDialog">
-      <div class="modal-dialog" @click.stop>
+      <div class="modal-dialog ark" @click.stop>
         <div class="modal-header">
           <h3>添加到素材库</h3>
-          <button @click="closeAddToLibraryDialog" class="close-btn">×</button>
+          <button @click="closeAddToLibraryDialog" class="close-btn ark">×</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -313,7 +313,7 @@
               v-model="libraryItemName"
               type="text"
               placeholder="请输入拼图名称"
-              class="form-input"
+              class="form-input ark"
               :disabled="isAddingToLibrary"
             />
           </div>
@@ -321,7 +321,7 @@
             <label class="form-label">分类</label>
             <select
               v-model="libraryItemCategory"
-              class="form-select"
+              class="form-select ark"
               :disabled="isAddingToLibrary"
             >
               <option value="自定义">自定义</option>
@@ -338,17 +338,17 @@
               v-model="libraryItemTags"
               type="text"
               placeholder="请输入标签，用逗号分隔"
-              class="form-input"
+              class="form-input ark"
               :disabled="isAddingToLibrary"
             />
             <p class="form-hint">例如：风景,美丽,自然</p>
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeAddToLibraryDialog" class="modal-btn" :disabled="isAddingToLibrary">
+          <button @click="closeAddToLibraryDialog" class="ark" :disabled="isAddingToLibrary">
             取消
           </button>
-          <button @click="handleAddToLibrary" class="modal-btn primary" :disabled="isAddingToLibrary">
+          <button @click="handleAddToLibrary" class="ark primary" :disabled="isAddingToLibrary">
             {{ isAddingToLibrary ? '添加中...' : '添加到素材库' }}
           </button>
         </div>
@@ -357,10 +357,10 @@
 
     <!-- 图片裁剪对话框 -->
     <div v-if="showCropDialog" class="modal-overlay ark">
-      <div class="modal-dialog crop-dialog" @click.stop>
+      <div class="modal-dialog ark crop-dialog" @click.stop>
         <div class="modal-header">
           <h3>裁剪图片</h3>
-          <button @click="closeCropDialog" class="close-btn">×</button>
+          <button @click="closeCropDialog" class="close-btn ark">×</button>
         </div>
         <div class="modal-body crop-body">
           <div class="cropper-container">
@@ -389,10 +389,10 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeCropDialog" class="modal-btn">
+          <button @click="closeCropDialog" class="ark">
             取消
           </button>
-          <button @click="confirmCrop" class="modal-btn primary">
+          <button @click="confirmCrop" class="ark primary">
             确认裁剪
           </button>
         </div>
@@ -1229,10 +1229,6 @@ onUnmounted(() => {
   .drop-zone-content h4 {
     @apply text-lg;
   }
-  
-  .file-select-btn {
-    @apply px-4 py-2 text-sm;
-  }
 }
 
 /* 新的布局样式 */
@@ -1483,27 +1479,7 @@ onUnmounted(() => {
 }
 
 .bottom-btn {
-  @apply px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200;
-  background-color: var(--settings-hover);
-  color: var(--settings-text-primary);
-}
-
-.bottom-btn:hover {
-  background-color: var(--settings-border);
-}
-
-.bottom-btn:hover {
-  background-color: var(--settings-border);
-}
-
-.bottom-btn.primary {
-  @apply bg-blue-500 text-white hover:bg-blue-600;
-  background-color: var(--settings-accent);
-  color: #1f2937;
-}
-
-.bottom-btn.primary:hover {
-  background-color: var(--settings-accent-hover, #2563eb);
+  @apply text-sm;
 }
 
 .bottom-btn:disabled {
@@ -1663,7 +1639,7 @@ onUnmounted(() => {
 }
 
 .modal-dialog {
-  @apply rounded-lg shadow-xl w-full max-w-md mx-4;
+  @apply shadow-xl w-full max-w-md mx-4;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
 }
@@ -1678,11 +1654,6 @@ onUnmounted(() => {
 
 .close-btn {
   @apply text-2xl cursor-pointer;
-  color: var(--settings-text-secondary);
-}
-
-.close-btn:hover {
-  color: var(--settings-text-primary);
 }
 
 .modal-body {
@@ -1712,17 +1683,8 @@ onUnmounted(() => {
 
 .form-input,
 .form-select {
-  @apply w-full px-3 py-2 border rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:border-transparent;
+  @apply w-full;
   @apply transition-colors duration-200;
-  background-color: var(--settings-card-bg);
-  color: var(--settings-text-primary);
-  border-color: var(--settings-border);
-}
-
-.form-input:focus,
-.form-select:focus {
-  border-color: var(--settings-accent);
 }
 
 .form-select option {
@@ -1766,10 +1728,9 @@ onUnmounted(() => {
 }
 
 .import-drop-zone {
-  @apply w-full h-64 border-2 border-dashed rounded-lg;
+  @apply w-full h-64;
   @apply flex items-center justify-center cursor-pointer;
   @apply transition-all duration-200;
-  border-color: var(--settings-border);
   background-color: var(--settings-card-bg);
 }
 
@@ -1786,7 +1747,7 @@ onUnmounted(() => {
 }
 
 .drop-zone-content {
-  @apply text-center space-y-3;
+  @apply text-center space-y-3 flex flex-col justify-center;
 }
 
 .drop-icon {
@@ -1806,19 +1767,6 @@ onUnmounted(() => {
 .drop-hint {
   @apply text-sm font-medium my-4;
   color: var(--settings-text-secondary);
-}
-
-.file-select-btn {
-  @apply px-6 py-3 text-base font-medium rounded-lg;
-  @apply bg-blue-500 text-white hover:bg-blue-600;
-  @apply transition-colors duration-200 shadow-sm;
-  background-color: var(--settings-accent);
-  color: #1f2937;
-}
-
-.file-select-btn:hover {
-  background-color: var(--settings-accent-hover, #2563eb);
-  @apply shadow-md;
 }
 
 /* 移动端悬浮工具栏样式 */
