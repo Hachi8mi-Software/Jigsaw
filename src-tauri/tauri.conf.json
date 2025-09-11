@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "jigsaw",
+  "productName": "拼图乐",
   "version": "0.1.0",
   "identifier": "com.hachi8mi.jigsaw",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "jigsaw",
+        "title": "拼图乐 - Puzzle Fun",
         "width": 800,
         "height": 600
       }
