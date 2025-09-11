@@ -5,6 +5,7 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { APP_CONFIG, getPageTitle } from '../config/app'
 
 // 路由组件懒加载
 const HomeView = () => import('../views/HomeView.vue')
@@ -97,7 +98,7 @@ const routes: RouteRecordRaw[] = [
  * 创建路由实例
  */
 const router = createRouter({
-  history: createWebHistory('/Jigsaw/'),
+  history: createWebHistory(APP_CONFIG.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
@@ -113,11 +114,7 @@ const router = createRouter({
  */
 router.beforeEach((to, from, next) => {
   // 设置页面标题
-  if (to.meta?.title) {
-    document.title = `${to.meta.title} - 拼图乐`
-  } else {
-    document.title = '拼图乐 - Puzzle Fun'
-  }
+  document.title = getPageTitle(to.meta?.title as string)
   
   next()
 })

@@ -3,6 +3,8 @@
  * 负责处理图片路径和资源管理
  */
 
+import { getImagePath as getImagePathFromConfig } from '../config/app'
+
 /**
  * 获取图片资源的完整路径
  * 支持开发环境和生产环境的不同base路径
@@ -10,9 +12,7 @@
  * @returns 完整的图片URL路径
  */
 export function getImagePath(imageName: string): string {
-  // 使用Vite定义的全局常量
-  const baseUrl = __BASE_URL__ || '/Jigsaw/'
-  return `${baseUrl}images/${imageName}`
+  return getImagePathFromConfig(imageName)
 }
 
 /**
