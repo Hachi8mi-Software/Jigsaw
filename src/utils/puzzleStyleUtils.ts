@@ -58,7 +58,7 @@ export function createGridStyle(gridCols: number, gridRows: number, baseSize?: n
       backgroundColor: 'var(--settings-card-bg, #f9f9f9)',
       position: 'relative' as const,
       maxWidth: '100%', // 确保不会超出容器
-      overflow: 'hidden' // 防止内容溢出
+      overflow: 'visible' // 防止内容溢出
     }
   }
   
