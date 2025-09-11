@@ -141,7 +141,8 @@ export class OperationHistoryManager {
   private deepClonePieceStatus(pieces: PieceStatus[]): PieceStatus[] {
     return pieces.map(piece => ({
       ...piece,
-      position: { ...piece.position },
+      x: piece.x,
+      y: piece.y,
       gridPosition: piece.gridPosition
     }))
   }
