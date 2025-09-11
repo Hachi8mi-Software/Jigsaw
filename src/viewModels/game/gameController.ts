@@ -290,6 +290,7 @@ export class GameController {
    */
   private addLeaderboardRecord(puzzleData: PuzzleData, gameTime: number): void {
     const leaderboardEntry = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // 生成唯一ID
       playerName: '玩家', // 可以后续扩展为用户输入的名称
       puzzleId: puzzleData.id,
       completionTime: gameTime,

@@ -100,7 +100,25 @@ class LibraryViewModel {
     try {
       const key = saveManager.getStorageKey('leaderboard_records')
       const stored = localStorage.getItem(key)
-      return stored ? JSON.parse(stored) : []
+      const records: LeaderboardEntry[] = stored ? JSON.parse(stored) : []
+      
+      // 为没有ID的旧记录添加ID
+      const updatedRecords = records.map(record => {
+        if (!record.id) {
+          return {
+            ...record,
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+          }
+        }
+        return record
+      })
+      
+      // 如果有记录被更新，保存回localStorage
+      if (updatedRecords.some((record, index) => record.id !== records[index]?.id)) {
+        this.saveLeaderboardRecords(updatedRecords)
+      }
+      
+      return updatedRecords
     } catch (error) {
       console.error('加载排行榜记录失败:', error)
       return []
@@ -570,6 +588,11 @@ export const useLibraryStore = defineStore('library', () => {
     libraryViewModel.saveLeaderboardRecords(leaderboardRecords.value)
   }
 
+  const removeLeaderboardRecord = (recordId: string) => {
+    leaderboardRecords.value = leaderboardRecords.value.filter(record => record.id !== recordId)
+    libraryViewModel.saveLeaderboardRecords(leaderboardRecords.value)
+  }
+
   const clearAllLeaderboardRecords = () => {
     leaderboardRecords.value = []
     libraryViewModel.saveLeaderboardRecords(leaderboardRecords.value)
@@ -691,6 +714,7 @@ export const useLibraryStore = defineStore('library', () => {
     // 排行榜相关
     addLeaderboardRecord,
     clearLeaderboardRecords,
+    removeLeaderboardRecord,
     clearAllLeaderboardRecords,
     
     // OPFS相关

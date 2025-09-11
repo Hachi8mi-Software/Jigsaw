@@ -131,6 +131,7 @@ export interface Achievement {
 
 // 排行榜记录接口
 export interface LeaderboardEntry {
+  id: string // 添加唯一标识符
   playerName: string
   puzzleId: string
   completionTime: number

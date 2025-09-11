@@ -118,6 +118,13 @@
                     <span class="completed-date">{{ formatDate(record.completedAt) }}</span>
                   </div>
                 </div>
+                <button 
+                  @click="deleteRecord(record)"
+                  class="delete-record-btn"
+                  title="删除记录"
+                >
+                  ✕
+                </button>
               </div>
               <div v-if="gameBoard.records.length > 5" class="more-records">
                 <button @click="showAllRecords(gameBoard)" class="show-more-btn">
@@ -151,6 +158,13 @@
               </div>
               <div class="detailed-moves">{{ record.moveCount }} 步</div>
               <div class="detailed-date">{{ formatDate(record.completedAt) }}</div>
+              <button 
+                @click="deleteRecord(record)"
+                class="delete-record-btn"
+                title="删除记录"
+              >
+                ✕
+              </button>
             </div>
           </div>
         </div>
@@ -315,6 +329,20 @@ const clearGameRecords = async (puzzleId: string, gameName: string) => {
   
   if (confirmed) {
     libraryStore.clearLeaderboardRecords(puzzleId)
+  }
+}
+
+const deleteRecord = async (record: LeaderboardEntry) => {
+  const confirmed = await notificationStore.showConfirm({
+    title: '删除记录',
+    message: `确定要删除这条记录吗？\n\n完成时间：${formatTime(record.completionTime)}\n移动步数：${record.moveCount} 步\n\n此操作无法撤销。`,
+    type: 'danger',
+    confirmText: '删除',
+    cancelText: '取消'
+  })
+  
+  if (confirmed) {
+    libraryStore.removeLeaderboardRecord(record.id)
   }
 }
 
@@ -587,6 +615,27 @@ watch(gameLeaderboards, () => {
   color: var(--settings-text-secondary);
 }
 
+.delete-record-btn {
+  @apply p-1 rounded-full transition-colors duration-200 text-sm font-bold;
+  background-color: transparent;
+  color: var(--settings-text-secondary);
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-record-btn:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+[data-theme="dark"] .delete-record-btn:hover {
+  background-color: #7f1d1d;
+  color: #fca5a5;
+}
+
 .more-records {
   @apply text-center mt-4;
 }
@@ -639,7 +688,7 @@ watch(gameLeaderboards, () => {
 }
 
 .detailed-record-item {
-  @apply grid grid-cols-4 gap-4 p-3 rounded-lg;
+  @apply grid grid-cols-5 gap-4 p-3 rounded-lg;
   background-color: var(--settings-hover);
 }
 
@@ -704,7 +753,7 @@ watch(gameLeaderboards, () => {
   }
   
   .detailed-record-item {
-    @apply grid-cols-2 gap-2;
+    @apply grid-cols-3 gap-2;
   }
 }
 </style>
