@@ -169,7 +169,7 @@ watch(() => route.path, (newPath, oldPath) => {
         <span class="menu-icon">☰</span>
       </button>
       <div class="mobile-title">
-        <span class="app-logo">🧩</span>
+        <img src="/logo.png" alt="拼图乐" class="app-logo-img" />
         <span class="app-name">拼图乐</span>
       </div>
       <div class="mobile-spacer"></div>
@@ -191,7 +191,7 @@ watch(() => route.path, (newPath, oldPath) => {
       }"
     >
       <div class="sidebar-header">
-        <div class="app-logo">🧩</div>
+        <img src="/logo.png" alt="拼图乐" class="app-logo-img" />
         <h1 class="app-title">拼图乐</h1>
         <p class="app-subtitle">Puzzle Fun</p>
       </div>
@@ -260,8 +260,9 @@ watch(() => route.path, (newPath, oldPath) => {
   border-bottom: 1px solid var(--border-color);
 }
 
-.app-logo {
-  @apply text-4xl mb-2;
+.app-logo-img {
+  @apply w-12 h-12 mb-2 mx-auto;
+  object-fit: contain;
 }
 
 .app-title {
@@ -366,8 +367,8 @@ watch(() => route.path, (newPath, oldPath) => {
   @apply flex items-center space-x-2;
 }
 
-.mobile-title .app-logo {
-  @apply text-2xl;
+.mobile-title .app-logo-img {
+  @apply w-8 h-8;
 }
 
 .app-name {
