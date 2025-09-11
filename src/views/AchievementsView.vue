@@ -24,11 +24,24 @@
       </div>
     </div>
 
+    <!-- 成就分类标签 -->
+    <div class="achievement-categories">
+      <button 
+        v-for="category in categories" 
+        :key="category.id"
+        class="category-btn"
+        :class="{ 'active': selectedCategory === category.id }"
+        @click="selectedCategory = category.id"
+      >
+        {{ category.icon }} {{ category.name }}
+      </button>
+    </div>
+
     <!-- 成就列表 -->
     <div class="achievements-content">
       <div class="achievements-grid">
         <div
-          v-for="achievement in achievements"
+          v-for="achievement in filteredAchievements"
           :key="achievement.id"
           class="achievement-card"
           :class="{ 'unlocked': achievement.unlockedAt }"
@@ -40,11 +53,16 @@
             <h3 class="achievement-name">{{ achievement.name }}</h3>
             <p class="achievement-description">{{ achievement.description }}</p>
             <div v-if="achievement.unlockedAt" class="achievement-date">
+              <span class="unlock-icon">✨</span>
               解锁时间: {{ formatDate(achievement.unlockedAt) }}
             </div>
             <div v-else class="achievement-locked">
-              🔒 未解锁
+              <span class="lock-icon">🔒</span>
+              未解锁
             </div>
+          </div>
+          <div v-if="achievement.unlockedAt" class="achievement-badge">
+            <span class="badge-text">已解锁</span>
           </div>
         </div>
       </div>
@@ -53,13 +71,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch, ref } from 'vue'
 import { useLibraryStore } from '../stores/library'
 import { useGameStore } from '../stores/game'
 import type { DateValue } from '../types'
 
 // Store
 const libraryStore = useLibraryStore()
+
+// 状态
+const selectedCategory = ref('all')
+
+// 成就分类
+const categories = [
+  { id: 'all', name: '全部', icon: '🏆' },
+  { id: 'basic', name: '基础', icon: '🧩' },
+  { id: 'speed', name: '速度', icon: '⚡' },
+  { id: 'time', name: '时间', icon: '⏰' },
+  { id: 'skill', name: '技巧', icon: '🎯' },
+  { id: 'special', name: '特殊', icon: '✨' },
+  { id: 'milestone', name: '里程碑', icon: '💯' }
+]
 
 // 计算属性
 const achievements = computed(() => {
@@ -71,6 +103,33 @@ const unlockedCount = computed(() => unlockedAchievements.value.length)
 const totalCount = computed(() => achievements.value.length)
 const completionRate = computed(() => {
   return totalCount.value > 0 ? Math.round((unlockedCount.value / totalCount.value) * 100) : 0
+})
+
+// 过滤后的成就
+const filteredAchievements = computed(() => {
+  if (selectedCategory.value === 'all') {
+    return achievements.value
+  }
+  
+  return achievements.value.filter(achievement => {
+    const id = achievement.id
+    switch (selectedCategory.value) {
+      case 'basic':
+        return ['first_puzzle', 'second_puzzle', 'persistent', 'dedicated', 'master'].includes(id)
+      case 'speed':
+        return ['speed_demon', 'lightning_fast', 'speed_master'].includes(id)
+      case 'time':
+        return ['time_spent', 'time_master', 'time_legend'].includes(id)
+      case 'skill':
+        return ['efficient_mover', 'precision_master'].includes(id)
+      case 'special':
+        return ['perfectionist', 'night_owl', 'early_bird', 'weekend_warrior'].includes(id)
+      case 'milestone':
+        return ['century_club', 'half_century', 'decade'].includes(id)
+      default:
+        return true
+    }
+  })
 })
 
 // 方法
@@ -91,6 +150,13 @@ onMounted(() => {
 
   libraryStore.checkAchievements(libraryStore.userStats)
 })
+
+// 监听用户统计数据变化，实时检查成就
+watch(() => libraryStore.userStats, (newStats) => {
+  if (newStats) {
+    libraryStore.checkAchievements(newStats)
+  }
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -108,7 +174,32 @@ onMounted(() => {
 }
 
 .achievements-header {
-  @apply mb-8;
+  @apply mb-6;
+}
+
+.achievement-categories {
+  @apply flex flex-wrap justify-center gap-2 mb-6;
+}
+
+.category-btn {
+  @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border: 1px solid var(--settings-border);
+  box-shadow: 0 2px 4px -1px var(--shadow-color);
+}
+
+.category-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px var(--shadow-color);
+  border-color: var(--settings-accent);
+}
+
+.category-btn.active {
+  background-color: var(--settings-accent);
+  color: #1f2937;
+  border-color: var(--settings-accent);
+  box-shadow: 0 4px 6px -1px rgba(250, 233, 37, 0.3);
 }
 
 .achievements-title {
@@ -180,13 +271,40 @@ onMounted(() => {
 }
 
 .achievement-card {
-  @apply bg-white rounded-lg shadow-md p-6 flex items-start space-x-4;
+  @apply bg-white rounded-lg shadow-md p-6 flex items-start space-x-4 relative;
   @apply transition-all duration-200 hover:shadow-lg;
   background-color: var(--settings-card-bg);
   color: var(--settings-text-primary);
   border: 1px solid var(--settings-border);
   box-shadow: 0 4px 6px -1px var(--shadow-color);
   transition: all 0.3s ease;
+  min-height: 120px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 解锁成就的特殊动画 */
+.achievement-card.unlocked {
+  animation: fadeInUp 0.6s ease-out, unlockGlow 2s ease-in-out;
+}
+
+@keyframes unlockGlow {
+  0%, 100% {
+    box-shadow: 0 4px 6px -1px rgba(250, 233, 37, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 16px -1px rgba(250, 233, 37, 0.6);
+  }
 }
 
 .achievement-card:hover {
@@ -253,9 +371,28 @@ onMounted(() => {
 }
 
 .achievement-locked {
-  @apply text-sm;
+  @apply text-sm flex items-center;
   color: var(--settings-text-secondary);
   transition: color 0.3s ease;
+}
+
+.lock-icon {
+  @apply mr-1;
+}
+
+.unlock-icon {
+  @apply mr-1;
+}
+
+.achievement-badge {
+  @apply absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium;
+  background-color: var(--settings-accent);
+  color: #1f2937;
+  box-shadow: 0 2px 4px -1px rgba(250, 233, 37, 0.3);
+}
+
+.badge-text {
+  @apply font-semibold;
 }
 
 /* 响应式设计 */
@@ -272,12 +409,20 @@ onMounted(() => {
     @apply text-2xl;
   }
   
+  .achievement-categories {
+    @apply gap-1 mb-4;
+  }
+  
+  .category-btn {
+    @apply px-3 py-1 text-xs;
+  }
+  
   .achievements-grid {
     @apply gap-3;
   }
   
   .achievement-card {
-    @apply p-4 space-x-3;
+    @apply p-4 space-x-3 min-h-0;
   }
   
   .achievement-icon {
@@ -290,6 +435,10 @@ onMounted(() => {
   
   .achievement-description {
     @apply text-sm;
+  }
+  
+  .achievement-badge {
+    @apply top-1 right-1 px-1 py-0.5 text-xs;
   }
 }
 

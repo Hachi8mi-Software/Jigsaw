@@ -272,6 +272,9 @@ export class GameController {
       if (!userStats.bestTimes[puzzleId] || gameTime < userStats.bestTimes[puzzleId]) {
         userStats.bestTimes[puzzleId] = gameTime
       }
+
+      // 更新成功移动次数（使用当前游戏的移动次数）
+      userStats.totalSuccessMovements += this.gameStore.moveCount
       
       return userStats
     })
