@@ -248,7 +248,6 @@ onMounted(async () => {
 /* 英雄区域 */
 .hero-section {
   @apply py-12 px-4 sm:px-6 lg:px-8;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   background: linear-gradient(0deg, #00000000, #000000ff), linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   min-height: 15rem;
   max-height: 40vh;
@@ -257,7 +256,7 @@ onMounted(async () => {
 /* 白天模式优化 */
 @media (prefers-color-scheme: light) {
   .hero-section {
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    background: linear-gradient(0deg, #f3f4f6, #6f7072), linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   }
   
   .hero-title {
