@@ -8,6 +8,7 @@ import { computed, onMounted, watch, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useLibraryStore } from './stores/library'
 import { useSettingsStore } from './stores/settings'
+import { GameViewModel } from './viewModels/game/gameViewModel'
 import NotificationSystem from './components/NotificationSystem.vue'
 import "@/assets/ark.css"
 
@@ -17,6 +18,9 @@ const route = useRoute()
 // Store
 const libraryStore = useLibraryStore()
 const settingsStore = useSettingsStore()
+
+// 游戏视图管理器
+const gameViewModel = GameViewModel.getInstance()
 
 // 移动端侧栏状态
 const isMobileSidebarOpen = ref(false)
@@ -149,6 +153,12 @@ watch(() => settingsStore.settings.ui.theme, (newTheme) => {
   console.log('Store主题变化:', newTheme)
   applyTheme()
 }, { immediate: true })
+
+// 全局路由监听 - 处理游戏暂停逻辑
+watch(() => route.path, (newPath, oldPath) => {
+  console.log('路由变化:', { from: oldPath, to: newPath })
+  gameViewModel.handleRouteChange(newPath, oldPath)
+})
 </script>
 
 <template>

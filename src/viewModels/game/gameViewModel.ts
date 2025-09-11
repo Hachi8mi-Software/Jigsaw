@@ -267,11 +267,26 @@ export class GameViewModel {
    * 处理路由变化时的游戏暂停逻辑
    */
   handleRouteChange(newPath: string, oldPath: string | undefined): void {
+    console.log('🔄 路由变化检测:', { 
+      from: oldPath, 
+      to: newPath,
+      isGameActive: this.gameController.isGameActive,
+      isCompleted: this.gameController.isCompleted,
+      isPaused: this.gameController.isPaused
+    })
+    
     // 如果从游戏页面切换到其他页面，且游戏正在运行，则自动暂停
     if (oldPath && oldPath.startsWith('/game') && !newPath.startsWith('/game')) {
+      console.log('🎮 检测到离开游戏页面')
       if (this.gameController.isGameActive && !this.gameController.isCompleted && !this.gameController.isPaused) {
-        console.log('离开游戏页面，自动暂停游戏')
+        console.log('⏸️ 自动暂停游戏')
         this.gameController.pauseGame(true) // 标记为自动暂停
+      } else {
+        console.log('❌ 游戏状态不符合暂停条件:', {
+          isGameActive: this.gameController.isGameActive,
+          isCompleted: this.gameController.isCompleted,
+          isPaused: this.gameController.isPaused
+        })
       }
     }
   }

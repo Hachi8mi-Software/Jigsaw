@@ -111,8 +111,10 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const pauseGameState = (autoPause: boolean = false) => {
+    console.log('🔄 pauseGameState 被调用:', { autoPause })
     gameStateManager.pauseGame(autoPause)
     gameTimer.pauseTimer()
+    console.log('✅ 游戏状态已暂停，计时器已暂停')
   }
 
   const resumeGameState = () => {

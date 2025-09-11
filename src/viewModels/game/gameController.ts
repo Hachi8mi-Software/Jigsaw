@@ -103,10 +103,20 @@ export class GameController {
    * 暂停游戏
    */
   pauseGame(autoPause: boolean = false): void {
+    console.log('⏸️ pauseGame 被调用:', {
+      autoPause,
+      isGameActive: this.gameStore.isGameActive,
+      isCompleted: this.gameStore.isCompleted,
+      isPaused: this.gameStore.isPaused
+    })
+    
     if (this.gameStore.isGameActive && !this.gameStore.isCompleted) {
+      console.log('✅ 执行暂停操作')
       this.gameStore.pauseGameState(autoPause)
       this.saveGameState()
       console.log(autoPause ? '游戏已自动暂停' : '游戏已暂停')
+    } else {
+      console.log('❌ 暂停条件不满足')
     }
   }
 

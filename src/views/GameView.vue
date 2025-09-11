@@ -371,11 +371,6 @@ watch(() => route.params.puzzleId, (newId, oldId) => {
   }
 })
 
-// 监听路由路径变化，离开游戏页面时自动暂停
-watch(() => route.path, (newPath, oldPath) => {
-  gameViewModel.handleRouteChange(newPath, oldPath)
-})
-
 // 组件卸载时清理
 onUnmounted(() => {
   gameViewModel.handleComponentUnmount()
