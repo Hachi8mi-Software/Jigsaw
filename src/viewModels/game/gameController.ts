@@ -278,6 +278,11 @@ export class GameController {
 
     // 添加排行榜记录
     this.addLeaderboardRecord(puzzleData, gameTime)
+    
+    // 更新当前存档的统计信息
+    import('@/services/SaveManager').then(({ saveManager }) => {
+      saveManager.refreshSlotStats(saveManager.getCurrentSlotId())
+    })
   }
 
   /**

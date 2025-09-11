@@ -219,6 +219,69 @@ export class SaveManager {
   }
 
   /**
+   * 动态计算存档槽位的统计信息
+   */
+  calculateSlotStats(slotId: string): Partial<SaveSlot> {
+    try {
+      // 获取用户统计数据
+      const userStats = this.loadSlotUserStats(slotId)
+      const leaderboardRecords = this.loadSlotLeaderboardRecords(slotId)
+      const achievements = this.loadSlotAchievements(slotId)
+      const customPuzzles = this.loadSlotCustomPuzzles(slotId)
+
+      // 计算游戏次数（从排行榜记录统计）
+      const totalGamesPlayed = leaderboardRecords.length
+
+      // 计算总游戏时长（从排行榜记录统计）
+      const totalTimeSpent = leaderboardRecords.reduce((total, record) => total + record.completionTime, 0)
+
+      // 计算解锁成就数量
+      const achievementsUnlocked = achievements.filter(achievement => achievement.unlockedAt).length
+
+      // 计算自定义拼图数量
+      const customPuzzlesCount = customPuzzles.length
+
+      return {
+        totalGamesPlayed,
+        totalTimeSpent,
+        achievementsUnlocked,
+        customPuzzlesCount
+      }
+    } catch (error) {
+      console.error('计算存档统计信息失败:', error)
+      return {
+        totalGamesPlayed: 0,
+        totalTimeSpent: 0,
+        achievementsUnlocked: 0,
+        customPuzzlesCount: 0
+      }
+    }
+  }
+
+  /**
+   * 刷新所有存档槽位的统计信息
+   */
+  refreshAllSlotStats(): void {
+    this.saveSlots.forEach(slot => {
+      const stats = this.calculateSlotStats(slot.id)
+      Object.assign(slot, stats)
+    })
+    this.saveSaveSlotsInfo()
+  }
+
+  /**
+   * 刷新指定存档槽位的统计信息
+   */
+  refreshSlotStats(slotId: string): void {
+    const slot = this.saveSlots.find(slot => slot.id === slotId)
+    if (slot) {
+      const stats = this.calculateSlotStats(slotId)
+      Object.assign(slot, stats)
+      this.saveSaveSlotsInfo()
+    }
+  }
+
+  /**
    * 导出存档数据
    */
   exportSlotData(slotId: string): string | null {

@@ -51,6 +51,8 @@ export class SettingsViewModel {
 
   // 刷新存档数据
   private refreshSaveData() {
+    // 先刷新所有存档的统计信息
+    saveManager.refreshAllSlotStats()
     this.saveSlotsState.value = saveManager.getSaveSlots()
     this.currentSlotState.value = saveManager.getCurrentSlotId()
   }
@@ -201,6 +203,8 @@ export class SettingsViewModel {
 
     const slotId = saveManager.createNewSlot(name.trim())
     if (slotId) {
+      // 刷新新创建存档的统计信息
+      saveManager.refreshSlotStats(slotId)
       this.refreshSaveData() // 刷新数据
       this.notificationStore.success(`存档槽位 "${name}" 创建成功`)
       return true
@@ -213,6 +217,8 @@ export class SettingsViewModel {
   public async switchToSlot(slotId: string): Promise<boolean> {
     const success = saveManager.switchToSlot(slotId)
     if (success) {
+      // 刷新当前存档的统计信息
+      saveManager.refreshSlotStats(slotId)
       this.refreshSaveData() // 刷新数据
       this.notificationStore.success(`已切换到存档: ${saveManager.getCurrentSlot()?.name}`)
       // 重新加载设置
@@ -275,6 +281,8 @@ export class SettingsViewModel {
 
     const newSlotId = saveManager.copySlot(slotId, newName.trim())
     if (newSlotId) {
+      // 刷新新复制存档的统计信息
+      saveManager.refreshSlotStats(newSlotId)
       this.refreshSaveData() // 刷新数据
       this.notificationStore.success(`存档复制成功: "${newName}"`)
       return true
