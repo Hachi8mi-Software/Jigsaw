@@ -64,6 +64,13 @@
         <div class="completion-content">
           <div class="completion-icon">🎉</div>
           <h2>恭喜完成拼图！</h2>
+          
+          <!-- 自动完成提示 -->
+          <div v-if="isAutoCompleted" class="auto-completed-tip">
+            <span class="tip-icon">🤖</span>
+            <span class="tip-text">此记录通过自动完成功能获得</span>
+          </div>
+          
           <div class="completion-stats">
             <div class="completion-stat">
               <span class="stat-label">完成时间</span>
@@ -216,6 +223,7 @@ const isGameActive = computed(() => gameViewModel.isGameActive)
 const isCompleted = computed(() => gameViewModel.isCompleted)
 const isPaused = computed(() => gameViewModel.isPaused)
 const isAutoPaused = computed(() => gameViewModel.isAutoPaused)
+const isAutoCompleted = computed(() => gameViewModel.isAutoCompleted)
 const completionPercentage = computed(() => gameViewModel.completionPercentage)
 const elapsedTime = computed(() => gameViewModel.elapsedTime)
 const moveCount = computed(() => gameViewModel.moveCount)
@@ -514,6 +522,27 @@ onUnmounted(() => {
 .completion-content h2 {
   @apply text-2xl font-bold mb-6;
   color: var(--settings-text-primary);
+}
+
+.auto-completed-tip {
+  @apply flex items-center justify-center mb-4 p-3 rounded-lg;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+}
+
+[data-theme="dark"] .auto-completed-tip {
+  background-color: #451a03;
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+}
+
+.tip-icon {
+  @apply text-lg mr-2;
+}
+
+.tip-text {
+  @apply text-sm font-medium;
 }
 
 .completion-stats {

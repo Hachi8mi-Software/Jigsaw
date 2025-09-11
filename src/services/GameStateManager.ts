@@ -13,6 +13,7 @@ export class GameStateManager {
   private isPaused = ref(false)
   private isAutoPaused = ref(false)
   private isRestarting = ref(true)
+  private isAutoCompleted = ref(false) // 添加自动完成标志
   private gameSessionId = ref<string | null>(null)
   private startTime = ref<Date | null>(null)
   private endTime = ref<Date | null>(null)
@@ -41,6 +42,7 @@ export class GameStateManager {
     this.isGameActive.value = true
     this.isPaused.value = false
     this.isAutoPaused.value = false
+    this.isAutoCompleted.value = false // 重置自动完成标志
     this.isRestarting.value = false
     this.gameSessionId.value = data.sessionId
     this.moveCount.value = 0
@@ -57,6 +59,7 @@ export class GameStateManager {
     moveCount: number
     sessionId: string
     isPaused?: boolean
+    isAutoCompleted?: boolean
   }): void {
     this.currentPuzzle.value = data.puzzleData
     this.startTime.value = data.startTime
@@ -66,6 +69,7 @@ export class GameStateManager {
     this.isGameActive.value = !data.endTime
     this.isPaused.value = data.isPaused || false
     this.isAutoPaused.value = false
+    this.isAutoCompleted.value = data.isAutoCompleted || false
     this.isRestarting.value = false
     this.gameSessionId.value = data.sessionId
   }
@@ -91,12 +95,20 @@ export class GameStateManager {
   /**
    * 完成游戏
    */
-  completeGame(completionTime: Date): void {
+  completeGame(completionTime: Date, isAutoCompleted: boolean = false): void {
     this.endTime.value = completionTime
     this.isCompleted.value = true
     this.isGameActive.value = false
     this.isPaused.value = false
     this.isAutoPaused.value = false
+    this.isAutoCompleted.value = isAutoCompleted
+  }
+
+  /**
+   * 设置自动完成状态
+   */
+  setAutoCompleted(isAutoCompleted: boolean): void {
+    this.isAutoCompleted.value = isAutoCompleted
   }
 
   /**
@@ -111,6 +123,7 @@ export class GameStateManager {
     this.isGameActive.value = false
     this.isPaused.value = false
     this.isAutoPaused.value = false
+    this.isAutoCompleted.value = false
     this.gameSessionId.value = null
     this.isRestarting.value = true
   }
@@ -155,6 +168,10 @@ export class GameStateManager {
 
   get isAutoPausedValue() {
     return this.isAutoPaused.value
+  }
+
+  get isAutoCompletedValue() {
+    return this.isAutoCompleted.value
   }
 
   get isRestartingValue() {

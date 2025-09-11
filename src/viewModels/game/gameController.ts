@@ -232,8 +232,9 @@ export class GameController {
   private completeGame(): void {
     if (!this.gameStore.isCompleted && this.gameStore.currentPuzzle) {
       const endTime = new Date()
+      const isAutoCompleted = this.gameStore.isAutoCompleted
       
-      this.gameStore.completeGameState(endTime)
+      this.gameStore.completeGameState(endTime, isAutoCompleted)
       
       // 更新用户统计
       if (this.gameStore.startTime && endTime) {
@@ -278,7 +279,8 @@ export class GameController {
       puzzleId: puzzleData.id,
       completionTime: gameTime,
       moveCount: this.gameStore.moveCount,
-      completedAt: Date.now()
+      completedAt: Date.now(),
+      isAutoCompleted: this.gameStore.isAutoCompleted
     }
 
     this.libraryStore.addLeaderboardRecord(leaderboardEntry)
@@ -415,6 +417,10 @@ export class GameController {
 
   get isAutoPaused() {
     return this.gameStore.isAutoPaused
+  }
+
+  get isAutoCompleted() {
+    return this.gameStore.isAutoCompleted
   }
 
   get elapsedTime() {

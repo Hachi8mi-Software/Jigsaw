@@ -246,6 +246,9 @@ export class PuzzleBoardViewModel {
   autoSolve() {
     if (!this.puzzleData) return
     
+    // 设置自动完成标志
+    this.gameStore.setAutoCompleted(true)
+    
     this.pieces.forEach((piece: PieceStatus, index: number) => {
       // 获取实际的网格位置
       let correctX = 0

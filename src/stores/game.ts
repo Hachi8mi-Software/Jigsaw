@@ -120,8 +120,8 @@ export const useGameStore = defineStore('game', () => {
     gameTimer.resumeTimer()
   }
 
-  const completeGameState = (completionTime: Date) => {
-    gameStateManager.completeGame(completionTime)
+  const completeGameState = (completionTime: Date, isAutoCompleted: boolean = false) => {
+    gameStateManager.completeGame(completionTime, isAutoCompleted)
     gameTimer.setEndTime(completionTime)
   }
 
@@ -135,6 +135,10 @@ export const useGameStore = defineStore('game', () => {
   const stopCurrentPuzzle = () => {
     // 停止当前拼图的计时（退出拼图时调用）
     gameTimer.stopCurrentPuzzle()
+  }
+
+  const setAutoCompleted = (isAutoCompleted: boolean) => {
+    gameStateManager.setAutoCompleted(isAutoCompleted)
   }
 
   // 拼图块管理方法
@@ -231,7 +235,8 @@ export const useGameStore = defineStore('game', () => {
     const isCompleted = gameCompletionChecker.checkGameCompletion()
     if (isCompleted) {
       const completionTime = new Date()
-      gameStateManager.completeGame(completionTime)
+      const isAutoCompleted = gameStateManager.isAutoCompletedValue
+      gameStateManager.completeGame(completionTime, isAutoCompleted)
       gameTimer.setEndTime(completionTime)
       console.log('🎉 游戏完成检测到，停止计时器')
     }
@@ -343,6 +348,7 @@ export const useGameStore = defineStore('game', () => {
     isGameActive: computed(() => gameStateManager.isGameActiveValue),
     isPaused: computed(() => gameStateManager.isPausedValue),
     isAutoPaused: computed(() => gameStateManager.isAutoPausedValue),
+    isAutoCompleted: computed(() => gameStateManager.isAutoCompletedValue),
     gameSessionId: computed(() => gameStateManager.gameSessionIdValue),
     userStats: computed(() => gameStateManager.userStatsValue),
     isRestarting: computed(() => gameStateManager.isRestartingValue),
@@ -412,6 +418,7 @@ export const useGameStore = defineStore('game', () => {
 
     // 拼图控制
     stopCurrentPuzzle,
+    setAutoCompleted,
 
     // 其他方法
     generateInitialPieces,

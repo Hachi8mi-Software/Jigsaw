@@ -136,4 +136,5 @@ export interface LeaderboardEntry {
   completionTime: number
   moveCount: number
   completedAt: DateValue
+  isAutoCompleted?: boolean // 是否为自动完成
 }

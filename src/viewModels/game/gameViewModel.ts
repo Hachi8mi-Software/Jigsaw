@@ -338,6 +338,10 @@ export class GameViewModel {
     return this.gameController.isAutoPaused
   }
 
+  get isAutoCompleted() {
+    return this.gameController.isAutoCompleted
+  }
+
   get elapsedTime() {
     return this.gameController.elapsedTime
   }

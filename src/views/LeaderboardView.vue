@@ -107,7 +107,12 @@
                   </span>
                 </div>
                 <div class="record-info">
-                  <div class="completion-time">{{ formatTime(record.completionTime) }}</div>
+                  <div class="completion-time">
+                    {{ formatTime(record.completionTime) }}
+                    <span v-if="record.isAutoCompleted" class="auto-completed-badge" title="自动完成">
+                      🤖
+                    </span>
+                  </div>
                   <div class="record-meta">
                     <span class="move-count">{{ record.moveCount }} 步</span>
                     <span class="completed-date">{{ formatDate(record.completedAt) }}</span>
@@ -140,7 +145,10 @@
               class="detailed-record-item"
             >
               <div class="detailed-rank">{{ index + 1 }}</div>
-              <div class="detailed-time">{{ formatTime(record.completionTime) }}</div>
+              <div class="detailed-time">
+                {{ formatTime(record.completionTime) }}
+                <span v-if="record.isAutoCompleted" class="auto-completed-badge" title="自动完成">🤖</span>
+              </div>
               <div class="detailed-moves">{{ record.moveCount }} 步</div>
               <div class="detailed-date">{{ formatDate(record.completedAt) }}</div>
             </div>
@@ -567,6 +575,11 @@ watch(gameLeaderboards, () => {
 .completion-time {
   @apply text-lg font-semibold;
   color: var(--settings-text-primary);
+}
+
+.auto-completed-badge {
+  @apply ml-2 text-sm;
+  opacity: 0.7;
 }
 
 .record-meta {
