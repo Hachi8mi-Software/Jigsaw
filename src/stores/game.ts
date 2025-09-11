@@ -340,12 +340,20 @@ export const useGameStore = defineStore('game', () => {
       return false
     }
     
+    console.log('🔄 执行撤销操作:', {
+      operationType: operation.type,
+      description: operation.description,
+      timestamp: operation.timestamp
+    })
+    
     // 恢复到操作前状态
     pieceManager.restoreFromData(operation.beforeState)
     gameCompletionChecker.updatePieces(pieceManager.piecesValue)
     
     // 增加步数（因为撤销了一个操作）
     gameStateManager.incrementMoveCount()
+    
+    console.log('✅ 撤销操作完成，拼图块位置已还原')
     
     return true
   }
@@ -417,6 +425,11 @@ export const useGameStore = defineStore('game', () => {
     )
     operationHistory.addOperation(operation)
     operationBeforeState = null // 清空临时状态
+  }
+
+  const cancelRecordingOperation = (): void => {
+    operationBeforeState = null // 清空临时状态，取消操作记录
+    console.log('🚫 取消操作记录')
   }
 
   const resetPuzzle = () => {
@@ -545,6 +558,7 @@ export const useGameStore = defineStore('game', () => {
     clearOperationHistory,
     startRecordingOperation,
     recordPlaceOperation,
-    recordSwapOperation
+    recordSwapOperation,
+    cancelRecordingOperation
   }
 })

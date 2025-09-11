@@ -124,7 +124,7 @@ export class OperationHistoryManager {
     afterState: PieceStatus[],
     description: string
   ): Operation {
-    return {
+    const operation = {
       id: this.generateOperationId(),
       type,
       timestamp: new Date(),
@@ -132,6 +132,18 @@ export class OperationHistoryManager {
       afterState: this.deepClonePieceStatus(afterState),
       description
     }
+    
+    // 添加调试信息
+    console.log('📝 创建操作记录:', {
+      type: operation.type,
+      description: operation.description,
+      beforeStatePieces: beforeState.length,
+      afterStatePieces: afterState.length,
+      unplacedPiecesBefore: beforeState.filter(p => !p.isPlaced).length,
+      unplacedPiecesAfter: afterState.filter(p => !p.isPlaced).length
+    })
+    
+    return operation
   }
 
   /**
@@ -141,9 +153,16 @@ export class OperationHistoryManager {
   private deepClonePieceStatus(pieces: PieceStatus[]): PieceStatus[] {
     return pieces.map(piece => ({
       ...piece,
+      // 完整复制所有位置相关属性
       x: piece.x,
       y: piece.y,
-      gridPosition: piece.gridPosition
+      rotation: piece.rotation,
+      flipped: piece.flipped,
+      isPlaced: piece.isPlaced,
+      isCorrect: piece.isCorrect,
+      gridPosition: piece.gridPosition,
+      originalIndex: piece.originalIndex,
+      id: piece.id
     }))
   }
 

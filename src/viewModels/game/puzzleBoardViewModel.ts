@@ -303,6 +303,9 @@ export class PuzzleBoardViewModel {
     const piece = this.gameStore.getPuzzleBoardPiece(index)
     if (!piece) return
     
+    // 在拖拽开始时记录操作前状态（此时拼图块还在原始位置）
+    this.gameStore.startRecordingOperation()
+    
     // 获取拼图块的实际显示位置
     let actualX = piece.x
     let actualY = piece.y
@@ -411,6 +414,9 @@ export class PuzzleBoardViewModel {
     const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece) return
     
+    // 取消操作记录，因为这不是一个有效的操作
+    this.gameStore.cancelRecordingOperation()
+    
     if (piece.isPlaced) {
       this.resetPlacedPiecePosition()
     } else {
@@ -422,6 +428,9 @@ export class PuzzleBoardViewModel {
   private handleInvalidGridDrop() {
     const piece = this.gameStore.getPuzzleBoardPiece(this.draggingPieceIndex)
     if (!piece) return
+    
+    // 取消操作记录，因为这不是一个有效的操作
+    this.gameStore.cancelRecordingOperation()
     
     if (piece.isPlaced) {
       this.resetPlacedPiecePosition()
@@ -469,9 +478,7 @@ export class PuzzleBoardViewModel {
       currentFlipped: piece.flipped || false
     })
     
-    // 开始记录操作前状态
-    this.gameStore.startRecordingOperation()
-    
+    // 操作前状态已在 startDrag 中记录，这里直接更新位置
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
     // 不传入isCorrect，让setPuzzleBoardPiecePlaced自己计算（会考虑最新的旋转和翻转状态）
     this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, undefined)
