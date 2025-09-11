@@ -469,12 +469,18 @@ export class PuzzleBoardViewModel {
       currentFlipped: piece.flipped || false
     })
     
+    // 开始记录操作前状态
+    this.gameStore.startRecordingOperation()
+    
     this.gameStore.updatePiecePosition(this.draggingPieceIndex, newX, newY)
     // 不传入isCorrect，让setPuzzleBoardPiecePlaced自己计算（会考虑最新的旋转和翻转状态）
     this.gameStore.setPuzzleBoardPiecePlaced(this.draggingPieceIndex, true, gridIndex, undefined)
     
     // 播放拼图块放置音效
     audioUtils.playPiecePlaced()
+    
+    // 记录操作历史（在增加步数之前）
+    this.gameStore.recordPlaceOperation(this.draggingPieceIndex, gridIndex)
     
     // 增加步数
     this.gameStore.incrementMoveCount()
@@ -499,6 +505,9 @@ export class PuzzleBoardViewModel {
 
     const occupiedPiece = this.gameStore.getPuzzleBoardPiece(occupiedPieceIndex)
     if (!occupiedPiece) return
+
+    // 开始记录操作前状态
+    this.gameStore.startRecordingOperation()
 
     // 如果拖拽的拼图块还没有放置，先将其放置到目标位置
     if (!draggingPiece.isPlaced) {
@@ -567,6 +576,9 @@ export class PuzzleBoardViewModel {
 
     // 播放拼图块放置音效
     audioUtils.playPiecePlaced()
+    
+    // 记录操作历史（在增加步数之前）
+    this.gameStore.recordSwapOperation(this.draggingPieceIndex, occupiedPieceIndex)
     
     // 增加步数
     this.gameStore.incrementMoveCount()

@@ -4,13 +4,14 @@
  */
 
 import { defineStore } from 'pinia'
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import type { PuzzleData, PiecePosition, PieceStatus } from '../types'
 import { GameTimer } from '../services/GameTimer'
 import { PieceManager } from '../services/PieceManager'
 import { GameStateManager } from '../services/GameStateManager'
 import { GameCompletionChecker } from '../services/GameCompletionChecker'
 import { GamePersistence } from '../services/GamePersistence'
+import { OperationHistoryManager, type Operation } from '../services/OperationHistoryManager'
 import { calculatePuzzleDifficulty } from '../utils/difficultyUtils'
 
 export const useGameStore = defineStore('game', () => {
@@ -18,8 +19,9 @@ export const useGameStore = defineStore('game', () => {
   const gameTimer = new GameTimer()
   const pieceManager = new PieceManager()
   const gameStateManager = new GameStateManager()
-  const gameCompletionChecker = new GameCompletionChecker([])
+  const gameCompletionChecker = new GameCompletionChecker()
   const gamePersistence = new GamePersistence()
+  const operationHistory = reactive(new OperationHistoryManager())
 
   // 计算属性
   const totalPieces = computed(() => pieceManager.totalPieces)
@@ -188,8 +190,21 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const swapPuzzleBoardPieces = (pieceIndex1: number, pieceIndex2: number): void => {
+    // 记录操作前状态
+    const beforeState = pieceManager.getSnapshot()
+    
     pieceManager.swapPieces(pieceIndex1, pieceIndex2)
     gameCompletionChecker.updatePieces(pieceManager.piecesValue)
+    
+    // 记录操作后状态并添加到历史记录
+    const afterState = pieceManager.getSnapshot()
+    const operation = operationHistory.createOperation(
+      'swap',
+      beforeState,
+      afterState,
+      `交换拼图块 ${pieceIndex1} 和 ${pieceIndex2}`
+    )
+    operationHistory.addOperation(operation)
   }
 
   const resetAllPuzzleBoardPieceStates = () => {
@@ -318,6 +333,102 @@ export const useGameStore = defineStore('game', () => {
     gameStateManager.incrementMoveCount()
   }
 
+  // 撤销和重做相关方法
+  const undoLastOperation = (): boolean => {
+    const operation = operationHistory.undo()
+    if (!operation) {
+      return false
+    }
+    
+    // 恢复到操作前状态
+    pieceManager.restoreFromData(operation.beforeState)
+    gameCompletionChecker.updatePieces(pieceManager.piecesValue)
+    
+    // 减少步数（因为撤销了一个操作）
+    if (gameStateManager.moveCountValue > 0) {
+      gameStateManager.decrementMoveCount()
+    }
+    
+    return true
+  }
+
+  const redoLastOperation = (): boolean => {
+    const operation = operationHistory.redo()
+    if (!operation) {
+      return false
+    }
+    
+    // 恢复到操作后状态
+    pieceManager.restoreFromData(operation.afterState)
+    gameCompletionChecker.updatePieces(pieceManager.piecesValue)
+    
+    // 增加步数（因为重做了一个操作）
+    gameStateManager.incrementMoveCount()
+    
+    return true
+  }
+
+  const canUndo = (): boolean => {
+    return operationHistory.canUndo()
+  }
+
+  const canRedo = (): boolean => {
+    return operationHistory.canRedo()
+  }
+
+  const clearOperationHistory = (): void => {
+    operationHistory.clear()
+  }
+
+  // 用于记录操作前状态的临时变量
+  let operationBeforeState: PieceStatus[] | null = null
+
+  const startRecordingOperation = (): void => {
+    operationBeforeState = pieceManager.getSnapshot()
+  }
+
+  const recordPlaceOperation = (pieceIndex: number, gridIndex: number): void => {
+    if (!operationBeforeState) {
+      console.warn('操作前状态未记录，无法创建操作历史')
+      return
+    }
+    
+    const afterState = pieceManager.getSnapshot()
+    const operation = operationHistory.createOperation(
+      'place',
+      operationBeforeState,
+      afterState,
+      `放置拼图块 ${pieceIndex} 到网格位置 ${gridIndex}`
+    )
+    operationHistory.addOperation(operation)
+    operationBeforeState = null // 清空临时状态
+  }
+
+  const recordSwapOperation = (pieceIndex1: number, pieceIndex2: number): void => {
+    if (!operationBeforeState) {
+      console.warn('操作前状态未记录，无法创建操作历史')
+      return
+    }
+    
+    const afterState = pieceManager.getSnapshot()
+    const operation = operationHistory.createOperation(
+      'swap',
+      operationBeforeState,
+      afterState,
+      `交换拼图块 ${pieceIndex1} 和 ${pieceIndex2}`
+    )
+    operationHistory.addOperation(operation)
+    operationBeforeState = null // 清空临时状态
+  }
+
+  const resetPuzzle = () => {
+    gameStateManager.resetGameState()
+    clearOperationHistory()
+    if (gameStateManager.currentPuzzleValue) {
+      generateInitialPieces(gameStateManager.currentPuzzleValue)
+    }
+  }
+
   const setRestarting = (isRestarting: boolean) => {
     gameStateManager.setRestarting(isRestarting)
   }
@@ -332,6 +443,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const shufflePieces = (pieces: PieceStatus[]): PieceStatus[] => {
+    clearOperationHistory()
     pieceManager.restoreFromData(pieces)
     pieceManager.shufflePositions()
     gameCompletionChecker.updatePieces(pieceManager.piecesValue)
@@ -424,6 +536,17 @@ export const useGameStore = defineStore('game', () => {
 
     // 其他方法
     generateInitialPieces,
-    shufflePieces
+    shufflePieces,
+    resetPuzzle,
+
+    // 撤销和重做
+    undoLastOperation,
+    redoLastOperation,
+    canUndo,
+    canRedo,
+    clearOperationHistory,
+    startRecordingOperation,
+    recordPlaceOperation,
+    recordSwapOperation
   }
 })

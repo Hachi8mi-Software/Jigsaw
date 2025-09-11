@@ -205,6 +205,12 @@
         <button @click="shufflePieces" class="control-btn">
           🔀 打乱
         </button>
+        <button @click="undoLastMove" class="control-btn" :disabled="!canUndo">
+          ↶ 撤销
+        </button>
+        <button @click="redoLastMove" class="control-btn" :disabled="!canRedo">
+          ↷ 重做
+        </button>
         <button @click="resetPuzzle" class="control-btn">
           🔄 重置
         </button>
@@ -234,6 +240,14 @@
               <button @click="handleShufflePieces" class="mobile-control-btn">
                 <span class="control-icon">🔀</span>
                 <span class="control-text">打乱</span>
+              </button>
+              <button @click="handleUndoLastMove" class="mobile-control-btn" :disabled="!canUndo">
+                <span class="control-icon">↶</span>
+                <span class="control-text">撤销</span>
+              </button>
+              <button @click="handleRedoLastMove" class="mobile-control-btn" :disabled="!canRedo">
+                <span class="control-icon">↷</span>
+                <span class="control-text">重做</span>
               </button>
               <button @click="handleResetPuzzle" class="mobile-control-btn">
                 <span class="control-icon">🔄</span>
@@ -358,6 +372,16 @@ const handleToggleHint = () => {
   closeMobileControls()
 }
 
+const handleUndoLastMove = () => {
+  undoLastMove()
+  closeMobileControls()
+}
+
+const handleRedoLastMove = () => {
+  redoLastMove()
+  closeMobileControls()
+}
+
 // 创建ViewModel实例
 // 视图状态
 const viewModel = ref<PuzzleBoardViewModel>(new PuzzleBoardViewModel(props.puzzleData))
@@ -414,6 +438,25 @@ const toggleHint = () => {
 const closeHint = () => {
   showHint.value = false
 }
+
+// 撤销和重做相关方法
+const undoLastMove = () => {
+  const success = gameStore.undoLastOperation()
+  if (!success) {
+    console.log('没有可撤销的操作')
+  }
+}
+
+const redoLastMove = () => {
+  const success = gameStore.redoLastOperation()
+  if (!success) {
+    console.log('没有可重做的操作')
+  }
+}
+
+// 计算属性：检查是否可以撤销和重做
+const canUndo = computed(() => gameStore.canUndo())
+const canRedo = computed(() => gameStore.canRedo())
 
 // 缓存网格矩形，避免频繁DOM查询
 let cachedGridRect: DOMRect | null = null
@@ -977,6 +1020,19 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
   @apply text-sm font-medium;
 }
 
+.mobile-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 3px 12px rgba(250, 233, 37, 0.2);
+}
+
+.mobile-control-btn:disabled:hover {
+  transform: none;
+  box-shadow: 0 3px 12px rgba(250, 233, 37, 0.2);
+  background: #fae925;
+}
+
 .control-btn {
   @apply px-6 py-2 rounded-xl transition-all duration-300 font-medium;
   background: #fae925;
@@ -1013,6 +1069,24 @@ watch(() => gameStore.pieces, (newPieces, oldPieces) => {
 .control-btn:hover::before {
   opacity: 0.8;
   background-size: 35px 35px, 45px 45px, 40px 40px;
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.control-btn:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #d4c41a;
+  background: #fae925;
+}
+
+.control-btn:disabled::before {
+  opacity: 0.3;
 }
 
 .hint-btn {

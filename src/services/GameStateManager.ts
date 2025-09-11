@@ -136,6 +136,15 @@ export class GameStateManager {
   }
 
   /**
+   * 减少移动次数
+   */
+  decrementMoveCount(): void {
+    if (this.moveCount.value > 0) {
+      this.moveCount.value--
+    }
+  }
+
+  /**
    * 设置重启状态
    */
   setRestarting(isRestarting: boolean): void {
