@@ -90,7 +90,7 @@
               <label class="setting-label">
                 主题色彩
               </label>
-              <select v-model="viewModel.uiSettings.value.theme" class="setting-select">
+              <select v-model="viewModel.uiSettings.value.theme" class="setting-select ark">
                 <option value="light">浅色主题</option>
                 <option value="dark">深色主题</option>
                 <option value="auto">跟随系统</option>
@@ -101,7 +101,7 @@
               <label class="setting-label">
                 界面语言
               </label>
-              <select v-model="viewModel.uiSettings.value.language" class="setting-select">
+              <select v-model="viewModel.uiSettings.value.language" class="setting-select ark">
                 <option value="zh-CN">简体中文</option>
                 <option value="en-US">English</option>
               </select>
@@ -111,7 +111,7 @@
               <label class="setting-label">
                 动画效果
               </label>
-              <select v-model="viewModel.uiSettings.value.animations" class="setting-select">
+              <select v-model="viewModel.uiSettings.value.animations" class="setting-select ark">
                 <option value="full">完整动画</option>
                 <option value="reduced">减少动画</option>
                 <option value="none">禁用动画</option>
@@ -235,7 +235,7 @@
               <label class="setting-label">
                 渲染质量
               </label>
-              <select v-model="viewModel.performanceSettings.value.renderQuality" class="setting-select">
+              <select v-model="viewModel.performanceSettings.value.renderQuality" class="setting-select ark">
                 <option value="high">高质量</option>
                 <option value="medium">中等质量</option>
                 <option value="low">低质量</option>
@@ -246,7 +246,7 @@
               <label class="setting-label">
                 最大拼图块数
               </label>
-              <select v-model.number="viewModel.performanceSettings.value.maxPieces" class="setting-select">
+              <select v-model.number="viewModel.performanceSettings.value.maxPieces" class="setting-select ark">
                 <option :value="100">100 块</option>
                 <option :value="500">500 块</option>
                 <option :value="1000">1000 块</option>
@@ -650,15 +650,8 @@ const copySlot = async () => {
 }
 
 .setting-select {
-  @apply w-full max-w-xs px-3 py-2 border rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
-  background-color: var(--settings-card-bg);
+  @apply w-full;
   color: var(--settings-text-primary);
-  border-color: var(--settings-border);
-}
-
-.setting-select:focus {
-  border-color: var(--settings-accent);
 }
 
 .setting-select option {
