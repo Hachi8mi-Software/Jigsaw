@@ -869,19 +869,29 @@ const toggleFloatingToolbar = () => {
 }
 
 
-const exportPuzzle = () => {
-  const puzzleJson = editorStore.exportPuzzle()
-  if (puzzleJson) {
-    // 创建下载链接
-    const blob = new Blob([puzzleJson], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${puzzleName.value || '我的拼图'}.puzzle`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+const exportPuzzle = async () => {
+  try {
+    const puzzleJson = await editorStore.exportPuzzle()
+    if (puzzleJson) {
+      // 创建下载链接
+      const blob = new Blob([puzzleJson], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${puzzleName.value || '我的拼图'}.puzzle`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      // 显示成功通知
+      notificationStore.success('导出成功！', `拼图已导出到 ${puzzleName.value || '我的拼图'}.puzzle`)
+    } else {
+      notificationStore.error('导出失败', '无法生成拼图数据')
+    }
+  } catch (error) {
+    console.error('导出拼图失败:', error)
+    notificationStore.error('导出失败', '请重试')
   }
 }
 

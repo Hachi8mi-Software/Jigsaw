@@ -239,56 +239,101 @@ export const useEditorStore = defineStore('editor', () => {
     )
   }
 
-  const exportPuzzle = (): string | null => {
+  const exportPuzzle = async (): Promise<string | null> => {
     if (!canExport.value) return null
     
-    const puzzleData: PuzzleData = {
-      id: `puzzle_${Date.now()}`,
-      name: puzzleName.value,
-      imageUrl: `fs://${currentImageFilename.value!}`,
-      gridConfig: gridConfig.value,
-      boundaries: boundaries.value,
-      createdAt: new Date(),
-      difficulty: puzzleDifficulty.value
-    }
+    try {
+      // 获取当前图片的base64数据
+      let imageDataUrl = currentImage.value
+      
+      // 如果当前图片是Blob URL，需要转换为base64
+      if (imageDataUrl && imageDataUrl.startsWith('blob:')) {
+        imageDataUrl = await blobToDataURL(imageDataUrl)
+      }
+      
+      const puzzleData: PuzzleData = {
+        id: `puzzle_${Date.now()}`,
+        name: puzzleName.value,
+        imageUrl: imageDataUrl || '',
+        gridConfig: gridConfig.value,
+        boundaries: boundaries.value,
+        createdAt: new Date(),
+        difficulty: puzzleDifficulty.value
+      }
 
-    return editorManager.exportPuzzleData(puzzleData)
+      return editorManager.exportPuzzleData(puzzleData)
+    } catch (error) {
+      console.error('导出拼图失败:', error)
+      return null
+    }
   }
 
   const importPuzzle = async (jsonString: string): Promise<boolean> => {
     const puzzleData = editorManager.importPuzzleData(jsonString)
     if (puzzleData) {
-      // 如果导入的数据包含DataURI，需要迁移到OPFS
-      let imageFilename = puzzleData.imageUrl
-      
-      if (puzzleData.imageUrl.startsWith('data:')) {
-        try {
-          console.log('检测到DataURI，正在迁移到OPFS...')
-          imageFilename = await imageStorage.migrateFromDataURI(puzzleData.imageUrl)
-          console.log('DataURI迁移成功:', imageFilename)
-        } catch (error) {
-          console.error('DataURI迁移失败:', error)
+      try {
+        // 处理图片数据
+        if (puzzleData.imageUrl.startsWith('data:')) {
+          // 直接使用DataURI
+          currentImage.value = puzzleData.imageUrl
+          currentImageFilename.value = null // 不需要文件名
+        } else if (puzzleData.imageUrl.startsWith('fs://')) {
+          // 兼容旧的fs://格式，尝试从OPFS读取
+          const filename = puzzleData.imageUrl.replace('fs://', '')
+          try {
+            const blobURL = await imageStorage.getImageURL(filename)
+            currentImage.value = blobURL
+            currentImageFilename.value = filename
+          } catch (error) {
+            console.error('从OPFS读取图片失败:', error)
+            return false
+          }
+        } else {
+          console.error('不支持的图片URL格式:', puzzleData.imageUrl)
           return false
+        }
+        
+        gridConfig.value = puzzleData.gridConfig
+        boundaries.value = puzzleData.boundaries
+        puzzleName.value = puzzleData.name
+        isModified.value = false
+        return true
+      } catch (error) {
+        console.error('导入拼图失败:', error)
+        return false
+      }
+    }
+    return false
+  }
+
+  /**
+   * 将Blob URL转换为DataURL
+   */
+  const blobToDataURL = async (blobURL: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        canvas.width = img.width
+        canvas.height = img.height
+        
+        ctx?.drawImage(img, 0, 0)
+        
+        try {
+          const dataURL = canvas.toDataURL('image/jpeg', 0.9)
+          resolve(dataURL)
+        } catch (error) {
+          reject(error)
         }
       }
       
-      // 设置文件名和获取Blob URL
-      currentImageFilename.value = imageFilename
-      try {
-        const blobURL = await imageStorage.getImageURL(imageFilename)
-        currentImage.value = blobURL
-      } catch (error) {
-        console.error('获取图片URL失败:', error)
-        currentImage.value = null
-      }
-      
-      gridConfig.value = puzzleData.gridConfig
-      boundaries.value = puzzleData.boundaries
-      puzzleName.value = puzzleData.name
-      isModified.value = false
-      return true
-    }
-    return false
+      img.onerror = reject
+      img.src = blobURL
+    })
   }
 
   const clearEditor = async () => {
