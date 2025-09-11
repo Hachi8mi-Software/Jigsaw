@@ -38,6 +38,7 @@
   --theme-primary: #0b1820;
   --theme-background: #ffffff;
   line-height: normal;
+  appearance: none;
 }
 
 [data-theme="dark"] .ark {
@@ -140,20 +141,27 @@ select.ark {
   font-weight: 800;
 
   color: var(--theme-primary);
-  background-color: transparent;
+  background-color: transparent !important;
 
   border: 3px solid transparent;
   --border-length: 1rem;
-  background: linear-gradient(var(--theme-background), var(--theme-background)) padding-box,
-    linear-gradient(90deg,
-      var(--theme-primary) 0,
-      var(--theme-primary) var(--border-length),
-      transparent var(--border-length),
-      transparent calc(100% - var(--border-length)),
-      var(--theme-primary) calc(100% - var(--border-length)),
-      var(--theme-primary) 100%) border-box;
+  background: linear-gradient(135deg,
+        transparent 0,
+        transparent calc(100% - var(--border-length)),
+        var(--theme-primary) calc(100% - var(--border-length)),
+        var(--theme-primary) 100%) border-box,
+      linear-gradient(var(--theme-background), var(--theme-background)) padding-box,
+      linear-gradient(90deg,
+        var(--theme-primary) 0,
+        var(--theme-primary) var(--border-length),
+        transparent var(--border-length),
+        transparent calc(100% - var(--border-length)),
+        var(--theme-primary) calc(100% - var(--border-length)),
+        var(--theme-primary) 100%) border-box;
 
   outline: none;
+  border-radius: unset !important;
+  appearance: none;
 }
 
 .dash.ark {
