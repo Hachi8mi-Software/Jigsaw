@@ -5,6 +5,7 @@
 
 import { GridConfig } from '@/types'
 import { opfsImageManager, memoryImageStorage, OPFSImageManager, MemoryImageStorage } from './opfsImageManager'
+import { compressImage } from './imageUtils'
 
 export interface ImageStorageInterface {
   storeImage(file: File, filename?: string): Promise<string>
@@ -230,47 +231,7 @@ export class UnifiedImageStorage implements ImageStorageInterface {
     maxWidth?: number, 
     maxHeight?: number
   ): Promise<File> {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      const img = new Image()
-
-      img.onload = () => {
-        // 计算新的尺寸
-        let { width, height } = img
-        const maxW = maxWidth || width
-        const maxH = maxHeight || height
-
-        if (width > maxW || height > maxH) {
-          const ratio = Math.min(maxW / width, maxH / height)
-          width *= ratio
-          height *= ratio
-        }
-
-        // 设置画布尺寸
-        canvas.width = width
-        canvas.height = height
-
-        // 绘制图像
-        ctx?.drawImage(img, 0, 0, width, height)
-
-        // 转换为Blob
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: blob.type,
-              lastModified: Date.now()
-            })
-            resolve(compressedFile)
-          } else {
-            reject(new Error('图像压缩失败'))
-          }
-        }, file.type, quality)
-      }
-
-      img.onerror = reject
-      img.src = URL.createObjectURL(file)
-    })
+    return compressImage(file, quality, maxWidth, maxHeight)
   }
 
   async cropImage(file: File, gridConfig?: GridConfig, cropArea?: CropArea): Promise<File> {

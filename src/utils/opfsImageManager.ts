@@ -3,6 +3,8 @@
  * 使用浏览器的私有文件系统来存储图像数据，替代DataURI方式
  */
 
+import { compressImage } from "./imageUtils"
+
 export class OPFSImageManager {
   private static instance: OPFSImageManager
   private opfsRoot: FileSystemDirectoryHandle | null = null
@@ -46,6 +48,7 @@ export class OPFSImageManager {
    * 检查OPFS是否可用
    */
   async isOPFSAvailable(): Promise<boolean> {
+    return false;
     // 等待初始化完成
     while (!this.initialized) {
       await new Promise(resolve => setTimeout(resolve, 10))
@@ -315,13 +318,74 @@ export const opfsImageManager = OPFSImageManager.getInstance()
 export class MemoryImageStorage {
   private imageStore = new Map<string, File>()
   private urlCache = new Map<string, string>()
+  private localStorageKey = 'memoryImageStorage'
+
+  constructor() {
+    this.loadFromLocalStorage()
+  }
+
+  private loadFromLocalStorage(): void {
+    const storedFilenames = localStorage.getItem(this.localStorageKey)
+    if (storedFilenames) {
+      try {
+        const filenames: string[] = JSON.parse(storedFilenames)
+        for (const filename of filenames) {
+          const dataUrl = localStorage.getItem(`${this.localStorageKey}_${filename}`)
+          if (dataUrl) {
+            fetch(dataUrl)
+              .then(res => res.blob())
+              .then(blob => {
+                const file = new File([blob], filename, { type: blob.type })
+                this.imageStore.set(filename, file)
+              })
+              .catch(err => console.error('从LocalStorage加载图像失败:', err))
+          }
+        }
+      }
+      catch (error) {
+        console.error('解析LocalStorage数据失败:', error)
+      }
+    }
+  }
+
+  private saveToLocalStorage(): void {
+    const filenames = Array.from(this.imageStore.keys())
+    if (filenames.length === 0) {
+      localStorage.setItem(this.localStorageKey, JSON.stringify([]))
+      return
+    }
+
+    const promises = Array.from(this.imageStore.entries()).map(([filename, file]) => {
+      return new Promise<void>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const dataUrl = reader.result as string
+          localStorage.setItem(`${this.localStorageKey}_${filename}`, dataUrl)
+          resolve()
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+    })
+
+    Promise.all(promises).then(() => {
+      localStorage.setItem(this.localStorageKey, JSON.stringify(filenames))
+    }).catch(err => {
+      console.error('保存到LocalStorage时出错:', err)
+    })
+  }
 
   async storeImage(file: File, filename?: string): Promise<string> {
     if (!filename) {
-      filename = `memory_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+      if (file.name) {
+        filename = file.name
+      } else {
+        filename = `memory_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+      }
     }
-    
-    this.imageStore.set(filename, file)
+    const compressed = await compressImage(file, 0.6, 400, 300)
+    this.imageStore.set(filename, compressed)
+    this.saveToLocalStorage()
     return filename
   }
 
@@ -346,6 +410,7 @@ export class MemoryImageStorage {
       this.urlCache.delete(filename)
     }
     this.imageStore.delete(filename)
+    this.saveToLocalStorage()
   }
 
   async imageExists(filename: string): Promise<boolean> {
