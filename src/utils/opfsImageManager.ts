@@ -48,7 +48,6 @@ export class OPFSImageManager {
    * 检查OPFS是否可用
    */
   async isOPFSAvailable(): Promise<boolean> {
-    return false;
     // 等待初始化完成
     while (!this.initialized) {
       await new Promise(resolve => setTimeout(resolve, 10))
