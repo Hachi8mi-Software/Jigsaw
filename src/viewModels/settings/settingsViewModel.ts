@@ -12,6 +12,29 @@ export class SettingsViewModel {
   private saveSlotsState = ref<SaveSlot[]>([])
   private currentSlotState = ref<string>('default')
 
+  // 难度设置计算属性
+  public difficulty = computed({
+    get: () => this.settingsStore.settings.game.difficulty,
+    set: (value: 'easy' | 'medium' | 'hard') => {
+      this.settingsStore.settings.game.difficulty = value
+      // 根据难度自动设置旋转和数字显示
+      switch (value) {
+        case 'easy':
+          this.settingsStore.settings.game.showNumbers = true
+          this.settingsStore.settings.game.enableRotation = false
+          break
+        case 'medium':
+          this.settingsStore.settings.game.showNumbers = false
+          this.settingsStore.settings.game.enableRotation = false
+          break
+        case 'hard':
+          this.settingsStore.settings.game.showNumbers = false
+          this.settingsStore.settings.game.enableRotation = true
+          break
+      }
+    }
+  })
+  
   // 计算属性，绑定到View
   public gameSettings = computed({
     get: () => this.settingsStore.settings.game,

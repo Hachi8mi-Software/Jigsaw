@@ -39,26 +39,45 @@
             
             <div class="setting-item">
               <label class="setting-label">
-                <input 
-                  v-model="viewModel.gameSettings.value.enableRotation"
-                  type="checkbox"
-                  class="setting-checkbox"
-                />
-                启用拼图块旋转
+                游戏难度
               </label>
-              <p class="setting-description">允许旋转拼图块增加难度</p>
-            </div>
-            
-            <div class="setting-item">
-              <label class="setting-label">
-                <input 
-                  v-model="viewModel.gameSettings.value.showNumbers"
-                  type="checkbox"
-                  class="setting-checkbox"
-                />
-                显示数字提示
-              </label>
-              <p class="setting-description">在拼图块上显示数字标识帮助识别位置</p>
+              <div class="difficulty-buttons">
+                <button 
+                  @click="viewModel.difficulty.value = 'easy'"
+                  :class="['difficulty-btn', { active: viewModel.difficulty.value === 'easy' }]"
+                >
+                  <span class="btn-icon">🟢</span>
+                  <span class="btn-text">简单难度</span>
+                </button>
+                <button 
+                  @click="viewModel.difficulty.value = 'medium'"
+                  :class="['difficulty-btn', { active: viewModel.difficulty.value === 'medium' }]"
+                >
+                  <span class="btn-icon">🟡</span>
+                  <span class="btn-text">中等难度</span>
+                </button>
+                <button 
+                  @click="viewModel.difficulty.value = 'hard'"
+                  :class="['difficulty-btn', { active: viewModel.difficulty.value === 'hard' }]"
+                >
+                  <span class="btn-icon">🔴</span>
+                  <span class="btn-text">困难难度</span>
+                </button>
+              </div>
+              <div class="difficulty-description">
+                <p v-if="viewModel.difficulty.value === 'easy'" class="description-text">
+                  <span class="description-icon">💡</span>
+                  显示数字提示，拼图块不可旋转，适合新手玩家
+                </p>
+                <p v-else-if="viewModel.difficulty.value === 'medium'" class="description-text">
+                  <span class="description-icon">⚖️</span>
+                  不显示数字提示，拼图块不可旋转，平衡的挑战难度
+                </p>
+                <p v-else-if="viewModel.difficulty.value === 'hard'" class="description-text">
+                  <span class="description-icon">🔥</span>
+                  不显示数字提示，拼图块可旋转，最具挑战性的难度
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1086,6 +1105,96 @@ const copySlot = async () => {
   color: var(--settings-text-secondary);
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* 难度选择按钮样式 */
+.difficulty-buttons {
+  @apply flex gap-3 mb-4;
+}
+
+.difficulty-btn {
+  @apply flex-1 flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-200;
+  @apply border-2 border-transparent;
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+  cursor: pointer;
+  min-height: 60px;
+}
+
+.difficulty-btn:hover {
+  background-color: var(--settings-border);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.difficulty-btn.active {
+  background-color: var(--settings-accent);
+  color: #1f2937;
+  border-color: var(--settings-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.difficulty-btn.active:hover {
+  background-color: var(--settings-accent-hover);
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  @apply text-xl mr-2;
+}
+
+.btn-text {
+  @apply text-sm font-semibold;
+}
+
+/* 难度描述样式 */
+.difficulty-description {
+  @apply p-3 rounded-lg;
+  background-color: var(--settings-hover);
+  border: 1px solid var(--settings-border);
+}
+
+.description-text {
+  @apply flex items-center text-sm leading-relaxed;
+  color: var(--settings-text-primary);
+  margin: 0;
+}
+
+.description-icon {
+  @apply text-lg mr-2 flex-shrink-0;
+}
+
+/* 移动端难度按钮优化 */
+@media (max-width: 767px) {
+  .difficulty-buttons {
+    @apply flex-col gap-2;
+  }
+  
+  .difficulty-btn {
+    @apply flex-row px-3 py-2 min-h-0;
+  }
+  
+  .btn-icon {
+    @apply text-lg mr-2;
+  }
+  
+  .btn-text {
+    @apply text-xs;
+  }
+  
+  .difficulty-description {
+    @apply p-2;
+  }
+  
+  .description-text {
+    @apply text-xs;
+  }
+  
+  .description-icon {
+    @apply text-base mr-2;
+  }
 }
 
 </style>

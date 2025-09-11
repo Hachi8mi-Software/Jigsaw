@@ -8,6 +8,7 @@ export interface GameSettings {
   autoSnap: boolean
   enableRotation: boolean
   showNumbers: boolean
+  difficulty: 'easy' | 'medium' | 'hard'
 }
 
 export interface UiSettings {
@@ -39,8 +40,9 @@ const defaultSettings: AppSettings = {
     showBackground: true,
     showGrid: true,
     autoSnap: true,
-    enableRotation: true,
-    showNumbers: true
+    enableRotation: false,
+    showNumbers: true,
+    difficulty: 'easy'
   },
   ui: {
     theme: 'light',

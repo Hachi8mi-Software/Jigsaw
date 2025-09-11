@@ -408,8 +408,9 @@ export class SaveManager {
         showBackground: true,
         showGrid: true,
         autoSnap: true,
-        enableRotation: true,
-        showNumbers: true
+        enableRotation: false,
+        showNumbers: true,
+        difficulty: 'easy'
       },
       ui: {
         theme: 'light',
