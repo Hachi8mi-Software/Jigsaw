@@ -54,6 +54,16 @@ const checkMobile = () => {
   isMobile.value = window.innerWidth < 768
 }
 
+// 检测安卓设备
+const isAndroid = ref(false)
+
+// 检测设备类型
+const detectDevice = () => {
+  const userAgent = navigator.userAgent.toLowerCase()
+  isAndroid.value = userAgent.includes('android')
+  console.log('设备检测:', { isAndroid: isAndroid.value, userAgent })
+}
+
 // 方法
 const navigateTo = (path: string) => {
   router.push(path)
@@ -131,6 +141,9 @@ onMounted(() => {
   // 应用初始化
   console.log('拼图乐应用已启动')
   
+  // 检测设备类型
+  detectDevice()
+  
   // 确保素材库在应用启动时就被初始化
   libraryStore.initializeLibrary()
   
@@ -162,7 +175,7 @@ watch(() => route.path, (newPath, oldPath) => {
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" :class="{ 'android-device': isAndroid }">
     <!-- 移动端顶部栏 -->
     <div v-if="isMobile" class="mobile-header">
       <button @click="toggleMobileSidebar" class="mobile-menu-btn">
@@ -346,6 +359,8 @@ watch(() => route.path, (newPath, oldPath) => {
   right: 0;
   z-index: 1000;
   height: 60px;
+  /* 安卓端适配：确保header不会被状态栏遮挡 */
+  padding-top: env(safe-area-inset-top, 0);
 }
 
 .mobile-menu-btn {
@@ -387,6 +402,8 @@ watch(() => route.path, (newPath, oldPath) => {
 .sidebar.mobile-sidebar {
   @apply fixed top-0 left-0 h-full z-50 transform -translate-x-full transition-transform duration-300 ease-in-out;
   width: 280px;
+  /* 安卓端适配：确保侧栏不会被header遮挡 */
+  padding-top: calc(60px + env(safe-area-inset-top, 0));
 }
 
 .sidebar.mobile-sidebar-open {
@@ -395,6 +412,43 @@ watch(() => route.path, (newPath, oldPath) => {
 
 .main-content.mobile-main {
   @apply pt-16;
+  /* 安卓端适配：考虑状态栏高度 */
+  padding-top: calc(4rem + env(safe-area-inset-top, 0));
+}
+
+/* 安卓端特殊适配 */
+.android-device .mobile-header {
+  /* 安卓端：增加额外的顶部padding */
+  padding-top: calc(12px + env(safe-area-inset-top, 0));
+  min-height: calc(60px + env(safe-area-inset-top, 0));
+}
+
+.android-device .sidebar.mobile-sidebar {
+  /* 安卓端：确保侧栏不会被header遮挡 */
+  padding-top: calc(72px + env(safe-area-inset-top, 0));
+}
+
+.android-device .main-content.mobile-main {
+  /* 安卓端：确保主内容不会被header遮挡 */
+  padding-top: calc(4.5rem + env(safe-area-inset-top, 0));
+}
+
+/* 使用CSS特性检测的备用方案 */
+@supports (padding: max(0px)) {
+  .mobile-header {
+    /* 安卓端：使用max()确保最小padding */
+    padding-top: max(env(safe-area-inset-top, 0), 12px);
+  }
+  
+  .sidebar.mobile-sidebar {
+    /* 安卓端：动态计算侧栏顶部padding */
+    padding-top: max(calc(60px + env(safe-area-inset-top, 0)), 72px);
+  }
+  
+  .main-content.mobile-main {
+    /* 安卓端：动态计算主内容顶部padding */
+    padding-top: max(calc(4rem + env(safe-area-inset-top, 0)), 4.5rem);
+  }
 }
 
 /* 响应式断点 */
