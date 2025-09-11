@@ -274,6 +274,108 @@
           </div>
         </div>
 
+        <!-- 存档管理 -->
+        <div class="settings-section">
+          <h2 class="section-title">💾 存档管理</h2>
+          
+          <!-- 当前存档信息 -->
+          <div class="current-save-info">
+            <div class="current-save-header">
+              <h3>当前存档</h3>
+              <span class="current-save-name">{{ viewModel.currentSlot.value?.name || '默认存档' }}</span>
+            </div>
+            <div class="current-save-stats">
+              <div class="stat-item">
+                <span class="stat-label">游戏次数:</span>
+                <span class="stat-value">{{ viewModel.currentSlot.value?.totalGamesPlayed || 0 }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">游戏时长:</span>
+                <span class="stat-value">{{ formatTime(viewModel.currentSlot.value?.totalTimeSpent || 0) }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">解锁成就:</span>
+                <span class="stat-value">{{ viewModel.currentSlot.value?.achievementsUnlocked || 0 }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">自定义拼图:</span>
+                <span class="stat-value">{{ viewModel.currentSlot.value?.customPuzzlesCount || 0 }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 存档槽位列表 -->
+          <div class="save-slots-container">
+            <div class="save-slots-header">
+              <h3>存档槽位 ({{ viewModel.saveSlots.value.length }}/10)</h3>
+              <button @click="showCreateSlotModal = true" class="create-slot-btn" :disabled="viewModel.saveSlots.value.length >= 10">
+                ➕ 新建存档
+              </button>
+            </div>
+            
+            <div class="save-slots-list">
+              <div 
+                v-for="slot in viewModel.saveSlots.value" 
+                :key="slot.id"
+                class="save-slot-item"
+                :class="{ active: slot.id === viewModel.currentSlotId.value }"
+              >
+                <div class="slot-info">
+                  <div class="slot-name">{{ slot.name }}</div>
+                  <div class="slot-meta">
+                    <span class="slot-games">{{ slot.totalGamesPlayed }} 局</span>
+                    <span class="slot-time">{{ formatTime(slot.totalTimeSpent) }}</span>
+                    <span class="slot-date">{{ formatDate(slot.lastPlayedAt) }}</span>
+                  </div>
+                </div>
+                
+                <div class="slot-actions">
+                  <button 
+                    v-if="slot.id !== viewModel.currentSlotId.value"
+                    @click="viewModel.switchToSlot(slot.id)"
+                    class="slot-action-btn switch"
+                  >
+                    🔄 切换
+                  </button>
+                  <button 
+                    @click="openRenameSlotModal(slot)"
+                    class="slot-action-btn rename"
+                  >
+                    ✏️ 重命名
+                  </button>
+                  <button 
+                    @click="openCopySlotModal(slot)"
+                    class="slot-action-btn copy"
+                  >
+                    📋 复制
+                  </button>
+                  <button 
+                    @click="viewModel.exportSlotData(slot.id)"
+                    class="slot-action-btn export"
+                  >
+                    📤 导出
+                  </button>
+                  <button 
+                    v-if="slot.id !== 'default'"
+                    @click="viewModel.deleteSlot(slot.id)"
+                    class="slot-action-btn delete"
+                  >
+                    🗑️ 删除
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 存档导入 -->
+          <div class="save-import-section">
+            <button @click="viewModel.importSlotData" class="import-save-btn">
+              📥 导入存档文件
+            </button>
+            <p class="import-description">从导出的存档文件中恢复游戏数据</p>
+          </div>
+        </div>
+
         <!-- 关于信息 -->
         <div class="settings-section">
           <h2 class="section-title">ℹ️ 关于</h2>
@@ -305,13 +407,163 @@
         </button>
       </div>
     </div>
+
+    <!-- 创建存档模态框 -->
+    <div v-if="showCreateSlotModal" class="modal-overlay" @click="showCreateSlotModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>创建新存档</h3>
+          <button @click="showCreateSlotModal = false" class="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">存档名称</label>
+            <input 
+              v-model="newSlotName" 
+              type="text" 
+              class="form-input" 
+              placeholder="请输入存档名称"
+              maxlength="20"
+              @keyup.enter="createNewSlot"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="showCreateSlotModal = false" class="modal-btn cancel">取消</button>
+          <button @click="createNewSlot" class="modal-btn confirm" :disabled="!newSlotName.trim()">创建</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 重命名存档模态框 -->
+    <div v-if="showRenameSlotModal" class="modal-overlay" @click="showRenameSlotModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>重命名存档</h3>
+          <button @click="showRenameSlotModal = false" class="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">存档名称</label>
+            <input 
+              v-model="renameSlotName" 
+              type="text" 
+              class="form-input" 
+              placeholder="请输入新名称"
+              maxlength="20"
+              @keyup.enter="renameSlot"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="showRenameSlotModal = false" class="modal-btn cancel">取消</button>
+          <button @click="renameSlot" class="modal-btn confirm" :disabled="!renameSlotName.trim()">重命名</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 复制存档模态框 -->
+    <div v-if="showCopySlotModal" class="modal-overlay" @click="showCopySlotModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>复制存档</h3>
+          <button @click="showCopySlotModal = false" class="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">新存档名称</label>
+            <input 
+              v-model="copySlotName" 
+              type="text" 
+              class="form-input" 
+              placeholder="请输入新存档名称"
+              maxlength="20"
+              @keyup.enter="copySlot"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="showCopySlotModal = false" class="modal-btn cancel">取消</button>
+          <button @click="copySlot" class="modal-btn confirm" :disabled="!copySlotName.trim()">复制</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { SettingsViewModel } from '@/viewModels/settings/settingsViewModel'
+import type { SaveSlot } from '@/services/SaveManager'
 
 const viewModel = new SettingsViewModel()
+
+// 模态框状态
+const showCreateSlotModal = ref(false)
+const showRenameSlotModal = ref(false)
+const showCopySlotModal = ref(false)
+
+// 表单数据
+const newSlotName = ref('')
+const renameSlotName = ref('')
+const copySlotName = ref('')
+const currentSlot = ref<SaveSlot | null>(null)
+
+// 方法
+const formatTime = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+  
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+  return `${minutes}:${secs.toString().padStart(2, '0')}`
+}
+
+const formatDate = (dateString: string): string => {
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(dateString))
+}
+
+const createNewSlot = async () => {
+  if (await viewModel.createNewSlot(newSlotName.value)) {
+    showCreateSlotModal.value = false
+    newSlotName.value = ''
+  }
+}
+
+const openRenameSlotModal = (slot: SaveSlot) => {
+  currentSlot.value = slot
+  renameSlotName.value = slot.name
+  showRenameSlotModal.value = true
+}
+
+const renameSlot = async () => {
+  if (currentSlot.value && await viewModel.renameSlot(currentSlot.value.id, renameSlotName.value)) {
+    showRenameSlotModal.value = false
+    currentSlot.value = null
+    renameSlotName.value = ''
+  }
+}
+
+const openCopySlotModal = (slot: SaveSlot) => {
+  currentSlot.value = slot
+  copySlotName.value = `${slot.name} 副本`
+  showCopySlotModal.value = true
+}
+
+const copySlot = async () => {
+  if (currentSlot.value && await viewModel.copySlot(currentSlot.value.id, copySlotName.value)) {
+    showCopySlotModal.value = false
+    currentSlot.value = null
+    copySlotName.value = ''
+  }
+}
 </script>
 
 <style scoped>
@@ -581,6 +833,259 @@ const viewModel = new SettingsViewModel()
 
 .audio-test-btn:active:not(:disabled) {
   transform: translateY(0);
+}
+
+/* 存档管理样式 */
+.current-save-info {
+  @apply mb-6 p-4 rounded-lg border;
+  background-color: var(--settings-hover);
+  border-color: var(--settings-border);
+}
+
+.current-save-header {
+  @apply flex items-center justify-between mb-3;
+}
+
+.current-save-header h3 {
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
+}
+
+.current-save-name {
+  @apply text-sm px-2 py-1 rounded;
+  background-color: var(--settings-accent);
+  color: #1f2937;
+}
+
+.current-save-stats {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-3;
+}
+
+.stat-item {
+  @apply flex flex-col items-center p-2 rounded;
+  background-color: var(--settings-card-bg);
+}
+
+.stat-label {
+  @apply text-xs mb-1;
+  color: var(--settings-text-secondary);
+}
+
+.stat-value {
+  @apply text-sm font-semibold;
+  color: var(--settings-text-primary);
+}
+
+.save-slots-container {
+  @apply mb-6;
+}
+
+.save-slots-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.save-slots-header h3 {
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
+}
+
+.create-slot-btn {
+  @apply px-3 py-1 text-sm font-medium rounded transition-colors duration-200;
+  background-color: var(--settings-accent);
+  color: #1f2937;
+}
+
+.create-slot-btn:hover:not(:disabled) {
+  background-color: var(--settings-accent-hover);
+}
+
+.create-slot-btn:disabled {
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-slots-list {
+  @apply space-y-3;
+}
+
+.save-slot-item {
+  @apply flex items-center justify-between p-4 rounded-lg border transition-all duration-200;
+  background-color: var(--settings-hover);
+  border-color: var(--settings-border);
+}
+
+.save-slot-item.active {
+  background-color: var(--settings-accent);
+  border-color: var(--settings-accent);
+  color: #1f2937;
+}
+
+.save-slot-item:hover {
+  background-color: var(--settings-border);
+}
+
+.slot-info {
+  @apply flex-1;
+}
+
+.slot-name {
+  @apply text-base font-semibold mb-1;
+  color: var(--settings-text-primary);
+}
+
+.save-slot-item.active .slot-name {
+  color: #1f2937;
+}
+
+.slot-meta {
+  @apply flex space-x-3 text-xs;
+  color: var(--settings-text-secondary);
+}
+
+.save-slot-item.active .slot-meta {
+  color: #374151;
+}
+
+.slot-actions {
+  @apply flex space-x-2;
+}
+
+.slot-action-btn {
+  @apply px-2 py-1 text-xs font-medium rounded transition-colors duration-200;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border: 1px solid var(--settings-border);
+}
+
+.slot-action-btn:hover {
+  background-color: var(--settings-border);
+}
+
+.slot-action-btn.switch {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.slot-action-btn.switch:hover {
+  background-color: #059669;
+}
+
+.slot-action-btn.delete {
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.slot-action-btn.delete:hover {
+  background-color: #dc2626;
+}
+
+.save-import-section {
+  @apply text-center p-4 rounded-lg border;
+  background-color: var(--settings-hover);
+  border-color: var(--settings-border);
+}
+
+.import-save-btn {
+  @apply px-4 py-2 text-sm font-medium rounded transition-colors duration-200 mb-2;
+  background-color: var(--settings-accent);
+  color: #1f2937;
+}
+
+.import-save-btn:hover {
+  background-color: var(--settings-accent-hover);
+}
+
+.import-description {
+  @apply text-xs;
+  color: var(--settings-text-secondary);
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-lg shadow-xl max-w-md w-full mx-4;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+}
+
+.modal-header {
+  @apply flex items-center justify-between p-4 border-b;
+  border-bottom-color: var(--settings-border);
+}
+
+.modal-header h3 {
+  @apply text-lg font-semibold;
+  color: var(--settings-text-primary);
+}
+
+.modal-close {
+  @apply text-xl font-bold hover:opacity-70 transition-opacity duration-200;
+  color: var(--settings-text-secondary);
+}
+
+.modal-body {
+  @apply p-4;
+}
+
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium mb-2;
+  color: var(--settings-text-primary);
+}
+
+.form-input {
+  @apply w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+  background-color: var(--settings-card-bg);
+  color: var(--settings-text-primary);
+  border-color: var(--settings-border);
+}
+
+.form-input:focus {
+  border-color: var(--settings-accent);
+}
+
+.modal-footer {
+  @apply flex justify-end space-x-3 p-4 border-t;
+  border-top-color: var(--settings-border);
+}
+
+.modal-btn {
+  @apply px-4 py-2 text-sm font-medium rounded transition-colors duration-200;
+}
+
+.modal-btn.cancel {
+  background-color: var(--settings-hover);
+  color: var(--settings-text-primary);
+}
+
+.modal-btn.cancel:hover {
+  background-color: var(--settings-border);
+}
+
+.modal-btn.confirm {
+  background-color: var(--settings-accent);
+  color: #1f2937;
+}
+
+.modal-btn.confirm:hover:not(:disabled) {
+  background-color: var(--settings-accent-hover);
+}
+
+.modal-btn.confirm:disabled {
+  background-color: var(--settings-border);
+  color: var(--settings-text-secondary);
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 </style>

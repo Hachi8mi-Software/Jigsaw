@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
+import { saveManager } from '@/services/SaveManager'
 
 export interface GameSettings {
   showBackground: boolean
@@ -62,7 +63,8 @@ export const useSettingsStore = defineStore('settings', () => {
 
   const loadSettings = () => {
     try {
-      const saved = localStorage.getItem('app_settings')
+      const key = saveManager.getStorageKey('app_settings')
+      const saved = localStorage.getItem(key)
       if (saved) {
         const parsed = JSON.parse(saved)
         settings.value = { ...defaultSettings, ...parsed }
@@ -75,7 +77,8 @@ export const useSettingsStore = defineStore('settings', () => {
 
   const saveSettings = () => {
     try {
-      localStorage.setItem('app_settings', JSON.stringify(settings.value))
+      const key = saveManager.getStorageKey('app_settings')
+      localStorage.setItem(key, JSON.stringify(settings.value))
     } catch (error) {
       console.error('保存设置失败:', error)
     }
@@ -110,7 +113,19 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   const clearAllData = () => {
-    localStorage.clear()
+    // 清除当前存档的所有数据
+    const currentSlotId = saveManager.getCurrentSlotId()
+    const prefix = saveManager.getSlotPrefix(currentSlotId)
+    
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(prefix)) {
+        keysToRemove.push(key)
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key))
     settings.value = { ...defaultSettings }
   }
 

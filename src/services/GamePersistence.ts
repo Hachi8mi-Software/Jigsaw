@@ -4,6 +4,7 @@
  */
 
 import type { PuzzleData } from '../types'
+import { saveManager } from './SaveManager'
 
 export class GamePersistence {
   private readonly STORAGE_KEY_PREFIX = 'puzzle_game_state_'
@@ -34,7 +35,7 @@ export class GamePersistence {
         savedAt: new Date().toISOString()
       }
 
-      const key = `${this.STORAGE_KEY_PREFIX}${puzzleData.id}`
+      const key = saveManager.getStorageKey(`${this.STORAGE_KEY_PREFIX}${puzzleData.id}`)
       localStorage.setItem(key, JSON.stringify(gameStateData))
       
       console.log('游戏状态已保存:', puzzleData.id)
@@ -48,7 +49,7 @@ export class GamePersistence {
    */
   loadGameState(puzzleId: string): any | null {
     try {
-      const key = `${this.STORAGE_KEY_PREFIX}${puzzleId}`
+      const key = saveManager.getStorageKey(`${this.STORAGE_KEY_PREFIX}${puzzleId}`)
       const saved = localStorage.getItem(key)
       
       if (saved) {
@@ -79,7 +80,7 @@ export class GamePersistence {
    */
   clearGameState(puzzleId: string): void {
     try {
-      const key = `${this.STORAGE_KEY_PREFIX}${puzzleId}`
+      const key = saveManager.getStorageKey(`${this.STORAGE_KEY_PREFIX}${puzzleId}`)
       localStorage.removeItem(key)
       console.log('游戏状态已清除:', puzzleId)
     } catch (error) {
@@ -115,10 +116,11 @@ export class GamePersistence {
     const states: { puzzleId: string, savedAt: string }[] = []
     
     try {
+      const currentPrefix = saveManager.getSlotPrefix()
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
-        if (key && key.startsWith(this.STORAGE_KEY_PREFIX)) {
-          const puzzleId = key.replace(this.STORAGE_KEY_PREFIX, '')
+        if (key && key.startsWith(currentPrefix) && key.includes(this.STORAGE_KEY_PREFIX)) {
+          const puzzleId = key.replace(currentPrefix, '').replace(this.STORAGE_KEY_PREFIX, '')
           const saved = localStorage.getItem(key)
           
           if (saved) {

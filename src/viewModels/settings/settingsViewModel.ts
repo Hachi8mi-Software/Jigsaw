@@ -1,11 +1,16 @@
 import { useSettingsStore } from '@/stores/settings'
 import { useNotificationStore } from '@/stores/notification'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { audioUtils } from '@/utils/audioUtils'
+import { saveManager, type SaveSlot } from '@/services/SaveManager'
 
 export class SettingsViewModel {
   private settingsStore = useSettingsStore()
   private notificationStore = useNotificationStore()
+  
+  // 响应式状态
+  private saveSlotsState = ref<SaveSlot[]>([])
+  private currentSlotState = ref<string>('default')
 
   // 计算属性，绑定到View
   public gameSettings = computed({
@@ -33,6 +38,22 @@ export class SettingsViewModel {
     }
     return theme
   })
+
+  // 存档管理相关计算属性
+  public saveSlots = computed(() => this.saveSlotsState.value)
+  public currentSlot = computed(() => this.saveSlotsState.value.find(slot => slot.id === this.currentSlotState.value) || null)
+  public currentSlotId = computed(() => this.currentSlotState.value)
+
+  // 初始化方法
+  constructor() {
+    this.refreshSaveData()
+  }
+
+  // 刷新存档数据
+  private refreshSaveData() {
+    this.saveSlotsState.value = saveManager.getSaveSlots()
+    this.currentSlotState.value = saveManager.getCurrentSlotId()
+  }
 
   // 方法
   public saveSettings() {
@@ -169,5 +190,149 @@ export class SettingsViewModel {
     audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
     audioUtils.setEnabled(this.audioSettings.value.enableSounds)
     await audioUtils.playButtonClick()
+  }
+
+  // 存档管理方法
+  public async createNewSlot(name: string): Promise<boolean> {
+    if (!name.trim()) {
+      this.notificationStore.error('存档名称不能为空')
+      return false
+    }
+
+    const slotId = saveManager.createNewSlot(name.trim())
+    if (slotId) {
+      this.refreshSaveData() // 刷新数据
+      this.notificationStore.success(`存档槽位 "${name}" 创建成功`)
+      return true
+    } else {
+      this.notificationStore.error('创建存档槽位失败，可能已达到最大数量限制')
+      return false
+    }
+  }
+
+  public async switchToSlot(slotId: string): Promise<boolean> {
+    const success = saveManager.switchToSlot(slotId)
+    if (success) {
+      this.refreshSaveData() // 刷新数据
+      this.notificationStore.success(`已切换到存档: ${saveManager.getCurrentSlot()?.name}`)
+      // 重新加载设置
+      this.settingsStore.loadSettings()
+      return true
+    } else {
+      this.notificationStore.error('切换存档失败')
+      return false
+    }
+  }
+
+  public async deleteSlot(slotId: string): Promise<boolean> {
+    const slot = this.saveSlotsState.value.find(s => s.id === slotId)
+    if (!slot) return false
+
+    const confirmed = await this.notificationStore.showConfirm({
+      title: '删除存档',
+      message: `确定要删除存档 "${slot.name}" 吗？此操作无法撤销！`,
+      type: 'danger',
+      confirmText: '删除',
+      cancelText: '取消'
+    })
+
+    if (confirmed) {
+      const success = saveManager.deleteSlot(slotId)
+      if (success) {
+        this.refreshSaveData() // 刷新数据
+        this.notificationStore.success(`存档 "${slot.name}" 已删除`)
+        return true
+      } else {
+        this.notificationStore.error('删除存档失败')
+        return false
+      }
+    }
+    return false
+  }
+
+  public async renameSlot(slotId: string, newName: string): Promise<boolean> {
+    if (!newName.trim()) {
+      this.notificationStore.error('存档名称不能为空')
+      return false
+    }
+
+    const success = saveManager.renameSlot(slotId, newName.trim())
+    if (success) {
+      this.refreshSaveData() // 刷新数据
+      this.notificationStore.success('存档重命名成功')
+      return true
+    } else {
+      this.notificationStore.error('重命名存档失败')
+      return false
+    }
+  }
+
+  public async copySlot(slotId: string, newName: string): Promise<boolean> {
+    if (!newName.trim()) {
+      this.notificationStore.error('存档名称不能为空')
+      return false
+    }
+
+    const newSlotId = saveManager.copySlot(slotId, newName.trim())
+    if (newSlotId) {
+      this.refreshSaveData() // 刷新数据
+      this.notificationStore.success(`存档复制成功: "${newName}"`)
+      return true
+    } else {
+      this.notificationStore.error('复制存档失败')
+      return false
+    }
+  }
+
+  public exportSlotData(slotId: string): boolean {
+    const data = saveManager.exportSlotData(slotId)
+    if (data) {
+      const slot = this.saveSlotsState.value.find(s => s.id === slotId)
+      const filename = `puzzle-save-${slot?.name || slotId}.json`
+      
+      const blob = new Blob([data], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      this.notificationStore.success(`存档 "${slot?.name}" 导出成功`)
+      return true
+    } else {
+      this.notificationStore.error('导出存档失败')
+      return false
+    }
+  }
+
+  public importSlotData(): void {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          try {
+            const data = e.target?.result as string
+            const success = saveManager.importSlotData(data)
+            if (success) {
+              this.refreshSaveData() // 刷新数据
+              this.notificationStore.success('存档导入成功')
+            } else {
+              this.notificationStore.error('导入存档失败', '文件格式不正确')
+            }
+          } catch (error) {
+            this.notificationStore.error('导入存档失败', '文件格式不正确')
+          }
+        }
+        reader.readAsText(file)
+      }
+    }
+    input.click()
   }
 }

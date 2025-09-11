@@ -14,6 +14,7 @@ import { ref, computed } from 'vue'
 import type { LibraryItem, PuzzleData, Achievement, UserStats, DateValue, GridConfig, LeaderboardEntry } from '../types'
 import { BUILTIN_PUZZLES, ACHIEVEMENTS } from '../data'
 import { imageStorage, type CropArea } from '../utils/imageStorage'
+import { saveManager } from '@/services/SaveManager'
 
 
 
@@ -59,7 +60,8 @@ class LibraryViewModel {
   saveToStorage(items: LibraryItem[]): void {
     try {
       const userItems = items.filter(item => !item.isBuiltIn)
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(userItems))
+      const key = saveManager.getStorageKey('custom_puzzles')
+      localStorage.setItem(key, JSON.stringify(userItems))
     } catch (error) {
       console.error('保存素材库失败:', error)
     }
@@ -70,7 +72,8 @@ class LibraryViewModel {
    */
   loadFromStorage(): LibraryItem[] {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY)
+      const key = saveManager.getStorageKey('custom_puzzles')
+      const stored = localStorage.getItem(key)
       return stored ? JSON.parse(stored) : []
     } catch (error) {
       console.error('加载素材库失败:', error)
@@ -83,7 +86,8 @@ class LibraryViewModel {
    */
   saveLeaderboardRecords(records: LeaderboardEntry[]): void {
     try {
-      localStorage.setItem(this.LEADERBOARD_KEY, JSON.stringify(records))
+      const key = saveManager.getStorageKey('leaderboard_records')
+      localStorage.setItem(key, JSON.stringify(records))
     } catch (error) {
       console.error('保存排行榜记录失败:', error)
     }
@@ -94,7 +98,8 @@ class LibraryViewModel {
    */
   loadLeaderboardRecords(): LeaderboardEntry[] {
     try {
-      const stored = localStorage.getItem(this.LEADERBOARD_KEY)
+      const key = saveManager.getStorageKey('leaderboard_records')
+      const stored = localStorage.getItem(key)
       return stored ? JSON.parse(stored) : []
     } catch (error) {
       console.error('加载排行榜记录失败:', error)
@@ -107,7 +112,8 @@ class LibraryViewModel {
    */
   saveAchievements(achievements: Achievement[]): void {
     try {
-      localStorage.setItem(this.ACHIEVEMENTS_KEY, JSON.stringify(achievements))
+      const key = saveManager.getStorageKey('achievements')
+      localStorage.setItem(key, JSON.stringify(achievements))
     } catch (error) {
       console.error('保存成就失败:', error)
     }
@@ -118,7 +124,8 @@ class LibraryViewModel {
    */
   loadAchievements(): Achievement[] {
     try {
-      const stored = localStorage.getItem(this.ACHIEVEMENTS_KEY)
+      const key = saveManager.getStorageKey('achievements')
+      const stored = localStorage.getItem(key)
       const prev: any[] = stored ? JSON.parse(stored) : []
       let result = this.getAchievements()
       result = result.map(achievement => {
@@ -137,7 +144,8 @@ class LibraryViewModel {
    */
   saveUserStats(userStats: UserStats) {
     try {
-      localStorage.setItem(this.USER_STATS_KEY, JSON.stringify(userStats))
+      const key = saveManager.getStorageKey('user_stats')
+      localStorage.setItem(key, JSON.stringify(userStats))
     } catch (error) {
       console.error('保存用户统计失败:', error)
     }
@@ -148,7 +156,8 @@ class LibraryViewModel {
    */
   loadUserStats(): UserStats {
     try {
-      const stored = localStorage.getItem(this.USER_STATS_KEY)
+      const key = saveManager.getStorageKey('user_stats')
+      const stored = localStorage.getItem(key)
       return stored ? JSON.parse(stored) : this.getUserStats()
     } catch (error) {
       console.error('加载用户统计失败:', error)
