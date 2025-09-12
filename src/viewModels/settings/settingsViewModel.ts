@@ -193,6 +193,8 @@ export class SettingsViewModel {
     audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
     audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
     audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    audioUtils.setBackgroundMusicEnabled(this.audioSettings.value.enableBackgroundMusic)
+    audioUtils.setBackgroundMusicVolume(this.audioSettings.value.backgroundMusicVolume)
     await audioUtils.playTestSound()
   }
 
@@ -200,6 +202,8 @@ export class SettingsViewModel {
     audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
     audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
     audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    audioUtils.setBackgroundMusicEnabled(this.audioSettings.value.enableBackgroundMusic)
+    audioUtils.setBackgroundMusicVolume(this.audioSettings.value.backgroundMusicVolume)
     await audioUtils.playPiecePlaced()
   }
 
@@ -207,6 +211,8 @@ export class SettingsViewModel {
     audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
     audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
     audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    audioUtils.setBackgroundMusicEnabled(this.audioSettings.value.enableBackgroundMusic)
+    audioUtils.setBackgroundMusicVolume(this.audioSettings.value.backgroundMusicVolume)
     await audioUtils.playPuzzleCompleted()
   }
 
@@ -214,6 +220,8 @@ export class SettingsViewModel {
     audioUtils.setMasterVolume(this.audioSettings.value.masterVolume)
     audioUtils.setSoundEffectsVolume(this.audioSettings.value.soundEffects)
     audioUtils.setEnabled(this.audioSettings.value.enableSounds)
+    audioUtils.setBackgroundMusicEnabled(this.audioSettings.value.enableBackgroundMusic)
+    audioUtils.setBackgroundMusicVolume(this.audioSettings.value.backgroundMusicVolume)
     await audioUtils.playButtonClick()
   }
 

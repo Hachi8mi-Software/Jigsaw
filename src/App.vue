@@ -10,6 +10,7 @@ import { useLibraryStore } from './stores/library'
 import { useSettingsStore } from './stores/settings'
 import { GameViewModel } from './viewModels/game/gameViewModel'
 import NotificationSystem from './components/NotificationSystem.vue'
+import { audioUtils } from './utils/audioUtils'
 import "@/assets/ark.css"
 
 const router = useRouter()
@@ -136,8 +137,58 @@ const watchSystemTheme = () => {
   }
 }
 
+// 背景音乐控制
+const initializeBackgroundMusic = async () => {
+  // 应用音频设置
+  audioUtils.setMasterVolume(settingsStore.settings.audio.masterVolume)
+  audioUtils.setSoundEffectsVolume(settingsStore.settings.audio.soundEffects)
+  audioUtils.setEnabled(settingsStore.settings.audio.enableSounds)
+  audioUtils.setBackgroundMusicEnabled(settingsStore.settings.audio.enableBackgroundMusic)
+  audioUtils.setBackgroundMusicVolume(settingsStore.settings.audio.backgroundMusicVolume)
+  
+  // 如果启用了背景音乐，尝试开始播放
+  if (settingsStore.settings.audio.enableBackgroundMusic) {
+    await audioUtils.startBackgroundMusic()
+  }
+}
+
+// 监听音频设置变化
+const watchAudioSettings = () => {
+  watch(() => settingsStore.settings.audio, (newAudioSettings, oldAudioSettings) => {
+    // 只有在设置真正改变时才更新音频工具类
+    if (oldAudioSettings) {
+      if (newAudioSettings.masterVolume !== oldAudioSettings.masterVolume) {
+        audioUtils.setMasterVolume(newAudioSettings.masterVolume)
+      }
+      if (newAudioSettings.soundEffects !== oldAudioSettings.soundEffects) {
+        audioUtils.setSoundEffectsVolume(newAudioSettings.soundEffects)
+      }
+      if (newAudioSettings.enableSounds !== oldAudioSettings.enableSounds) {
+        audioUtils.setEnabled(newAudioSettings.enableSounds)
+      }
+      if (newAudioSettings.enableBackgroundMusic !== oldAudioSettings.enableBackgroundMusic) {
+        console.log('检测到背景音乐设置变化:', { 
+          from: oldAudioSettings.enableBackgroundMusic, 
+          to: newAudioSettings.enableBackgroundMusic 
+        })
+        audioUtils.setBackgroundMusicEnabled(newAudioSettings.enableBackgroundMusic)
+      }
+      if (newAudioSettings.backgroundMusicVolume !== oldAudioSettings.backgroundMusicVolume) {
+        audioUtils.setBackgroundMusicVolume(newAudioSettings.backgroundMusicVolume)
+      }
+    } else {
+      // 初始化时设置所有值
+      audioUtils.setMasterVolume(newAudioSettings.masterVolume)
+      audioUtils.setSoundEffectsVolume(newAudioSettings.soundEffects)
+      audioUtils.setEnabled(newAudioSettings.enableSounds)
+      audioUtils.setBackgroundMusicEnabled(newAudioSettings.enableBackgroundMusic)
+      audioUtils.setBackgroundMusicVolume(newAudioSettings.backgroundMusicVolume)
+    }
+  }, { deep: true })
+}
+
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
   // 应用初始化
   console.log('拼图乐应用已启动')
   
@@ -152,6 +203,12 @@ onMounted(() => {
   
   // 监听系统主题变化
   watchSystemTheme()
+  
+  // 初始化背景音乐
+  await initializeBackgroundMusic()
+  
+  // 监听音频设置变化
+  watchAudioSettings()
   
   // 检测移动端
   checkMobile()

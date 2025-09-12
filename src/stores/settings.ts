@@ -21,6 +21,8 @@ export interface AudioSettings {
   masterVolume: number
   soundEffects: number
   enableSounds: boolean
+  enableBackgroundMusic: boolean
+  backgroundMusicVolume: number
 }
 
 export interface PerformanceSettings {
@@ -52,7 +54,9 @@ const defaultSettings: AppSettings = {
   audio: {
     masterVolume: 70,
     soundEffects: 80,
-    enableSounds: true
+    enableSounds: true,
+    enableBackgroundMusic: false,
+    backgroundMusicVolume: 50
   },
   performance: {
     renderQuality: 'high',

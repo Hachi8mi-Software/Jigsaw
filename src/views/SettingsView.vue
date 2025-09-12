@@ -151,6 +151,7 @@
         <div class="settings-section">
           <h2 class="section-title">🔊 音效设置</h2>
           <div class="settings-grid">
+            <!-- 主音量控制 -->
             <div class="setting-item">
               <label class="setting-label">
                 主音量
@@ -158,6 +159,7 @@
               <div class="volume-control">
                 <input 
                   v-model.number="viewModel.audioSettings.value.masterVolume"
+                  @change="handleMasterVolumeChange"
                   type="range"
                   min="0"
                   max="100"
@@ -165,15 +167,31 @@
                 />
                 <span class="volume-value">{{ viewModel.audioSettings.value.masterVolume }}%</span>
               </div>
+              <p class="setting-description">控制所有音频的总音量</p>
             </div>
             
+            <!-- 音效控制组 -->
             <div class="setting-item">
               <label class="setting-label">
-                游戏音效
+                <input 
+                  v-model="viewModel.audioSettings.value.enableSounds"
+                  @change="handleEnableSoundsChange"
+                  type="checkbox"
+                  class="setting-checkbox"
+                />
+                启用音效
+              </label>
+              <p class="setting-description">播放拼图放置和完成音效</p>
+            </div>
+
+            <div class="setting-item">
+              <label class="setting-label">
+                游戏音效音量
               </label>
               <div class="volume-control">
                 <input 
                   v-model.number="viewModel.audioSettings.value.soundEffects"
+                  @change="handleSoundEffectsChange"
                   type="range"
                   min="0"
                   max="100"
@@ -181,18 +199,39 @@
                 />
                 <span class="volume-value">{{ viewModel.audioSettings.value.soundEffects }}%</span>
               </div>
+              <p class="setting-description">调节游戏音效的音量</p>
             </div>
-            
+
+            <!-- 背景音乐控制组 -->
             <div class="setting-item">
               <label class="setting-label">
                 <input 
-                  v-model="viewModel.audioSettings.value.enableSounds"
+                  v-model="viewModel.audioSettings.value.enableBackgroundMusic"
+                  @change="handleBackgroundMusicToggle"
                   type="checkbox"
                   class="setting-checkbox"
                 />
-                启用音效
+                启用背景音乐
               </label>
-              <p class="setting-description">播放拼图放置和完成音效</p>
+              <p class="setting-description">循环播放背景音乐</p>
+            </div>
+
+            <div class="setting-item">
+              <label class="setting-label">
+                背景音乐音量
+              </label>
+              <div class="volume-control">
+                <input 
+                  v-model.number="viewModel.audioSettings.value.backgroundMusicVolume"
+                  @change="handleBackgroundMusicVolumeChange"
+                  type="range"
+                  min="0"
+                  max="100"
+                  class="setting-range"
+                />
+                <span class="volume-value">{{ viewModel.audioSettings.value.backgroundMusicVolume }}%</span>
+              </div>
+              <p class="setting-description">调节背景音乐的音量</p>
             </div>
 
             <div class="setting-item">
@@ -514,6 +553,7 @@
 import { ref } from 'vue'
 import { SettingsViewModel } from '@/viewModels/settings/settingsViewModel'
 import type { SaveSlot } from '@/services/SaveManager'
+import { audioUtils } from '@/utils/audioUtils'
 
 const viewModel = new SettingsViewModel()
 
@@ -582,6 +622,37 @@ const copySlot = async () => {
     currentSlot.value = null
     copySlotName.value = ''
   }
+}
+
+// 处理背景音乐开关变化
+const handleBackgroundMusicToggle = () => {
+  console.log('设置页面检测到背景音乐开关变化:', viewModel.audioSettings.value.enableBackgroundMusic)
+  // 直接调用音频工具类更新
+  audioUtils.setBackgroundMusicEnabled(viewModel.audioSettings.value.enableBackgroundMusic)
+}
+
+// 处理主音量变化
+const handleMasterVolumeChange = () => {
+  console.log('设置页面检测到主音量变化:', viewModel.audioSettings.value.masterVolume)
+  audioUtils.setMasterVolume(viewModel.audioSettings.value.masterVolume)
+}
+
+// 处理音效音量变化
+const handleSoundEffectsChange = () => {
+  console.log('设置页面检测到音效音量变化:', viewModel.audioSettings.value.soundEffects)
+  audioUtils.setSoundEffectsVolume(viewModel.audioSettings.value.soundEffects)
+}
+
+// 处理背景音乐音量变化
+const handleBackgroundMusicVolumeChange = () => {
+  console.log('设置页面检测到背景音乐音量变化:', viewModel.audioSettings.value.backgroundMusicVolume)
+  audioUtils.setBackgroundMusicVolume(viewModel.audioSettings.value.backgroundMusicVolume)
+}
+
+// 处理音效开关变化
+const handleEnableSoundsChange = () => {
+  console.log('设置页面检测到音效开关变化:', viewModel.audioSettings.value.enableSounds)
+  audioUtils.setEnabled(viewModel.audioSettings.value.enableSounds)
 }
 </script>
 
@@ -660,8 +731,113 @@ const copySlot = async () => {
 }
 
 .setting-range {
-  @apply w-full max-w-xs appearance-none h-2 rounded-lg cursor-pointer;
+  @apply w-full max-w-xs appearance-none cursor-pointer;
+  height: 6px;
   background-color: var(--settings-border);
+  border-radius: 3px;
+  outline: none;
+}
+
+/* 滑块轨道样式 */
+.setting-range::-webkit-slider-track {
+  height: 6px;
+  background-color: var(--settings-border);
+  border-radius: 3px;
+  border: none;
+}
+
+.setting-range::-moz-range-track {
+  height: 6px;
+  background-color: var(--settings-border);
+  border-radius: 3px;
+  border: none;
+}
+
+/* 滑块按钮样式 */
+.setting-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background-color: var(--settings-accent);
+  border-radius: 50%;
+  border: 2px solid var(--settings-card-bg);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.setting-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.setting-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background-color: var(--settings-accent);
+  border-radius: 50%;
+  border: 2px solid var(--settings-card-bg);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.setting-range::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 移动端优化 */
+@media (max-width: 767px) {
+  .setting-range {
+    height: 4px;
+    border-radius: 2px;
+  }
+  
+  .setting-range::-webkit-slider-track {
+    height: 4px;
+    border-radius: 2px;
+  }
+  
+  .setting-range::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+  }
+  
+  .setting-range::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    border-width: 1px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+  
+  .setting-range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-width: 1px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+  
+  .setting-range::-webkit-slider-thumb:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  .setting-range::-moz-range-thumb:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* 移动端触摸优化 */
+  .setting-range::-webkit-slider-thumb:active {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  }
+  
+  .setting-range::-moz-range-thumb:active {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  }
 }
 
 .setting-description {
@@ -825,7 +1001,7 @@ const copySlot = async () => {
 .audio-test-btn {
   @apply px-3 py-1 text-xs font-medium rounded transition-colors duration-200;
   background-color: var(--settings-accent);
-  color: white;
+  color: #1f2937;
   border: none;
   min-width: 80px;
 }

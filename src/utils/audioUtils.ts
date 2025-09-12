@@ -8,6 +8,10 @@ export class AudioUtils {
   private masterVolume = 0.7
   private soundEffectsVolume = 0.8
   private enabled = true
+  private backgroundMusicEnabled = false
+  private backgroundMusicVolume = 0.5
+  private backgroundMusic: HTMLAudioElement | null = null
+  private backgroundMusicInitialized = false
 
   constructor() {
     // 不在这里初始化，改为按需初始化
@@ -31,12 +35,6 @@ export class AudioUtils {
     }
   }
 
-  /**
-   * 设置主音量
-   */
-  setMasterVolume(volume: number) {
-    this.masterVolume = Math.max(0, Math.min(1, volume / 100))
-  }
 
   /**
    * 设置音效音量
@@ -50,6 +48,130 @@ export class AudioUtils {
    */
   setEnabled(enabled: boolean) {
     this.enabled = enabled
+  }
+
+  /**
+   * 设置背景音乐启用状态
+   */
+  setBackgroundMusicEnabled(enabled: boolean) {
+    const wasEnabled = this.backgroundMusicEnabled
+    this.backgroundMusicEnabled = enabled
+    
+    console.log('背景音乐状态变化:', { wasEnabled, enabled, willUpdate: wasEnabled !== enabled })
+    
+    // 只有在状态真正改变时才更新播放状态
+    if (wasEnabled !== enabled) {
+      console.log('调用 updateBackgroundMusicState')
+      this.updateBackgroundMusicState()
+    } else {
+      console.log('状态未改变，跳过更新')
+    }
+  }
+
+  /**
+   * 设置背景音乐音量
+   */
+  setBackgroundMusicVolume(volume: number) {
+    this.backgroundMusicVolume = Math.max(0, Math.min(1, volume / 100))
+    if (this.backgroundMusic) {
+      this.backgroundMusic.volume = this.backgroundMusicVolume * this.masterVolume
+    }
+  }
+
+  /**
+   * 设置主音量（同时更新背景音乐音量）
+   */
+  setMasterVolume(volume: number) {
+    this.masterVolume = Math.max(0, Math.min(1, volume / 100))
+    if (this.backgroundMusic) {
+      this.backgroundMusic.volume = this.backgroundMusicVolume * this.masterVolume
+    }
+  }
+
+  /**
+   * 初始化背景音乐
+   */
+  private async initBackgroundMusic(): Promise<void> {
+    if (this.backgroundMusicInitialized) return
+
+    try {
+      this.backgroundMusic = new Audio('/bgm.mp3')
+      this.backgroundMusic.loop = true
+      this.backgroundMusic.volume = this.backgroundMusicVolume * this.masterVolume
+      this.backgroundMusic.preload = 'auto'
+      
+      // 设置静音模式以避免自动播放限制
+      this.backgroundMusic.muted = true
+      
+      this.backgroundMusicInitialized = true
+      console.log('背景音乐初始化成功')
+    } catch (error) {
+      console.warn('背景音乐初始化失败:', error)
+    }
+  }
+
+  /**
+   * 更新背景音乐播放状态
+   */
+  private async updateBackgroundMusicState(): Promise<void> {
+    console.log('更新背景音乐状态:', { 
+      enabled: this.backgroundMusicEnabled, 
+      hasMusic: !!this.backgroundMusic,
+      musicPaused: this.backgroundMusic?.paused,
+      musicMuted: this.backgroundMusic?.muted
+    })
+    
+    if (!this.backgroundMusicEnabled) {
+      if (this.backgroundMusic) {
+        console.log('停止背景音乐播放')
+        this.backgroundMusic.pause()
+        this.backgroundMusic.currentTime = 0
+        this.backgroundMusic.muted = true // 确保静音
+        console.log('背景音乐已停止，状态:', {
+          paused: this.backgroundMusic.paused,
+          muted: this.backgroundMusic.muted,
+          currentTime: this.backgroundMusic.currentTime
+        })
+      } else {
+        console.log('没有背景音乐实例，无需停止')
+      }
+      return
+    }
+
+    await this.initBackgroundMusic()
+    
+    if (this.backgroundMusic && this.backgroundMusicEnabled) {
+      try {
+        // 取消静音并播放
+        this.backgroundMusic.muted = false
+        await this.backgroundMusic.play()
+        console.log('背景音乐开始播放')
+      } catch (error) {
+        console.warn('背景音乐播放失败:', error)
+        // 如果播放失败，可能是因为用户交互限制，保持静音状态
+        this.backgroundMusic.muted = true
+      }
+    }
+  }
+
+  /**
+   * 开始播放背景音乐（需要用户交互触发）
+   */
+  public async startBackgroundMusic(): Promise<void> {
+    if (!this.backgroundMusicEnabled) return
+    
+    await this.initBackgroundMusic()
+    await this.updateBackgroundMusicState()
+  }
+
+  /**
+   * 停止播放背景音乐
+   */
+  public stopBackgroundMusic(): void {
+    if (this.backgroundMusic) {
+      this.backgroundMusic.pause()
+      this.backgroundMusic.currentTime = 0
+    }
   }
 
   /**
