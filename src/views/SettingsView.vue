@@ -1049,6 +1049,25 @@ const handleEnableSoundsChange = () => {
   @apply grid grid-cols-2 md:grid-cols-4 gap-3;
 }
 
+/* 移动端存档统计优化 */
+@media (max-width: 767px) {
+  .current-save-stats {
+    @apply grid-cols-2 gap-2;
+  }
+  
+  .stat-item {
+    @apply p-2;
+  }
+  
+  .stat-label {
+    @apply text-xs;
+  }
+  
+  .stat-value {
+    @apply text-sm;
+  }
+}
+
 .stat-item {
   @apply flex flex-col items-center p-2 rounded;
   background-color: var(--settings-card-bg);
@@ -1070,6 +1089,21 @@ const handleEnableSoundsChange = () => {
 
 .save-slots-header {
   @apply flex items-center justify-between mb-4;
+}
+
+/* 移动端存档槽头部优化 */
+@media (max-width: 767px) {
+  .save-slots-header {
+    @apply flex-col items-stretch gap-3;
+  }
+  
+  .save-slots-header h3 {
+    @apply text-base text-center;
+  }
+  
+  .create-slot-btn {
+    @apply w-full py-2;
+  }
 }
 
 .save-slots-header h3 {
@@ -1102,6 +1136,33 @@ const handleEnableSoundsChange = () => {
   @apply flex items-center justify-between p-4 rounded-lg border transition-all duration-200;
   background-color: var(--settings-hover);
   border-color: var(--settings-border);
+}
+
+/* 移动端存档槽优化 */
+@media (max-width: 767px) {
+  .save-slot-item {
+    @apply flex-col items-stretch p-3;
+  }
+  
+  .slot-info {
+    @apply mb-2;
+  }
+  
+  .slot-name {
+    @apply text-sm mb-1;
+  }
+  
+  .slot-meta {
+    @apply flex space-x-2 text-xs;
+  }
+  
+  .slot-actions {
+    @apply flex-wrap gap-2;
+  }
+  
+  .slot-action-btn {
+    @apply flex-1 min-w-0 text-xs px-2 py-2;
+  }
 }
 
 .save-slot-item.active {
@@ -1175,6 +1236,17 @@ const handleEnableSoundsChange = () => {
   @apply text-center p-4 rounded-lg border;
   background-color: var(--settings-hover);
   border-color: var(--settings-border);
+}
+
+/* 移动端导入存档优化 */
+@media (max-width: 767px) {
+  .save-import-section {
+    @apply p-3;
+  }
+  
+  .import-save-btn {
+    @apply w-full py-2 text-sm;
+  }
 }
 
 .import-save-btn {
