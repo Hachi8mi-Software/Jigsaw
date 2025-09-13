@@ -420,7 +420,9 @@ export class SaveManager {
       audio: {
         masterVolume: 70,
         soundEffects: 80,
-        enableSounds: true
+        enableSounds: true,
+        enableBackgroundMusic: false,
+        backgroundMusicVolume: 50
       },
       performance: {
         renderQuality: 'high',
