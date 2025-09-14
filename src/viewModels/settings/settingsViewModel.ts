@@ -81,11 +81,6 @@ export class SettingsViewModel {
   }
 
   // 方法
-  public saveSettings() {
-    this.settingsStore.saveSettings()
-    this.notificationStore.success('设置已保存')
-  }
-
   public async resetToDefaults() {
     const confirmed = await this.notificationStore.showConfirm({
       title: '恢复默认设置',
@@ -97,59 +92,6 @@ export class SettingsViewModel {
     
     if (confirmed) {
       this.settingsStore.resetToDefaults()
-    }
-  }
-
-  public exportData() {
-    this.settingsStore.exportSettings()
-  }
-
-  public importData() {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json'
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (file) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target?.result as string)
-            this.settingsStore.importSettings(data)
-            this.notificationStore.success('设置导入成功')
-          } catch (error) {
-            this.notificationStore.error('导入失败', '文件格式不正确')
-          }
-        }
-        reader.readAsText(file)
-      }
-    }
-    input.click()
-  }
-
-  public async clearData() {
-    const firstConfirmed = await this.notificationStore.showConfirm({
-      title: '清除所有数据',
-      message: '确定要清除所有数据吗？这将删除所有设置、游戏记录和自定义拼图！',
-      type: 'danger',
-      confirmText: '继续',
-      cancelText: '取消'
-    })
-    
-    if (firstConfirmed) {
-      const secondConfirmed = await this.notificationStore.showConfirm({
-        title: '最终确认',
-        message: '此操作无法撤销，确定继续吗？',
-        type: 'danger',
-        confirmText: '确定清除',
-        cancelText: '取消'
-      })
-      
-      if (secondConfirmed) {
-        this.settingsStore.clearAllData()
-        this.notificationStore.success('所有数据已清除')
-        location.reload()
-      }
     }
   }
 

@@ -295,43 +295,6 @@
           </div>
         </div>
 
-        <!-- 数据管理 -->
-        <div class="settings-section">
-          <h2 class="section-title">💾 数据管理</h2>
-          
-          <div class="data-management-list">
-            <div class="data-management-item">
-              <button @click="viewModel.exportData" class="data-management-btn">
-                <div class="btn-icon">📤</div>
-                <div class="btn-content">
-                  <div class="btn-title">导出数据</div>
-                  <div class="btn-description">导出 puzzle-settings.json 文件，包含所有应用设置、游戏配置和用户偏好</div>
-                </div>
-              </button>
-            </div>
-            
-            <div class="data-management-item">
-              <button @click="viewModel.importData" class="data-management-btn">
-                <div class="btn-icon">📥</div>
-                <div class="btn-content">
-                  <div class="btn-title">导入数据</div>
-                  <div class="btn-description">从 puzzle-settings.json 文件导入设置，将覆盖当前的所有配置</div>
-                </div>
-              </button>
-            </div>
-            
-            <div class="data-management-item">
-              <button @click="viewModel.clearData" class="data-management-btn danger">
-                <div class="btn-icon">🗑️</div>
-                <div class="btn-content">
-                  <div class="btn-title">清除所有数据</div>
-                  <div class="btn-description">删除所有设置、游戏记录和本地存储的数据，此操作无法撤销</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- 存档管理 -->
         <div class="settings-section">
           <h2 class="section-title">💾 存档管理</h2>
@@ -459,9 +422,6 @@
       <div class="settings-footer">
         <button @click="viewModel.resetToDefaults" class="footer-btn">
           🔄 恢复默认
-        </button>
-        <button @click="viewModel.saveSettings" class="footer-btn primary">
-          💾 保存设置
         </button>
       </div>
     </div>
@@ -851,69 +811,6 @@ const handleEnableSoundsChange = () => {
 
 .volume-value {
   @apply text-sm min-w-12;
-  color: var(--settings-text-secondary);
-}
-
-.data-management-list {
-  @apply space-y-4 mt-6;
-}
-
-.data-management-item {
-  @apply w-full;
-}
-
-.data-management-btn {
-  @apply w-full flex items-start p-4 rounded-lg border transition-all duration-200 text-left;
-  background-color: var(--settings-hover);
-  border-color: var(--settings-border);
-  color: var(--settings-text-primary);
-}
-
-.data-management-btn:hover {
-  background-color: var(--settings-border);
-  border-color: var(--settings-accent);
-  transform: translateY(-1px);
-}
-
-.data-management-btn.danger {
-  background-color: #fef2f2;
-  border-color: #fecaca;
-  color: #dc2626;
-}
-
-[data-theme="dark"] .data-management-btn.danger {
-  background-color: #7f1d1d;
-  border-color: #dc2626;
-  color: #fca5a5;
-}
-
-.data-management-btn.danger:hover {
-  background-color: #fee2e2;
-  border-color: #f87171;
-  color: #b91c1c;
-}
-
-[data-theme="dark"] .data-management-btn.danger:hover {
-  background-color: #450a0a;
-  border-color: #b91c1c;
-  color: #fecaca;
-}
-
-.btn-icon {
-  @apply text-2xl mr-4 flex-shrink-0 mt-1;
-}
-
-.btn-content {
-  @apply flex-1;
-}
-
-.btn-title {
-  @apply font-semibold text-base mb-2;
-  color: var(--settings-text-primary);
-}
-
-.btn-description {
-  @apply text-sm leading-relaxed;
   color: var(--settings-text-secondary);
 }
 
