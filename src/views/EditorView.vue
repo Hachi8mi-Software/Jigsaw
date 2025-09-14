@@ -241,9 +241,6 @@
         </div>
         
         <div class="bottom-actions">
-          <button @click="triggerImageUpload" class="ark bottom-btn">
-            🔄 更换图片
-          </button>
           <button @click="reopenCropDialog" class="ark bottom-btn" v-if="currentImage">
             ✂️ 重新裁剪
           </button>
