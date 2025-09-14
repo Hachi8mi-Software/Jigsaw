@@ -5,11 +5,11 @@
 
 /**
  * 应用基础路径配置
- * 这是唯一需要修改 BASEURL 的地方
+ * 支持通过环境变量 VITE_BASE_URL 控制，默认为 '/'
  */
 export const APP_CONFIG = {
   // 应用的基础路径，用于路由和静态资源
-  BASE_URL: '/',
+  BASE_URL: import.meta.env.VITE_BASE_URL || '/',
   
   // 应用名称
   APP_NAME: '拼图乐',

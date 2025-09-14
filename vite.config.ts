@@ -2,11 +2,10 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
-// 应用配置常量
-const BASE_URL = "/";
+// 应用配置常量 - 支持环境变量控制
+const BASE_URL = process.env.VITE_BASE_URL || "/";
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
