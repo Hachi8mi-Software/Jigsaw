@@ -96,11 +96,11 @@ export class SettingsViewModel {
   }
 
   public openGitHub() {
-    window.open('https://github.com', '_blank')
+    window.open('https://github.com/Hachi8mi-Software/Jigsaw/', '_blank')
   }
 
   public showLicenses() {
-    this.notificationStore.info('开源许可信息将在后续版本中提供')
+    window.open('https://github.com/Hachi8mi-Software/Jigsaw/tree/main?tab=MIT-1-ov-file#readme', '_blank')
   }
 
   // 主题切换方法
